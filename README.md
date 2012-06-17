@@ -1,8 +1,6 @@
-# Proper — Semantic Rich Text Editor
+# Substance Surface
 
-Proper 0.5.0 will be a complete rewrite, using CodeMirror instead of `contenteditable`. Thanks to Victor Saiz (vectorsize) for working on this!
-
-Proper is intended to be an extensible low-level interface for rich text editing. It doesn't introduce any UI components, but an API for managing user-defined text annotations. However, there will be examples for basic semantic rich text editing featuring em, strong, link and comment annotations. You're encouraged to build your own variations based on the given integration examples.
+Surface is intended to be an extensible low-level interface for rich text editing. It doesn't introduce any UI components, but an API for managing user-defined text annotations. For an implementation of a ritch text editor and several examples please refer to [Substance Text](https://github.com/substance/text)
 
 
 ## API (in-progress)
@@ -123,27 +121,6 @@ proper.$('a.em').click(function() {
 ```
 
 ## Changelog
-
-**0.5.0**
-
-In progress. Rewrite using CodeMirror.
-Ranges management and basic functionality implemented.
-
-**0.3.1**
-
-Solves various issues and produces cleaner and more semantically correct html.
-
-**0.3.0**
-
-Solves a number of Firefox related issues and adds native support for `code` annotations.
-
-**0.2.1**
-
-Mozilla compatibility.
-
-**0.2.0**
-
-Recognition of command states. Support for keybindings.
 
 **0.1.0**
 

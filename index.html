@@ -1,0 +1,102 @@
+<!DOCTYPE html> 
+<html> 
+<head> 
+  <title>PROPER&trade; - Semantic Rich Text Editor</title>  
+  
+  <!-- Styles -->
+  <link href="stylesheets/codemirror.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="stylesheets/page.css" media="screen" rel="stylesheet" type="text/css" />
+  <link href="stylesheets/proper.css" media="screen" rel="stylesheet" type="text/css" />
+
+  <!-- Libraries -->
+  <script src="lib/underscore.js"></script>
+  <script src="lib/jquery-min.js"></script>
+  <script src="lib/jquery.hotkeys.js"></script>
+  <script src="lib/codemirror.js"></script>
+
+  <!-- Source -->
+  <script src="proper.js"></script>
+
+  <script>
+    // Proper Init
+    $(function() {
+
+        var proper = new Proper({
+          el: '#content'
+        });
+
+        // Gets proper.selection()
+        $('#selection').click(function(e){
+          e.preventDefault();
+          console.log('Selection:');
+          console.log(proper.selection());
+        });
+
+        // Annotates comment
+        $('#comment').click(function(e){
+          e.preventDefault();
+          proper.annotate({
+            // id: "/comment/x", should this be set from inside proper instead?
+            type: "comment",
+            data: {
+              author: "John Doe",
+              content: "You might want to spell that right. Right? :)"
+            }
+          });
+          console.log('Annotations:');
+          console.log(proper.annotations());
+        });
+
+        // Annotates em
+        $('#em').bind('click', function(e){
+          e.preventDefault();
+          proper.annotate({
+            type: "em"
+          });
+          console.log('Annotations:');
+          console.log(proper.annotations());
+        });
+
+        // Annotates strong
+        $('#strong').bind('click', function(e){
+          e.preventDefault();
+          proper.annotate({
+            type: "strong"
+          });
+          console.log('Annotations:');
+          console.log(proper.annotations());
+        });
+
+        $('.command').click(function(){
+          // console.log('ee');
+        });
+    });
+  </script>
+</head>
+<body>
+  <h1>PROPER&trade; - Semantic Rich Text Editor (Version 0.5.0-work-in-progress)</h1>
+  
+  <div id="main">
+    <ul class="proper-commands">
+      <li><a href="#comment" title="Annotate" class="command comment ul" id="comment" command="comment"><div>Comment</div></a>
+      <li><a href="#em" title="Emphasis (CTRL+SHIFT+E)" class="command em" id="em" command="em"><div>Emphasis</div></a></li>
+      <li><a href="#strong" title="Strong (CTRL+SHIFT+S)" class="command strong" id="strong" command="strong"><div>Strong</div></a></li>
+    </ul>
+    <form><textarea id="content" class="editable" name="code">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
+Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+
+Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</textarea></form>
+  </div>
+  
+  <div id="source">
+
+  </div>
+  <br class="clear"/>
+  <div class="credits">
+    Straight from the labs of <a href="http://quasipartikel.at">Quaspartikel</a> 
+    and <a href="http://froodee.at/">froodee</a>. 
+  </div>
+  
+  <a href="http://github.com/michael/proper"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://s3.amazonaws.com/github/ribbons/forkme_right_gray_6d6d6d.png" alt="Fork me on GitHub"></a>
+</body> 
+</html>

@@ -1,6 +1,6 @@
 # Substance Surface
 
-Surface is intended to be an extensible low-level interface for rich text editing. It doesn't introduce any UI components, but an API for managing user-defined text annotations. For an implementation of a ritch text editor and several examples please refer to [Substance Text](https://github.com/substance/text)
+Surface is intended to be an extensible low-level interface for rich text editing. It doesn't introduce any UI components, but an API for managing user-defined text annotations. For an implementation of a ritch text editor and several examples please refer to [Substance Text](https://github.com/substance/text).
 
 
 ## API (in-progress)
@@ -98,7 +98,7 @@ Modify the selection programmatically:
 proper.execute({
   "command": "selection:update",
   "start": 40,
-  "end: 67
+  "end": 67
 });
 ```
 

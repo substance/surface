@@ -143,34 +143,35 @@ We're at a very early state. We're going to maintain a list of thoughts about fu
 ## Operational Transformations
 
 Michael: How could a future OT interface look like?
-Michael: I'd propose just introduced additional commands that do delta-updates to the document
-Michael: We might want to use Tim's [OT library](http://github.com/timjb/javascript-operational-transformation) to transform the state internally.
+
+- Michael: I'd propose just introduced additional commands that do delta-updates to the document
+- Michael: We might want to use Tim's [OT library](http://github.com/timjb/javascript-operational-transformation) to transform the state internally.
 
 
 ## Matching annotations
 
-Victor: On user type or select, detects if we are within the range of an existing annotation (could visually mark the annotation range to signal there's an existing annotation where we stand). Then when we match the whole range it should broadcast the match to the GUI registered tools.
+- Victor: On user type or select, detects if we are within the range of an existing annotation (could visually mark the annotation range to signal there's an existing annotation where we stand). Then when we match the whole range it should broadcast the match to the GUI registered tools.
 
 
 ## Updating annotations
 
-Victor: When you are editing content, and you type within an existing annotation we need to update the annotation ranges, also when you delete characters. For that we need to somehow track the first word and the last word of an annotation (using CM links?). How would we address then if the last or first word is deleted?
+- Victor: When you are editing content, and you type within an existing annotation we need to update the annotation ranges, also when you delete characters. For that we need to somehow track the first word and the last word of an annotation (using CM links?). How would we address then if the last or first word is deleted?
 
 
 ## Highlight all annotations?
 
-Victor: It could be interesting to be able to show all the existing annotation ranges in the surface.
+- Victor: It could be interesting to be able to show all the existing annotation ranges in the surface.
 
 
 ## Register a Tool/UI
 
-Victor: We need a way to be able to add GUI tools to interact with the surface from Text.
+- Victor: We need a way to be able to add GUI tools to interact with the surface from Text.
 Michael: Not sure if I'm getting this right, but the surface shouldn't know anything about the GUI tool that uses it. I guess a one-way dependency is what we want here. Let's discuss this in chat. :)
 
 
 ## Keyboard shortcuts
 
-Victor: We should probably manage keyboard shortcuts from the Surface and use CM keymaps.
+- Victor: We should probably manage keyboard shortcuts from the Surface and use CM keymaps.
 
 
 # Contributors

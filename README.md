@@ -140,6 +140,13 @@ You should be aware there's no magic involved. You have full control about styli
 We're at a very early state. We're going to maintain a list of thoughts about funcationality right here in the README. Just add/remove sections and put your name in front of your text, so we can do sort of an open discussion here. Everything that is more or less confirmed or implemented goes up to the API docs.
 
 
+## Operational Transformations
+
+Michael: How could a future OT interface look like?
+Michael: I'd propose just introduced additional commands that do delta-updates to the document
+Michael: We might want to use Tim's [OT library](http://github.com/timjb/javascript-operational-transformation) to transform the state internally.
+
+
 ## Matching annotations
 
 Victor: On user type or select, detects if we are within the range of an existing annotation (could visually mark the annotation range to signal there's an existing annotation where we stand). Then when we match the whole range it should broadcast the match to the GUI registered tools.

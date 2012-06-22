@@ -105,25 +105,39 @@ surface.apply({
 Hooking into selection events is easy too. `el` is a container html element sitting below the selection. You can populate it with some contextual UI stuff.
 
 ```js
-proper.on('selection', function(selection, el) {
+surface.on('selection', function(selection, el) {
   $(el).html('<a href="#" class="em">Emphasize</a>');
 });
 ```
 
+
+## Usage
+
+Here's an example of how an application can use the API based on an application-specific event. In this example clicking on a em icon, triggers the addition of a new em annotation based on the current selection. 
+
 ```js
-// Your very own event handler triggering the addition of a new em annotation
-// which immediately gets visible in the rendered version
-proper.$('a.em').click(function() {
-  proper.annotate({
-    type: "em" // you can style it using the .annotation.em class selector
+$('a.em').click(function() {
+  surface.apply({
+	"command": "annotation:insert",
+    "type": "em"
   });
 });
 ```
 
+You can style those user defined annotations by using this class convention. 
 
-# Designated Discussion Area
+```js
+.surface-annotation.em {
+  color: blue;
+}
+```
 
-We're at a very early state. We're going to maintain a list of thoughts about funcationality right here in the README. Just add/remove sections and put your name in front of your text, so we can do sort of an open discussion here.
+You should be aware there's no magic involved. You have full control about styling here. Surface just sets the right class, based on the annotation type.
+
+
+# Brainstorming Area
+
+We're at a very early state. We're going to maintain a list of thoughts about funcationality right here in the README. Just add/remove sections and put your name in front of your text, so we can do sort of an open discussion here. Everything that is more or less confirmed or implemented goes up to the API docs.
 
 
 ## Matching annotations
@@ -138,13 +152,13 @@ Victor: When you are editing content, and you type within an existing annotation
 
 ## Highlight all annotations?
 
-It could be interesting to be able to show all the existing annotation ranges in the surface.
+Victor: It could be interesting to be able to show all the existing annotation ranges in the surface.
 
 
 ## Register a Tool/UI
 
 Victor: We need a way to be able to add GUI tools to interact with the surface from Text.
-Michael: Not sure if I'm getting this right, but 
+Michael: Not sure if I'm getting this right, but the surface shouldn't know anything about the GUI tool that uses it. I guess a one-way dependency is what we want here. Let's discuss this in chat. :)
 
 
 ## Keyboard shortcuts
@@ -152,8 +166,7 @@ Michael: Not sure if I'm getting this right, but
 Victor: We should probably manage keyboard shortcuts from the Surface and use CM keymaps.
 
 
-
 # Contributors
 
-- Victor Saiz ([vectorsize](http://github.com/vectorsize))
-- Michael Aufreiter ([michael](http://github.com/michael))
+-  [Victor Saiz](http://github.com/vectorsize)
+-  [Michael Aufreiter](http://github.com/michael)

@@ -3,13 +3,12 @@
 Surface is intended to be an extensible low-level interface for rich text editing. It doesn't introduce any UI components, but an API for managing user-defined text annotations. For an implementation of a ritch text editor and several examples please refer to [Substance Text](https://github.com/substance/text).
 
 
-## API (in-progress)
+## API (work-in-progress)
 
-### Initialization (not sure on that)
-
+### Create a new surface
 
 ```js
-var proper = new Proper({
+var surface = new Surface({
   el: '#content'
 });
 ```
@@ -27,10 +26,10 @@ var op = {
 }
 ```
 
-Applying it looks like so:
+Applying operations to the surface looks like so:
 
 ```js
-proper.execute(op);
+surface.apply(op);
 ```
 
 Transforming text in such a way is called [Operational Transformation](http://javascript-operational-transformation.readthedocs.org/en/latest/ot-for-javascript.html#getting-started).
@@ -38,7 +37,7 @@ Transforming text in such a way is called [Operational Transformation](http://ja
 Hooking into operations: (as they may be triggered by the user)
 
 ```js
-proper.on('operation', function(operation) {
+surface.on('operation', function(operation) {
   // do something
 });
 ```
@@ -48,9 +47,10 @@ proper.on('operation', function(operation) {
 
 **Adding an annotation**
 
+It uses the current selection, or throws an error if there
+
 ```js
-// Add annotation (uses the current selection)
-proper.execute({
+surface.apply({
   "command": "annotation:insert",
   "id": "/comment/x", // optional
   "type": "comment",
@@ -66,7 +66,7 @@ proper.execute({
 
 ```js
 // Accesss annotations
-proper.annotations(); 
+surface.annotations(); 
 // => {
   "/comment/x": {...},
   "/em/foo": {...},
@@ -89,13 +89,13 @@ A selection object looks like so:
 Get the current selection like so:
 
 ```js
-proper.selection();
+surface.selection();
 ```
 
 Modify the selection programmatically:
 
 ```js
-proper.execute({
+surface.apply({
   "command": "selection:update",
   "start": 40,
   "end": 67
@@ -120,15 +120,40 @@ proper.$('a.em').click(function() {
 });
 ```
 
-## Changelog
 
-**0.1.0**
+# Designated Discussion Area
 
-Initial Version.
+We're at a very early state. We're going to maintain a list of thoughts about funcationality right here in the README. Just add/remove sections and put your name in front of your text, so we can do sort of an open discussion here.
 
 
-## Contributors
+## Matching annotations
 
-- Victor Saiz ([vectorsize](http://github.com/vectorsize)) working on 0.5.0
-- Tim Baumann ([timjb](http://github.com/timjb)) implementation of 0.3.0
-- Michael Aufreiter ([michael](http://github.com/michael)) initial version
+Victor: On user type or select, detects if we are within the range of an existing annotation (could visually mark the annotation range to signal there's an existing annotation where we stand). Then when we match the whole range it should broadcast the match to the GUI registered tools.
+
+
+## Updating annotations
+
+Victor: When you are editing content, and you type within an existing annotation we need to update the annotation ranges, also when you delete characters. For that we need to somehow track the first word and the last word of an annotation (using CM links?). How would we address then if the last or first word is deleted?
+
+
+## Highlight all annotations?
+
+It could be interesting to be able to show all the existing annotation ranges in the surface.
+
+
+## Register a Tool/UI
+
+Victor: We need a way to be able to add GUI tools to interact with the surface from Text.
+Michael: Not sure if I'm getting this right, but 
+
+
+## Keyboard shortcuts
+
+Victor: We should probably manage keyboard shortcuts from the Surface and use CM keymaps.
+
+
+
+# Contributors
+
+- Victor Saiz ([vectorsize](http://github.com/vectorsize))
+- Michael Aufreiter ([michael](http://github.com/michael))

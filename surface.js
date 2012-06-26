@@ -1,23 +1,133 @@
 //     (c) 2012 Victor Saiz, Michael Aufreiter
-//     Proper is freely distributable under the MIT license.
+//     surface is freely distributable under the MIT license.
 //     For all details and documentation:
-//     http://github.com/substance/proper
+//     http://github.com/surface/surface
 
 // Goals:
-//
-// * Provides an API for ritch text editors like Substance Text
-// * The output is plain.
-// * Implements Tim Baumann (timjb)'s Operational Transform library to communicate with Composer
 
 (function(){
 
-  // Proper
-  // ------
 
-  this.Proper = function(options){
+  // Backbone.Events
+  // -----------------
+
+  // Regular expression used to split event strings
+  var eventSplitter = /\s+/;
+  // Create a local reference to slice/splice.
+  var slice = Array.prototype.slice;
+  var splice = Array.prototype.splice;
+
+  // A module that can be mixed in to *any object* in order to provide it with
+  // custom events. You may bind with `on` or remove with `off` callback functions
+  // to an event; trigger`-ing an event fires all callbacks in succession.
+  //
+  //     var object = {};
+  //     _.extend(object, Backbone.Events);
+  //     object.on('expand', function(){ alert('expanded'); });
+  //     object.trigger('expand');
+  //
+    _.Events = window.Backbone ? Backbone.Events : {
+
+    // Bind one or more space separated events, `events`, to a `callback`
+    // function. Passing `"all"` will bind the callback to all events fired.
+    on: function(events, callback, context) {
+
+      var calls, event, node, tail, list;
+      if (!callback) return this;
+      events = events.split(eventSplitter);
+      calls = this._callbacks || (this._callbacks = {});
+
+      // Create an immutable callback list, allowing traversal during
+      // modification.  The tail is an empty object that will always be used
+      // as the next node.
+      while (event = events.shift()) {
+        list = calls[event];
+        node = list ? list.tail : {};
+        node.next = tail = {};
+        node.context = context;
+        node.callback = callback;
+        calls[event] = {tail: tail, next: list ? list.next : node};
+      }
+
+      return this;
+    },
+
+    // Remove one or many callbacks. If `context` is null, removes all callbacks
+    // with that function. If `callback` is null, removes all callbacks for the
+    // event. If `events` is null, removes all bound callbacks for all events.
+    off: function(events, callback, context) {
+      var event, calls, node, tail, cb, ctx;
+
+      // No events, or removing *all* events.
+      if (!(calls = this._callbacks)) return;
+      if (!(events || callback || context)) {
+        delete this._callbacks;
+        return this;
+      }
+
+      // Loop through the listed events and contexts, splicing them out of the
+      // linked list of callbacks if appropriate.
+      events = events ? events.split(eventSplitter) : _.keys(calls);
+      while (event = events.shift()) {
+        node = calls[event];
+        delete calls[event];
+        if (!node || !(callback || context)) continue;
+        // Create a new list, omitting the indicated callbacks.
+        tail = node.tail;
+        while ((node = node.next) !== tail) {
+          cb = node.callback;
+          ctx = node.context;
+          if ((callback && cb !== callback) || (context && ctx !== context)) {
+            this.on(event, cb, ctx);
+          }
+        }
+      }
+
+      return this;
+    },
+
+    // Trigger one or many events, firing all bound callbacks. Callbacks are
+    // passed the same arguments as `trigger` is, apart from the event name
+    // (unless you're listening on `"all"`, which will cause your callback to
+    // receive the true name of the event as the first argument).
+    trigger: function(events) {
+      var event, node, calls, tail, args, all, rest;
+      if (!(calls = this._callbacks)) return this;
+      all = calls.all;
+      events = events.split(eventSplitter);
+      rest = slice.call(arguments, 1);
+
+      // For each event, walk through the linked list of callbacks twice,
+      // first to trigger the event, then to trigger any `"all"` callbacks.
+      while (event = events.shift()) {
+        if (node = calls[event]) {
+          tail = node.tail;
+          while ((node = node.next) !== tail) {
+            node.callback.apply(node.context || this, rest);
+          }
+        }
+        if (node = all) {
+          tail = node.tail;
+          args = [event].concat(rest);
+          while ((node = node.next) !== tail) {
+            node.callback.apply(node.context || this, args);
+          }
+        }
+      }
+
+      return this;
+    }
+
+  };
+
+  // surface
+  // ---------
+
+  this.Surface = function(options){
 
     var range
-    ,   annotationList = [];
+    ,   annotationList = []
+    ,   events = _.extend({}, _.Events);
 
     // Init codeMirror
     var cm = CodeMirror.fromTextArea($(options.el)[0], options);
@@ -38,66 +148,9 @@
 
         range = {'from':from, 'to':to, 'str': str};
 
-        // When we have at least one character we show the tools
-        // if(cm.getSelection().length < 2){
-        //   var node = $(tools)[0];
-        //   cm.addWidget(cm.getCursor(false), node, true);
-        // }
-
-        findMatching();
-      }else{
-        // no chars selected we remove the tools
+        events.trigger('selection:change', selection());
       }
     });
-
-    /*
-      Proposed OT implementation from the docs
-
-      var client = new ot.Client(0); // the client joins at revision 0
-
-      client.applyOperation = function (operation?) {
-        // apply the operation to the editor, e.g.
-        // var operation = new ot.Operation(0)
-        // .retain(6)
-        // .delete(" ipsum")
-        // .retain(15);
-        // operation.applyToCodeMirror(cm);
-      };
-
-      client.sendOperation = function (operation) {
-        // send the operation to the server, e.g. with ajax:
-        $.ajax({
-          url: '/operations',
-          type: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify(operation)
-        });
-      };
-
-      function onUserChange (change) {
-        var operation = client.createOperation(); // has the right revision number
-        // initialize operation here with for example operation.fromCodeMirrorChange
-        client.applyClient(operation);
-      }
-
-      function onReceiveOperation (json) {
-        var operation = ot.Operation.fromJSON(JSON.parse(json));
-        client.applyServer(operation);
-      }
-
-      cm.setOption('onChange', function(cm){
-            var operation = new ot.Operation(n++).fromCodeMirrorChange(change, oldValue);
-            // do something with the operation here, like logging it
-            // or sending it to the server
-            oldValue = cm.getValue();
-      });
-    */
-
-    // cm.setOption('onFocus', function(e){
-    // });
-    
-    // cm.setOption('onBlur', function(e){
-    // });
 
     // Resets the cursor selection to the actual range
     function restetCursor(range){
@@ -138,10 +191,12 @@
     
     // Returns the current selection
     function selection(){
-      range = trim(range);
-      var start = toOffset(range.from);
-      var end = toOffset(range.to);
-      return {'start': start, 'end': end};
+      if(undefined != range){
+        range = trim(range);
+        var start = toOffset(range.from);
+        var end = toOffset(range.to);
+        return {'start': start, 'end': end};
+      }
     }
 
     // Adds annotation (uses the current selection)
@@ -150,27 +205,22 @@
       if(cm.getSelection().length > 0){
         note.pos = selection();
         //autogenerated id based on the type and the ofsset position string
-        note.id = note.type + '/' + note.pos.start + '' + note.pos.end;
-        restetCursor(range);
+        note.id = note.type + '-' + note.pos.start + '' + note.pos.end;
 
-        // Fast marking techinque
-        $('.' + note.type).addClass('selected');
         annotationList.push(note);
+        restetCursor(range);
+        events.trigger('annotation:change');
       }
     }
 
-    // Finds matching annotations for the selected range
-    function findMatching(){
-      var start = toOffset(range.from);
-      var end = toOffset(range.to);
-      var id = 'comment/' + start + '' + end;
-      var found = _.find(annotationList, function(ann){ return ann.id == id; });
-
-      if(typeof found !== 'undefined'){
-        // Fast marking techinque
-        $('#' + found.type).addClass('selected');
+    // Returns mathcing annotations if there are
+    function annotations(sel){
+      if(undefined != sel){
+        return _.filter(annotationList , function(ann){
+          return ann.pos.start == sel.start && ann.pos.end == sel.end;
+        });
       }else{
-        $('.command').removeClass('selected');
+        return annotationList;
       }
     }
 
@@ -178,7 +228,10 @@
     // -----------------
     
     return {
-      annotations: function(){ return annotationList; },
+      on:    function () { events.on.apply(events, arguments); },
+      off:  function () { events.off.apply(events, arguments); },
+      trigger: function () { events.trigger.apply(events, arguments); },
+      annotations: annotations,
       selection: selection,
       annotate: annotate
     };

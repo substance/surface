@@ -170,12 +170,13 @@ Michael: How could a future OT interface look like?
 
 ## Matching annotations
 
-- Victor: On user type or select, detects if we are within the range of an existing annotation (could visually mark the annotation range to signal there's an existing annotation where we stand). Then when we match the whole range it should broadcast the match to the GUI registered tools.
+- Victor: On user type or select, detects if we are within the range of an existing annotation (could visually mark the annotation range to signal there's an existing annotation where we stand).
 
 
 ## Updating annotations
 
 - Victor: When you are editing content, and you type within an existing annotation we need to update the annotation ranges, also when you delete characters. For that we need to somehow track the first word and the last word of an annotation (using CM links?). How would we address then if the last or first word is deleted?
+- Victor: Should we delte annotations when clicking again in the toolbox (ie. em tool) but that is not ideal for other types of annotations or should we have a delete annotation that works consistently on each scenario? 
 
 
 ## Highlight all annotations?

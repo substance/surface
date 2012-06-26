@@ -5,6 +5,9 @@
 
 // Goals:
 
+// TODO: delete annotations
+// TODO: create tests
+
 (function(){
 
 

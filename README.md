@@ -136,6 +136,24 @@ You can style those user defined annotations by using this class convention.
 
 You should be aware there's no magic involved. You have full control about styling here. Surface just sets the right class, based on the annotation type.
 
+### Listening for state changes
+
+Sometimes you may want to listen for state changes within the Surface instance, and update the UI accordingly. E.g. when the user changes the selection, and it overlaps with an `em` annotation you want to add a `.active` class to your button `a.em`.
+
+
+```js
+surface.on('selection:change', function(sel) {
+  // Returns all annotations matching that selection
+  var annotations = surface.annotations(sel);
+  
+  // Update the UI
+  $('a.toggle-annotation').removeClass('active')
+  annotations.each(function(annotation) {
+    $('a.toggle-annotation.'+annotation.type).addClass('active');
+  });
+});
+```
+
 
 # Brainstorming Area
 
@@ -163,12 +181,6 @@ Michael: How could a future OT interface look like?
 ## Highlight all annotations?
 
 - Victor: It could be interesting to be able to show all the existing annotation ranges in the surface.
-
-
-## Register a Tool/UI
-
-- Victor: We need a way to be able to add GUI tools to interact with the surface from Text.
-Michael: Not sure if I'm getting this right, but the surface shouldn't know anything about the GUI tool that uses it. I guess a one-way dependency is what we want here. Let's discuss this in chat. :)
 
 
 ## Keyboard shortcuts

@@ -149,6 +149,8 @@
         range = {'from':from, 'to':to, 'str': str};
 
         events.trigger('selection:change', selection());
+      }else{
+        events.trigger('selection:click');
       }
     });
 
@@ -209,7 +211,7 @@
 
         annotationList.push(note);
         restetCursor(range);
-        events.trigger('annotation:change');
+        events.trigger('annotation:change', note.type);
       }
     }
 

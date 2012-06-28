@@ -1,5 +1,3 @@
-This document is best viewed in [Prose](http://prose.io/#substance/surface/master/README.md).
-
 # Substance Surface
 
 Surface is intended to be an extensible low-level interface for rich text editing. It doesn't introduce any UI components, but an API for managing user-defined text annotations. For an implementation of a ritch text editor and several examples please refer to [Substance Text](https://github.com/substance/text).

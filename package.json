@@ -1,0 +1,29 @@
+{
+  "name": "surface"
+, "version": "0.0.0alpha"
+, "description": "An extensible low-level interface for rich text editing, a building block for web-based text editors"
+, "main": "surface.min.js"
+, "directories": {
+    "doc": "docs"
+  , "test": "test"
+  }
+, "scripts": {}
+, "repository": {
+    "type": "git"
+  , "url": "git://github.com/substance/surface.git"
+  }
+, "keywords": [
+    "editor"
+  , "web"
+  , "editor"
+  , "text"
+  , "editor"
+  ]
+, "dependencies": {}
+, "devDependencies": {
+    "grunt": "0.3.*"
+  , "mocha": "1.2.*"
+  }
+  "author": "Navaru"
+, "license": "MIT"
+}

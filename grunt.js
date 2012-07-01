@@ -7,30 +7,36 @@ module.exports = function(grunt) {
   grunt.initConfig({
     pkg: '<json:package.json>'
   , meta: {
-    banner: '/*! <%= pkg.title || pkg.name %> - v<%= pkg.version %> - ' +
-        '<%= grunt.template.today("yyyy-mm-dd") %>\n' +
-        '<%= pkg.homepage ? "* " + pkg.homepage + "\n" : "" %>' +
-        '* Copyright (c) <%= grunt.template.today("yyyy") %> <%= pkg.author.name %>;' +
-        ' Licensed <%= _.pluck(pkg.licenses, "type").join(", ") %> */'
-    }
-  , lint: {
-      files: ['grunt.js', 'lib/**/*.js', 'test/**/*.js']
+      banner: '// v<%= pkg.version %> - <%= grunt.template.today("hh:mm dd/mm/yy") %>'
+    , wrapperStart: ';(function (global) {'
+    , wrapperEnd: '} (this));'
     }
   , concat: {
       dist: {
-        src: ['<banner:meta.banner>', '<file_strip_banner:lib/<%= pkg.name %>.js>']
-      , dest: 'dist/<%= pkg.name %>.js'
+        src: [
+          '<banner:meta.banner>'
+        , '<banner:meta.wrapperStart>'
+        , 'lib/dataset.js'
+        , 'lib/input.js'
+        , 'lib/editor.js'
+        , '<banner:meta.wrapperEnd>'
+        ]
+      , dest: '<%= pkg.name %>.js'
       }
     }
   , min: {
       dist: {
         src: ['<banner:meta.banner>', '<config:concat.dist.dest>']
-      , dest: 'dist/<%= pkg.name %>.min.js'
+      , dest: '<%= pkg.name %>.min.js'
       }
     }
   , watch: {
-      files: '<config:lint.files>'
-    , tasks: 'lint'
+      files: ['lib/**/*.js']
+    , tasks: 'lint:lib concat:dist'
+    }
+  , lint: {
+      lib: ['lib/**/*.js']
+    , dist: ['<config:concat.dist.dest>']
     }
   , jshint: {
       options: {
@@ -61,6 +67,6 @@ module.exports = function(grunt) {
 // ----------------------------------------------------------------------------
 //  Tasks and Helpers
 // ----------------------------------------------------------------------------
-  grunt.registerTask('default', 'lint concat min');
+  grunt.registerTask('default', 'concat lint:dist min');
 
 };

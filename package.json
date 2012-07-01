@@ -24,6 +24,6 @@
     "grunt": "0.3.*"
   , "mocha": "1.2.*"
   }
-  "author": "Navaru"
+, "author": "Navaru"
 , "license": "MIT"
 }

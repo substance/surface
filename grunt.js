@@ -16,8 +16,15 @@ module.exports = function(grunt) {
         src: [
           '<banner:meta.banner>'
         , '<banner:meta.wrapperStart>'
+        , 'lib/utils.js'
+        , 'lib/kbd.js'
+        , 'lib/kbdinput.js'
+        , 'lib/mouse.js'
+        , 'lib/caret.js'
+        , 'lib/pixel.js'
         , 'lib/dataset.js'
-        , 'lib/input.js'
+        , 'lib/history.js'
+        , 'lib/commands.js'
         , 'lib/editor.js'
         , '<banner:meta.wrapperEnd>'
         ]
@@ -32,16 +39,14 @@ module.exports = function(grunt) {
     }
   , watch: {
       files: ['lib/**/*.js']
-    , tasks: 'lint:lib concat:dist'
+    , tasks: 'concat:dist lint:dist'
     }
   , lint: {
-      lib: ['lib/**/*.js']
-    , dist: ['<config:concat.dist.dest>']
+      dist: ['<config:concat.dist.dest>']
     }
   , jshint: {
       options: {
-        curly: true
-      , eqeqeq: true
+        eqeqeq: true
       , immed: true
       , latedef: true
       , newcap: true
@@ -51,7 +56,8 @@ module.exports = function(grunt) {
       , boss: true
       , eqnull: true
       , browser: true
-      , laxcomma: true
+      , laxcomma: true // comma first props
+      , asi: true // ignore semicolons
       }
     , globals: {}
     }

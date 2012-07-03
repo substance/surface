@@ -1,6 +1,6 @@
 ## HTML semantics and content organization
 
-According the current specs, this is the way we should write an article on a web page:
+According to the current specs, this is the way we should write an article on a web page:
 
 ```html
 <article>
@@ -17,7 +17,7 @@ According the current specs, this is the way we should write an article on a web
     <p>This section has a paragraph below</p>
     <p>Also has a paragraph above this one</p>
     <h2>Along the lines comes a subtitle of this section</h2>
-    <p>Let's put a paragraph here so it won't be lonely</p>
+    <p>Let's put a paragraph here so it won't feel lonely</p>
   </section>
 </article>
 ```

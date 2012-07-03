@@ -1,4 +1,4 @@
-// v0.0.0alpha - 11:07 03/07/12
+// v0.0.0alpha - 12:07 03/07/12
 
 ;(function (global) {
 
@@ -212,8 +212,8 @@ Caret.prototype.setHeight = function (size) {
   this.$el.style.height = size + "px" || "1em"
 }
 Caret.prototype.offset = function (x, y) {
-  this.$el.style.top = y + "px"
   this.$el.style.left = x + "px"
+  this.$el.style.top = y + "px"
 }
 Caret.prototype.hide = function () {
   this.$el.style.visibility = "hidden"
@@ -282,39 +282,6 @@ Caret.prototype.show = function () {
   History.prototype.clear = function () {
     
   }
-// TODO: think how to hold state on visual movement and data manipulation
-
-
-// TODO: think how to handle operations
-// One operation = stack of commands?
-
-
-// TODO: write a list of commands that need to be implemented
-
-// Caret movement:
-// goCharLeft
-// goCharRight
-// goLineUp
-// goLineDown
-// goLineStart
-// goLineEnd
-// goDocStart
-// goDocEnd
-// goWordLeft
-// goWordRight
-
-// Data manipulation commands:
-// delChar
-// delWordLeft
-// delWordRight
-// delLine
-
-// Selection:
-// selectWord
-// selectAll
-// selectRange
-
-
 
 function Surface ($parent) {
   var $el = this.$el = $doc.createElement('div')

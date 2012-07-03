@@ -4,7 +4,9 @@ Surface's main dependency is CodeMirror2, and because is so tightly coupled we e
 
 ## Development notes
 
-**grunt.js** is setup to watch for changes `surface/lib/*.js` and automatically concatenate, lint files from  to `surface.js`.
+Throughout the project DOM elements should be prefixed with `$` to easily differentiate JS variables from DOM elements.
+
+**grunt.js** is setup to watch for changes in `lib/*.js` and automatically concatenate and lint files to `surface.js`.
 
 ```bash
 surface$ grunt watch
@@ -14,6 +16,7 @@ Waiting...
 ```
 
 ## The API will constantly change - not stable
+
 
 ### Caret
 ```js
@@ -25,20 +28,35 @@ caret.hide()
 caret.height([size])
 ```
 
+
 ### Keyboard Input
 
-Still reading the W3 draft … and thinking how to easily implement the modifiers (Shift, Ctrl, etc) binding order; so when binding `Ctrl-Shift-A: 'selectAll'` , a `Shift-Ctrl-A` will do the same thing. 
+Still reading the W3 draft … and thinking how to easily implement the modifiers (Shift, Ctrl, etc) binding order; so when binding `Ctrl-Shift-A: 'selectAll'`, a `Shift-Ctrl-A` will do the same thing. 
+
 
 ### Commands
 
 **TODO**
 
-+ how to hold state on visual movement and data manipulation
-+ how to handle operations - one operation = stack of commands?
++ how to manage commands wisely? when extending surface how to add commands?
++ how to hold state on visual movement (caret, select) and data manipulation?
++ how to handle operations -- a operation == a stack of commands?
++ should a command be able to extend another? usecases?
+
+```js
+// command object
+{
+  name: 'goCharLeft'
+, exec: function () {
+    // le code
+  }
+, ...
+}
+```
 
 #### Write a list of commands that need to be implemented:
 
-#### Caret movement:
+##### Caret movement:
 + `goCharLeft`
 + `goCharRight`
 + `goLineUp`
@@ -50,16 +68,17 @@ Still reading the W3 draft … and thinking how to easily implement the modifier
 + `goWordLeft`
 + `goWordRight`
 
-#### Data manipulation commands:
-+ `delChar`
+##### Data manipulation commands:
++ `insChar` - insert string/char at position (line, column)
++ `delChar` - delete from to (range)
 + `delWordLeft`
 + `delWordRight`
 + `delLine`
++ `delAll`
 
-#### Selection:
-+ `selectWord`
-+ `selectAll`
+##### Selection:
 + `selectRange`
++ `selectAll`
 
 
 ### Pixel - maybe should be named simply `dom`?

@@ -1,4 +1,4 @@
-// v0.0.0alpha - 12:07 03/07/12
+// v0.0.0alpha - 11:07 04/07/12
 
 ;(function (global) {
 
@@ -286,18 +286,25 @@ Caret.prototype.show = function () {
 function Surface ($parent) {
   var $el = this.$el = $doc.createElement('div')
   $el.className = "surface"
-  $el.innerHTML = "<div class=ss-content></div>"
+  $el.innerHTML = "<div><div class=ss-content></div></div>"
 
-  this.$content = $el.firstChild
+  // a <div> wrapper is added so we don't care
+  // if we add padding to the editor or not
+  this.$wrap= $el.firstChild
+
+  // this holds the rendered content
+  this.$content = this.$wrap.firstChild
+
+  // add caret
+  this.caret = new Caret(this.$wrap)
+  // add text input
+  this.$input = kbdInputInit(this.$wrap)
+
 
   // add some key events for testing
   this.on('keydown', onKeyDown)
   this.on('keyup', onKeyUp)
 
-  // add caret
-  this.caret = new Caret($el)
-  // add text input
-  this.$input = kbdInputInit($el)
 
   // render el
   $parent.appendChild($el)

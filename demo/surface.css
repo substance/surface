@@ -1,7 +1,7 @@
 .surface,
+.surface > div,
 .ss-kbd-input,
 .ss-caret,
-.ss-content > p,
 .ss-content {
   margin: 0;
   padding: 0;
@@ -9,37 +9,41 @@
 
 .surface {
   border: 1px solid #e2e2e2;
+  cursor: text;
   font-style: normal;
   font-family: "Verdana";
   font-weight: normal;
   font-size: 14px;
-  vertical-align: baseline;
   padding: .5em;
   position: relative;
+  vertical-align: baseline;
   box-sizing: border-box;
   -mox-box-sizing: border-box;
   -webkit-box-sizing: border-box;
 }
+.surface > div {
+  position: relative;
+}
 
-.ss-kbd-input,
-.ss-caret {
-  position: absolute;
+.ss-content {
+  min-height: 1em;
 }
 
 .ss-kbd-input {
+  border: 1px dashed #afafaf;
   width: 100%;
   min-height: 1em;
+  position: absolute;
   top: -60px;
-  border: 1px dashed #afafaf;
 }
-
 
 .ss-caret {
   border-left: 1px solid #0297d6;
-  vertical-align: middle;
   height: 1.15em;
+  position: absolute;
   top: 0;
   left: 0;
+  vertical-align: middle;
 
 /* Caret blinking using CSS3 so probably won't stick */
   -webkit-animation-name: blinker;

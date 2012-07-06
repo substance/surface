@@ -190,4 +190,5 @@ Michael: How could a future OT interface look like?
 # Contributors
 
 -  [Victor Saiz](http://github.com/vectorsize)
+-  [Eugen Tudorancea](http://github.com/navaru)
 -  [Michael Aufreiter](http://github.com/michael)

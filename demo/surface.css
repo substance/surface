@@ -2,7 +2,8 @@
 .surface > div,
 .ss-kbd-input,
 .ss-caret,
-.ss-content {
+.ss-content
+.ss-measure {
   margin: 0;
   padding: 0;
 }
@@ -35,6 +36,7 @@
   min-height: 1em;
   position: absolute;
   top: -60px;
+  outline: none;
 }
 
 .ss-caret {
@@ -48,10 +50,17 @@
 /* Caret blinking using CSS3 so probably won't stick */
   -webkit-animation-name: blinker;
   -webkit-animation-iteration-count: infinite;
-  -webkit-animation-timing-function: ease-in-out(.5,0,.5,0);
-  -webkit-animation-duration: .8s;
+  -webkit-animation-timing-function: ease-in-out(.5,1,.5,1);
+  -webkit-animation-duration: .7s;
 }
 @-webkit-keyframes blinker {  
   from { opacity: 1.0; }
-  to { opacity: .2; }
+  to { opacity: .1; }
+}
+
+.ss-measure {
+  border: 1px dashed #cfcfcf;
+  position: absolute;
+  top: -90px;
+  outline: none;
 }

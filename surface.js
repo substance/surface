@@ -1,4 +1,4 @@
-// v0.0.0alpha - 11:07 04/07/12
+// v0.0.0alpha - 04:07 04/07/12
 
 ;(function (global) {
 
@@ -191,6 +191,7 @@ function bindKeyMap (keys, map) {
 function kbdInputInit ($parent) {
   var $el = $doc.createElement('div')
   $el.className = "ss-kbd-input"
+  $el.contentEditable = true
 
   $parent.appendChild($el)
 

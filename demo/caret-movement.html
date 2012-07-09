@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />  
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="viewport" content="initial-scale=1, minimum-scale=1, width=device-width" />
+
+  <title>Surface - experimenting with content</title>
+
+  <link rel="stylesheet" href="surface.css">
+</head>
+<style>
+  html, body, #viewport {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background: #f9f7f5;
+  }
+  #viewport {
+    width: 70%;
+    margin: 0 auto;
+    padding-top: 100px;
+    border: 1px dashed #e9e9e9;
+  }
+</style>
+<body>
+  <div id="viewport">
+    <div class="surface">
+      <div>
+        <div class="ss-measure"></div>
+        <div class="ss-content">
+          <div class="ss-line"></div>
+        </div>        
+        <div class="ss-caret"></div>
+        <div class="ss-kbd-input"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+var $editor = document.querySelector('.surface')
+  , $caret = document.querySelector('.ss-caret')
+  , $line = document.querySelector('.ss-line')
+  , $dummy = document.querySelector('.ss-measure')
+
+$line.innerHTML = "Design is <strong style='font-size:1.2em'>useful</strong> and <em>significant</em> !"
+
+document.addEventListener('keydown', function (e) {
+  switch (e.keyCode) {
+    case 37: goLeft(); e.preventDefault(); break;
+    case 38: goUp(); e.preventDefault(); break;
+    case 39: goRight(); e.preventDefault(); break;
+    case 40: goDown(); e.preventDefault(); break;
+  }
+})
+function goRight () { moveH(1) }
+function goLeft () { moveH(-1) }
+function goUp () { moveH(5) }
+function goDown () { moveH(-5) }
+
+// Current line cache
+var cl = {
+  text: $line.innerText
+, length: $line.innerText.length
+, height: $line.clientHeight
+, n: 1
+, $el: $line
+}
+// Caret position cache
+var cc = { 
+  l: 1
+, ch: 0
+// offset position
+, x: 0
+, y: 0
+}
+
+function setCaretPos (l, ch) { cc.l = l; cc.ch = ch }
+function setCaretHeight (h) { $caret.style.height = h +"px" }
+function setCaretOffset (x, y) {
+  $caret.style.left = (cc.x = x) +"px"
+  $caret.style.top = (cc.y = y - 2) +"px"
+}
+function getStringSize (str) {
+  $dummy.innerHTML = str
+  return {
+    w: $dummy.clientWidth
+  , h: $dummy.clientHeight
+  }
+}
+function moveH (len) {
+  if ((cc.ch === 0 && len < 0) || (cl.length === cc.ch && len > 0)) return
+
+  var html = chopNode(cl.$el, (len > 0 ? cc.ch : cc.ch + len), Math.abs(len))
+  var m = getStringSize(html)
+
+
+  setCaretPos(cl.n, cc.ch + len)
+  setCaretOffset(cc.x + (len < 0 ? -m.w : m.w), cl.height - m.h)
+  setCaretHeight(m.h)
+}
+function chopNode ($node, from, n) {
+  var html = ""
+    , nodes = $node.childNodes
+    , node
+    , nodeLength
+    , isTextNode
+    , done = false
+    , i = 0
+
+  while (i <= nodes.length) {
+    node = nodes[i++]
+    isTextNode = node.nodeType === 3
+    nodeLength = node[isTextNode ? 'nodeValue' : 'innerText'].length
+
+    if (from >= nodeLength) {
+      from -= nodeLength
+      continue
+    }
+
+    if (n > nodeLength - from) n -= nodeLength - from
+    else done = true
+
+    if (isTextNode)
+      html += node.nodeValue.substr(from, (done ? n : nodeLength - from)).replace(/\s/g, "&nbsp;")
+    else {
+      $dummy.innerHTML = node.outerHTML
+      $dummy.firstChild.innerText = node.innerText.substr(from, (done ? n : nodeLength - from))
+      html += $dummy.innerHTML
+    }
+
+    if (done) return html
+    else from = 0
+  }
+}
+function chopNodeX ($node, px) {
+  var html = ""
+    , nodes = $node.childNodes
+    , node
+    , nodeWidth
+    , isTextNode
+    , done = false
+    , i = 0
+
+  while (i <= nodes.length) {
+    node = nodes[i++]
+    isTextNode = node.nodeType === 3
+    
+    if (isTextNode) {
+      $dummy.innerHTML = node.nodeValue.replace(/\s/g, "&nbsp;")
+      nodeWidth = $dummy.clientWidth
+    }
+    else nodeWidth = node.clientWidth
+
+    if (px > nodeWidth) {
+      px -= nodeWidth
+      continue
+    }
+
+  }
+}
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+

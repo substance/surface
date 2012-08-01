@@ -1,0 +1,150 @@
+/* From Text */
+
+body{
+  margin: 0;
+  padding: 0;
+  background-color: #eef2e6;
+	font-family: "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
+/*we force the scroll to avoid glitches in cm for now*/
+	 overflow-y: scroll;
+}
+
+.main{
+	padding-bottom: 60px;
+}
+
+.clear{
+	clear: both;
+}
+
+.hidden{
+	display: none;
+}
+
+ul{
+  margin: 0;
+  padding: 0;
+}
+
+li{
+  list-style: none;
+}
+
+a{
+  text-decoration: none;
+}
+
+header{
+  background: #4F4F4F;
+  padding: 12px;
+  border-bottom: 1px solid #3f3f3f;
+}
+
+header a:link,
+header a:visited{
+  color: #90938C;
+}
+
+header a:hover,
+header a:active{
+  color: #eef2e6;
+}
+
+section{
+	width: 75%;
+	margin-left: auto;
+	margin-right: auto;
+	margin-top: 30px;
+	padding: 30px 30px 30px 20px;
+	box-shadow: 0 1px 0 rgba(255, 255, 255, 0),0 0 10px rgba(0, 0, 0, 0.1);
+	border: 1px solid #bfc3ba;
+	border-radius:1px;
+}
+
+section.doc{
+	background-color: #fff;
+	padding: 50px;
+}
+
+
+/*endtext*/
+
+
+
+.surface {
+	cursor: text;
+	width: 90%;
+	float: left;
+	padding: 20px;
+	white-space:'pre';
+	font: 15px Georgia, "Times New Roman", Times, serif;
+	border-radius: 3px;
+	border-style: solid;
+	border-width: 1px;
+	border-color: transparent;	
+}
+
+.surface:focus {
+    outline:0;
+    outline:none;
+	border: 1px dashed #eef2e6;
+}
+
+::selection {
+	background-color: transparent;
+}
+
+.selected{
+	background-color: #A6FFFB;
+}
+.surface span{
+	padding:0;
+	margin:0;
+	letter-spacing:0;
+	word-spacing:0;
+	border-right:1px solid transparent;
+	float: left;
+}
+
+.surface:focus .caret:not(.placeholder){
+	border-right-color: black;
+}
+
+.surface .placeholder.placeholder.empty{
+	color: #eef2e6;
+}
+
+.placeholder:not(.empty){
+	color: transparent;
+}
+.placeholder.caret:not(.empty){
+	border-left-width: 1px;
+	border-left-style: solid;
+	border-left-color: black;
+}
+
+.caret.newline+span{
+	border-left: 1px solid black;
+	text-transform: uppercase;
+}
+
+.invisible{
+	color: rgba(255,255,255,0.5);
+}
+div.line{
+	background-color: #edffff;
+	margin-bottom: 1px;
+	float: left;
+}
+
+#debug{
+	font: 11px "Courier New", Courier, mono;
+	unicode-bidi: embed;
+	text-align: left;
+	background-color: #ecfeeb;
+	padding: 10px 20px 10px 10px;
+	display: none;
+	clear: left;
+	height: 500px;
+	overflow: auto;
+}

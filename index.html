@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+<Meta http-equiv = "expires" content = "0">
+<title>Substance/Surface</title>
+<meta charset="utf-8">
+<link rel="stylesheet" href="stylesheets/surface.css">
+
+<!-- Libraries -->
+  <link rel="stylesheet" href="stylesheets/surface.css">
+  <script src="lib/jquery.js"></script>
+  <script src="lib/underscore-min.js"></script>
+  <script src="lib/Georgia-15px.js"></script>
+  <script src="lib/KeyEvents.js"></script>
+
+<!-- Templates -->
+  <script name="content" type="text/plain">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</script>
+  <script type="text/plain" name="empty-placeholder">
+    <span class="placeholder empty">TypeMe &#9829;</span>
+  </script>
+
+<!-- Source -->
+  <script src="surface.js"></script>
+
+<!-- Boot -->
+<!-- Todo: refactor based on the API -->
+  <script type="text/javascript">
+  $(function(){
+    var surface = new Surface().init();
+  });
+  </script>
+</head>
+<body>
+  <header>
+    <nav>
+      <ul>
+        <li><a title="Substance/Surface" href="http://interior.substance.io/modules/surface.html">Substance Surface</a></li>
+      </ul>
+    </nav>
+  </header>
+  <div class="main">
+    <section class="doc">
+      <div class="surface"></div>
+      <div class="clear"></div>
+    </section>
+
+    <div class="debug">
+      
+    </div>
+  </div>
+</body>
+</html>

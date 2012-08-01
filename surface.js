@@ -1,246 +1,411 @@
-//     (c) 2012 Victor Saiz, Michael Aufreiter
-//     surface is freely distributable under the MIT license.
-//     For all details and documentation:
-//     http://github.com/surface/surface
-
-// Goals:
-
-// TODO: delete annotations
-// TODO: create tests
-
-(function() {
-
-  // Backbone.Events
-  // -----------------
-
-  // Regular expression used to split event strings
-  var eventSplitter = /\s+/;
-  // Create a local reference to slice/splice.
-  var slice = Array.prototype.slice;
-  var splice = Array.prototype.splice;
-
-  // A module that can be mixed in to *any object* in order to provide it with
-  // custom events. You may bind with `on` or remove with `off` callback functions
-  // to an event; trigger`-ing an event fires all callbacks in succession.
-  //
-  //     var object = {};
-  //     _.extend(object, Backbone.Events);
-  //     object.on('expand', function(){ alert('expanded'); });
-  //     object.trigger('expand');
-  //
-    _.Events = window.Backbone ? Backbone.Events : {
-
-    // Bind one or more space separated events, `events`, to a `callback`
-    // function. Passing `"all"` will bind the callback to all events fired.
-    on: function(events, callback, context) {
-
-      var calls, event, node, tail, list;
-      if (!callback) return this;
-      events = events.split(eventSplitter);
-      calls = this._callbacks || (this._callbacks = {});
-
-      // Create an immutable callback list, allowing traversal during
-      // modification.  The tail is an empty object that will always be used
-      // as the next node.
-      while (event = events.shift()) {
-        list = calls[event];
-        node = list ? list.tail : {};
-        node.next = tail = {};
-        node.context = context;
-        node.callback = callback;
-        calls[event] = {tail: tail, next: list ? list.next : node};
-      }
-
-      return this;
-    },
-
-    // Remove one or many callbacks. If `context` is null, removes all callbacks
-    // with that function. If `callback` is null, removes all callbacks for the
-    // event. If `events` is null, removes all bound callbacks for all events.
-    off: function(events, callback, context) {
-      var event, calls, node, tail, cb, ctx;
-
-      // No events, or removing *all* events.
-      if (!(calls = this._callbacks)) return;
-      if (!(events || callback || context)) {
-        delete this._callbacks;
-        return this;
-      }
-
-      // Loop through the listed events and contexts, splicing them out of the
-      // linked list of callbacks if appropriate.
-      events = events ? events.split(eventSplitter) : _.keys(calls);
-      while (event = events.shift()) {
-        node = calls[event];
-        delete calls[event];
-        if (!node || !(callback || context)) continue;
-        // Create a new list, omitting the indicated callbacks.
-        tail = node.tail;
-        while ((node = node.next) !== tail) {
-          cb = node.callback;
-          ctx = node.context;
-          if ((callback && cb !== callback) || (context && ctx !== context)) {
-            this.on(event, cb, ctx);
-          }
-        }
-      }
-
-      return this;
-    },
-
-    // Trigger one or many events, firing all bound callbacks. Callbacks are
-    // passed the same arguments as `trigger` is, apart from the event name
-    // (unless you're listening on `"all"`, which will cause your callback to
-    // receive the true name of the event as the first argument).
-    trigger: function(events) {
-      var event, node, calls, tail, args, all, rest;
-      if (!(calls = this._callbacks)) return this;
-      all = calls.all;
-      events = events.split(eventSplitter);
-      rest = slice.call(arguments, 1);
-
-      // For each event, walk through the linked list of callbacks twice,
-      // first to trigger the event, then to trigger any `"all"` callbacks.
-      while (event = events.shift()) {
-        if (node = calls[event]) {
-          tail = node.tail;
-          while ((node = node.next) !== tail) {
-            node.callback.apply(node.context || this, rest);
-          }
-        }
-        if (node = all) {
-          tail = node.tail;
-          args = [event].concat(rest);
-          while ((node = node.next) !== tail) {
-            node.callback.apply(node.context || this, args);
-          }
-        }
-      }
-
-      return this;
-    }
-
-  };
-
-  // Substance
-  // ---------
-
-  if (!window.Substance) { var Substance = window.Substance = {}; }
+(function(w){
 
   // Surface
-  // ---------
+  // =======
 
-  Substance.Surface = function(options) {
-    var range
-    ,   annotationList = []
-    ,   events = _.extend({}, _.Events);
+  // Todo: Stick to the specified API
+  // Todo?: If previous char is a \n and current too we render a p to the next new lin
+  // Todo?: Selections
+  //    - on click we mark the beg of selection
+  //    - in release we know what we selected
+  //      - so we add a selection to the data structure as selected?
+  //      - the same method can add a specified class to the selection for the api
+  //      - we can also delete the whole selected text
 
-    // Init CodeMirror
-    var cm = CodeMirror($(options.el)[0], options);
-
-    // Override options
-    cm.setOption('lineWrapping', true);
+  this.Surface = function(options){
     
-    // CodeMirror events
-    // -----------------
+    var $surface = $('.surface')
+    ,   _caret = 0
+    ,   _lines = []
+    ,   keyEvents = new KeyEvents()
+    ,   cFont = $surface.css('font-family').split(', ')[0]
+    ,   fSize = $surface.css('font-size')
+    ,   $plh = $($('[name="empty-placeholder"]').html())
+    ,   contWidth = $surface.width()
+    ,   lineWidth = 0;
 
-    cm.setOption('onCursorActivity', function(cm){
-      // Make sure we at least have 1 character selected
-      if (cm.getSelection().length !== 0){
-        // Set the selection range
-        var from = cm.getCursor(true)
-        ,   to = cm.getCursor(false)
-        , str = cm.getSelection();
 
-        range = {'from':from, 'to':to, 'str': str};
+    // Data
+    // ----
 
-        events.trigger('selection:change', selection());
-      } else{
-        events.trigger('selection:click');
+    // Todo: reconsider the data structure and try a grid-like structure where each char has an x and y
+    // Todo: implement function selectRange
+    // Todo: implement function selectAll
+    // Todo: implement function delWordLeft () {}
+    // Todo: implement function delWordRight () {}
+    // Todo: implement function delLine () {}
+    // Todo: implement function delAll () {}
+    // Todo: check boundaries left and right when moving around
+    // Todo: search for all the blanks and newlines with underscore will return an array for quick browsing
+    // Todo: wrap methods like this: surface.apply({method: "add-annotation", "data": {"start": 10, ...}});
+
+    // Creates a new line object and
+    // returns the created line
+    function addLine(){
+      var right = null
+      , id = _.uniqueId('line-')
+      , left = null
+      , lastLine = getLine();
+
+      if(typeof lastLine !== 'undefined'){
+        lastLine.current = false;
+        lastLine.right = id;
+        left = lastLine.id;
+      }
+
+      var line = {
+            "id" : id,
+            "type" :  'line',
+            "current" :  true,
+            "left" :  left,
+            "right" :  null,
+            "chars" :  [],
+            "white" :  [],
+            "break" :  []
+          };
+      _lines.push(line);
+      return line;
+    }
+
+    // Inserts a character in the caret position
+    // Todo: implement function insChar
+    // Becomes:
+    // insert('w|c') -> inserts word|char at current caret position/line
+    function addChar(_char){
+
+      var _line = getLine()
+      ,   id = _.uniqueId('char-')
+      ,   cLine = getLine()
+      ,   offset = getCaretPos() +1
+      ,   parent = _line.id
+      ,   width = fontSizes[cFont][fSize][_char];
+
+      var ch = {
+        "id" : id,
+        "parent" :  parent,
+        "type" : 'ch',
+        "offset" :  offset,
+        "value" :  _char,
+        "width" : width
+      };
+
+      // distance to the end of the array
+      var right = (cLine.chars.length+1) - offset;
+      // begining of array to distance only
+      var pre = _.initial(cLine.chars, right);
+      // end of the array from distance
+      var post = _.rest(cLine.chars);
+
+      cLine.chars = _.union(pre, [ch], post);
+
+      rebuildIndex();
+      lineWidth += width;
+
+      // Wrap time!
+      if(lineWidth >= (contWidth / 2)){
+        // _line = addLine();
+      }
+      setCaret(+1);
+    }
+
+    // Deletes a specified object from the structure
+    // Todo: implement function delChar - delete from to (range)
+    // Becomes:
+    // function del ('w|c')  -> deletes word|char at current caret position/line
+    function del(o){
+      if(typeof o !== 'undefined'){
+        switch(o.type){
+          case 'ch':
+            var cLine = getLine();
+            cLine.chars = _.without(cLine.chars, o);
+            rebuildIndex();
+            break;
+        }
+      }     
+    }
+
+    // This currently goes trough the structure
+    // and updates the offsets
+    function rebuildIndex(){
+       _.each(_lines, function(_line){
+          _.each(_line.chars, function(_char, k){
+            _char.offset = k + 1;
+          });  
+      });  
+    }
+
+    // returns a line object
+    // if no position is specified
+    // returns the current line
+    function getLine(pos){
+      var pos = pos || false;
+      if(!pos){
+        return _.find(_lines, function(ln){
+          return ln.current === true;
+        });
+      }
+    }
+
+    // returns a char object
+    // from the specified position
+    function getChar(pos){
+      var pos = pos || getCaretPos();
+      var cLine = getLine();
+      return cLine.chars[pos];
+    }
+
+
+    // Caret
+    // -----
+
+    // Todo: implement function goLineUp
+    // Todo: implement function goLineDown
+    // Todo: implement function goLineStart
+    // Todo: implement function goLineEnd
+    // Todo: implement function goDocStart
+    // Todo: implement function goDocEnd
+    // Todo: implement function goWordLeft
+    // Todo: implement function goWordRight
+
+    // Moves the caret one character to its left
+    function goCharLeft(){
+      setCaret(-1);
+    }
+
+    // Moves the caret one character to its right
+    function goCharRight(){
+      setCaret(+1);
+    }
+
+    // Sets the caret's position to a specified offset
+    function setCaret(pos){
+      var pos = pos || 0;
+      var setTo = getCaretPos() + pos;
+      if(setTo > 0) {
+        _caret = setTo;
+      }else{
+        _caret = 0;
+      }
+    }
+
+    // this should be done by setCaret which 
+    // is now missused by others as an increment/decrement
+    function putCaret(pos){
+      _caret = pos;
+    }
+
+    // Returns current caret position
+    function getCaretPos(){
+      return _caret;
+    }
+
+
+    // Events
+    // ------
+    // Note: Based on Mochikit Key_Events
+  
+    // Targets special modifiers and special chars
+    // Note: We're storing a handled flag to work around a Safari bug: 
+    // http://bugs.webkit.org/show_bug.cgi?id=3387
+    $surface.live('keydown', function(e){
+      if (!keyEvents.handled) {
+
+        var k ={};
+        k.code = e.keyCode;
+        k.string = (keyEvents.specialKeys[k.code] || 'KEY_UNKNOWN');
+
+        var fn = keyEvents.specialKeyMap[k.string];
+        if (fn) {
+          fn();
+        }
+        switch(k.code){
+
+          // Return|Enter
+          case 13:
+            e.preventDefault();
+            break;
+
+
+          // LEFT
+          case 37:
+            goCharLeft();
+            break;
+
+          // RIGHT
+          case 39:
+            goCharRight();
+            break;
+
+          // DELETE
+          case 8:
+            e.preventDefault();
+            goCharLeft();
+            del(getChar());
+            break;
+
+          // SUPR
+          case 46:
+            del(getChar());
+            break;
+        }
+      }
+      keyEvents.handled = true;
+      render();
+    });
+
+    // Targets special chars and resets keyEvents.handled hack back to false
+    $surface.live('keyup', function(e){
+      keyEvents.handled = false; //needs to be set back to false
+      // var k ={}; k.code = e.keyCode; k.string = (keyEvents.specialKeys[k.code] || 'KEY_UNKNOWN');
+    });
+
+    // Targets all printable characters
+    // Note:
+    //  IE: does not fire keypress events for special keys
+    //  FF: sets charCode to 0, and sets the correct keyCode
+    //  Safari: sets keyCode and charCode to something stupid
+    $surface.live('keypress', function(e){
+      var k ={}
+      ,  _cLine;
+
+      k.code = 0;
+      k.string = '';
+
+      if (typeof(e.charCode) != 'undefined' &&
+          e.charCode !== 0 &&
+          !keyEvents.specialMacKeys[e.charCode]) {
+          k.code = e.charCode;
+          k.string = String.fromCharCode(k.code);
+      } else if (e.keyCode &&
+          typeof(e.charCode) == 'undefined') { // IE
+          k.code = e.keyCode;
+          k.string = String.fromCharCode(k.code);
+      }
+
+
+      if(_lines.length === 0){
+        _cLine = addLine();
+      }else{
+        _cLine = getLine();
+      }
+
+      addChar(k.string);
+      render();
+    });
+
+
+    // Render
+    // ------
+
+    // Renders the data structure into the surface
+    function render(){
+      var val
+      ,   $span
+      ,   $line = $('<div class="line"></div>');
+
+      $surface.html('');
+
+      if(_lines.length === 0){
+        $plh.removeClass('empty');
+        init();
+      }else{
+        
+        _.each(_lines, function(_line){
+          if(_line.chars.length === 0){
+            $plh.removeClass('empty');
+            init();
+          }else{
+            
+            $line.data(_line);
+
+            _.each(_line.chars, function(_char){
+              (_char.value === " ")? val = "&nbsp;": val = _char.value;
+
+              $span = $('<span>' + val + '</span>');
+              $span.data(_char);
+              $span.click(function(){
+                putCaret($(this).data().offset);
+                render();
+              });
+              $line.append($span);
+            });
+            $surface.append($line);
+          }
+
+        });
+
+      }
+      // console.log(_lines);
+      printCaret();
+    }
+
+
+    // Helpers
+    // -------
+
+    // Formats json stringas html
+    function jsonDebug(_json){
+      return JSON.stringify(_json, null, 4).replace(/\n/g, '<br>').replace(/[ \f\n\r\t\v]/g, '&nbsp;');
+    }
+
+    // Prints out the datastructure
+    function debug(){
+      $('#debug').show().html(jsonDebug(_lines));
+    }
+
+    // Makes the caret visible inside surface
+    function printCaret(){
+      $('.surface span').removeClass('caret');
+      $('.surface span[offset="off-' + getCaretPos() + '"]').addClass('caret');
+    }
+
+    // Deactivates the surface
+    $surface.blur(function(){
+      // If content is empty we put back the empty placholder
+      if(_lines.length === 0 || ((typeof _lines[0] !== 'undefined') && _lines[0].chars.length === 0)){
+        $plh.addClass('empty');
+        init();
       }
     });
 
-    // Resets the cursor selection to the actual range
-    function resetCursor(range) {
-      // Reselect trimmed range and string value
-      cm.setSelection(range.from, range.to);
+    // Activates the surface making it editable
+    $surface.click(function(){
+      // Wen activating the tab
+      // and focussing we can then type in and receive key events
+      $(this).attr({'tabindex':'1'});
+      $(this).focus();
+      render();
+    });
+
+
+    // Init
+    // ----
+    // Todo: Adjust the constructor to the defined api
+
+    // Appends the placeholder
+    function init(){
+      $plh.data({'offset':0});
+      $surface.html($plh);
     }
 
-    // Unselects left or right blank characters
-    function trim(sel) {
-      var first = sel.str.charCodeAt(0);
-      var last = sel.str.charCodeAt(sel.str.length-1);
-      // Check if first character is blank and adjusts the annotation range if it is
-      if (first === 32){
-        sel.from.ch = sel.from.ch + 1;
-      }
-
-      // Check if last character is blank and adjusts the annotation range if it is
-      if (last === 32){
-        sel.to.ch = sel.to.ch - 1;
-      }
-
-      // Get selection string
-      sel.str = cm.getRange(sel.from, sel.to);
-      return sel;
-    }
-
-    // Turns position line objects into a single value representing the offset from character 0
-    function toOffset(pos) {
-      var offset = 0;
-      if (pos.line > 0) {
-        var i = 0;
-        for(; i < pos.line; i++ ){
-          offset += cm.lineInfo(i).text.length + 1;//count the newline character as 1?
+    // Caret ticker
+    w.setInterval(function(){
+      $surface.find('span').each(function(i, _span){
+        if($(_span).data('offset') === getCaretPos()){
+          $(_span).toggleClass('caret');
         }
-      }
-      return pos.ch + offset;
-    }
-    
-    // Returns the current selection
-    function selection() {
-      if (undefined != range) {
-        range = trim(range);
-        var start = toOffset(range.from);
-        var end = toOffset(range.to);
-        return { 'start': start, 'end': end} ;
-      }
-    }
+      });
+    }, 500);
 
-    // Adds annotation (uses the current selection)
-    function annotate(note) {
-      if (cm.getSelection().length > 0) {
-        note.pos = selection();
-        //autogenerated id based on the type and the ofsset position string
-        note.id = note.type + '-' + note.pos.start + '' + note.pos.end;
 
-        annotationList.push(note);
-        resetCursor(range);
-        events.trigger('annotation:change', note.type);
-      }
-    }
+    // Public API
+    // ----
 
-    // Returns mathcing annotations if there are
-    function annotations(sel){
-      if (undefined != sel){
-        return _.filter(annotationList , function(ann) {
-          return ann.pos.start == sel.start && ann.pos.end == sel.end;
-        });
-      } else {
-        return annotationList;
-      }
-    }
+    return{
 
-    // Expose public API
-    // -----------------
-    
-    return {
-      on:          function () { events.on.apply(events, arguments); },
-      off:         function () { events.off.apply(events, arguments); },
-      trigger:     function () { events.trigger.apply(events, arguments); },
-      annotations: annotations,
-      selection:   selection,
-      annotate:    annotate
+      init:init
+      
     };
+
   };
 })(window);

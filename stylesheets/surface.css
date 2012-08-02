@@ -135,6 +135,7 @@ div.line{
 	background-color: #edffff;
 	margin-bottom: 1px;
 	float: left;
+	clear: left;
 }
 
 #debug{

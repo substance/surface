@@ -1,7 +1,7 @@
 # Substance Surface
 
 Surface provides a low-level interface for –in browser– plain text manipulation. It allows the instertion, deletion of text characters, keyboard navigation, along with range selections.
-Surface exposes an API that will make it possible to build more complex text editors on top of it, offering the possibillity to manipulate user-defined annotations. For an implementation of a ritch text editor and several examples please refer to [Substance Text](https://github.com/substance/text).
+Surface exposes an API that will make it possible to build more complex text editors on top of it, offering the possibillity to manipulate user-defined annotations. For an implementation of a Ritsch Text Editor and several examples please refer to [Substance Text](https://github.com/substance/text).
 
 (for a demo please try [this link](http://interior.substance.io/surface/))
 

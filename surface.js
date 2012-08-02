@@ -162,7 +162,6 @@
     // Deactivates the surface
     $el.blur(function(){
       var chars = node.getChars();
-      console.log(chars.length);
       if(chars.length === 0){
         phTagline();
         init();

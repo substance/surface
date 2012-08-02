@@ -69,8 +69,6 @@ section.doc{
 
 /*endtext*/
 
-
-
 .surface {
 	cursor: text;
 	width: 90%;
@@ -117,10 +115,13 @@ section.doc{
 .placeholder:not(.empty){
 	color: transparent;
 }
-.placeholder.caret:not(.empty){
+.placeholder.caret:not(.empty),
+.br.caret
+{
 	border-left-width: 1px;
 	border-left-style: solid;
 	border-left-color: black;
+	border-right-style: none;
 }
 
 .caret.newline+span{
@@ -128,15 +129,14 @@ section.doc{
 	text-transform: uppercase;
 }
 
-.invisible{
-	color: rgba(255,255,255,0.5);
+.br{
+	clear: both;
+	float: left;
+	text-indent: -999px;
 }
 
-div.line{
-	background-color: #edffff;
-	margin-bottom: 1px;
-	float: left;
-	clear: left;
+.invisible{
+	color: rgba(255,255,255,0.5);
 }
 
 #debug{

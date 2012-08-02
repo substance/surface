@@ -17,7 +17,6 @@
     // Vars
     var $el = $('.surface')
     ,   _caret = 0
-    ,   _lines = []
     ,   keyEvents = new KeyEvents()
     ,   cFont = $el.css('font-family').split(', ')[0]
     ,   fSize = $el.css('font-size')
@@ -25,7 +24,9 @@
     ,   $plh = $(tpl('empty-placeholder', {'text':tagLine}))
     ,   contWidth = $el.width()
     ,   node = new TextNode(cFont, fSize)
-    ,   caret = new Caret();
+    ,   newLineChar = '\\n'
+    ,   caret = new Caret()
+    ,   modifiers = {};
 
 
     // Helpers
@@ -81,29 +82,37 @@
         k.code = e.keyCode;
         k.string = (keyEvents.specialKeys[k.code] || 'KEY_UNKNOWN');
 
-        var fn = keyEvents.specialKeyMap[k.string];
-        if (fn) {
-          fn();
-        }
+        // var fn = keyEvents.specialKeyMap[k.string];
+        // console.log(fn);
+        // if (fn) {
+        //   fn();
+        // }
+
         switch(k.code){
 
           // Return|Enter
           case 13:
-            // insert the new character
-            node.addChar('^', caret.getPos());
+             // insert the new character
+            node.addChar('newLineChar', caret.getPos());
             // update caret
             caret.goRight();
-            break;
 
+            // store used modifier to disable elsewhere
+            modifiers[k.code] = true;
+            break;
 
           // LEFT
           case 37:
             caret.goLeft();
+            // store used modifier to disable elsewhere
+            modifiers[k.code] = true;
             break;
 
           // RIGHT
           case 39:
             caret.goRight();
+            // store used modifier to disable elsewhere
+            modifiers[k.code] = true;
             break;
 
           // DELETE
@@ -111,11 +120,15 @@
             e.preventDefault();
             node.del(caret.getPos());
             caret.goLeft(true);
+            // store used modifier to disable elsewhere
+            modifiers[k.code] = true;
             break;
 
           // SUPR
           case 46:
             node.del(caret.getPos()+1);
+            // store used modifier to disable elsewhere
+            modifiers[k.code] = true;
             break;
         }
       }
@@ -152,14 +165,19 @@
           k.string = String.fromCharCode(k.code);
       }
 
-      // insert the new character
-      node.addChar(k.string, caret.getPos());
-      // update caret
-      caret.goRight();
-      render();
+      // make sure it's not a modifier
+      if(!modifiers[k.code]){
+
+        // insert the new character
+        node.addChar(k.string, caret.getPos());
+        // update caret
+        caret.goRight();
+        render();
+      }
+
     });
 
-    // Deactivates the surface
+    // Deals with deactivation
     $el.blur(function(){
       var chars = node.getChars();
       if(chars.length === 0){
@@ -196,25 +214,25 @@
         _.each(chars, function(_char, i){
 
           val = _char.value;
-
           // Process chars here for html representation of the data
           if(val === ' ') val = '&nbsp;';
 
-          if(val === '^'){
-            $span = $('<br>');
-          }else{
-            $span = $(tpl('char', {'_char':val}));
+          $span = $(tpl('char', {'_char':val}));
+
+          if(val === 'newLineChar'){
+            $span.text('&nbsp;');
+            $span.addClass('br');
           }
 
+          // Set the caret marker
           if(i === caret.getPos()-1){
             $span.attr({id:'caret'});
           }
 
-          _char.dom = $span;
+          // _char.dom = $span; probably won't need that
           $span.data(_char);
 
           $span.click(function(){
-            console.log($(this).data().value);
             caret.goTo(i + 1);
             render();
           });

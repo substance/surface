@@ -21,7 +21,8 @@
     ,   keyEvents = new KeyEvents()
     ,   cFont = $el.css('font-family').split(', ')[0]
     ,   fSize = $el.css('font-size')
-    ,   $plh = $(tpl('empty-placeholder'))
+    ,   tagLine = 'Eventually Consistent™'
+    ,   $plh = $(tpl('empty-placeholder', {'text':tagLine}))
     ,   contWidth = $el.width()
     ,   node = new TextNode(cFont, fSize)
     ,   caret = new Caret();
@@ -54,7 +55,18 @@
     w.setInterval(function(){
       var $marked = $el.find('#caret').toggleClass('caret');
     }, 500);
-  
+
+    function phEmpty(){
+        $plh.removeClass('empty');
+        $plh.html('&nbsp');
+    }
+
+    function phTagline(){
+        $plh.addClass('empty');
+        $plh.html(tagLine);
+    }
+
+
     // Events
     // ------
     // Note: Based on Mochikit Key_Events
@@ -148,13 +160,14 @@
     });
 
     // Deactivates the surface
-    // $el.blur(function(){
-    //   // If content is empty we put back the empty placholder
-    //   if(_lines.length === 0 || ((isdef(_lines[0])) && _lines[0].chars.length === 0)){
-    //     $plh.addClass('empty');
-    //     init();
-    //   }
-    // });
+    $el.blur(function(){
+      var chars = node.getChars();
+      console.log(chars.length);
+      if(chars.length === 0){
+        phTagline();
+        init();
+      }      
+    });
 
     // Activates the surface making it editable
     $el.click(function(){
@@ -174,37 +187,43 @@
 
       var val
       ,   $span
-      ,   $line = $('<div class="line">')
+      ,   $line = $(tpl('line'))
       ,   chars = node.getChars();
 
-      _.each(chars, function(_char, i){
+      if(chars.length === 0){
+        phEmpty();
+        $line.append($plh);
+      }else{
+        _.each(chars, function(_char, i){
 
-        val = _char.value;
+          val = _char.value;
 
-        // Process chars here for html representation of the data
-        if(val === ' ') val = '&nbsp;';
+          // Process chars here for html representation of the data
+          if(val === ' ') val = '&nbsp;';
 
-        if(val === '^'){
-          $span = $('<br>');
-        }else{
-          $span = $(tpl('char', {'_char':val}));
-        }
+          if(val === '^'){
+            $span = $('<br>');
+          }else{
+            $span = $(tpl('char', {'_char':val}));
+          }
 
-        if(i === caret.getPos()-1){
-          $span.attr({id:'caret'});
-        }
+          if(i === caret.getPos()-1){
+            $span.attr({id:'caret'});
+          }
 
-        _char.dom = $span;
-        $span.data(_char);
+          _char.dom = $span;
+          $span.data(_char);
 
-        $span.click(function(){
-          console.log($(this).data().value);
-          caret.goTo(i + 1);
-          render();
+          $span.click(function(){
+            console.log($(this).data().value);
+            caret.goTo(i + 1);
+            render();
+          });
+
+          $line.append($span);
         });
-
-        $line.append($span);
-      });
+      }
+      
       $el.html($line);
     }
 
@@ -215,7 +234,6 @@
 
     // Appends the placeholder
     function init(){
-      $plh.data({'offset':0});
       $el.html($plh);
     }
 

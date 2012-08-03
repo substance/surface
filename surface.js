@@ -18,7 +18,7 @@
     var $el = $('.surface')
     ,   _caret = 0
     ,   keyEvents = new KeyEvents()
-    ,   cFont = $el.css('font-family').split(', ')[0]
+    ,   cFont = 'OpenSansRegular' //fixed font for now as grabbing it from the css proviqued bugs
     ,   fSize = $el.css('font-size')
     ,   tagLine = 'Eventually Consistent™'
     ,   $plh = $(tpl('empty-placeholder', {'text':tagLine}))

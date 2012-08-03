@@ -177,7 +177,6 @@
           // update caret
           caret.goRight(e);
           render();
-          console.log(node.getChars().length);
        }
 
 

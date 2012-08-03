@@ -155,8 +155,7 @@
     //  FF: sets charCode to 0, and sets the correct keyCode
     //  Safari: sets keyCode and charCode to something stupid
     $el.live('keypress', function(e){
-      var k ={}
-      ,  _cLine;
+      var k ={};
 
       k.code = 0;
       k.string = '';
@@ -172,11 +171,15 @@
           k.string = String.fromCharCode(k.code);
       }
 
-      // insert the new character
-      node.addChar(k.string, caret.getPos());
-      // update caret
-      caret.goRight(e);
-      render();
+        if(k.code !== 0){ //This shouldnt happen!
+          // insert the new character
+          node.addChar(k.string, caret.getPos());
+          // update caret
+          caret.goRight(e);
+          render();
+          console.log(node.getChars().length);
+       }
+
 
     });
 

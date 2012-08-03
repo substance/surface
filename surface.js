@@ -127,9 +127,9 @@
             break;
 
           case 'KEY_BACKSPACE':
-            e.preventDefault();
             node.del(caret.getPos());
             caret.goLeft(true);
+            e.preventDefault();
             break;
 
           case 'KEY_DELETE':
@@ -182,7 +182,7 @@
 
 
     // Deals with deactivation
-    $el.blur(function(){
+    $el.live('blur', function(){
       var chars = node.getChars();
       if(chars.length === 0){
         phTagline();
@@ -191,7 +191,7 @@
     });
 
     // Activates the surface making it editable
-    $el.click(function(){
+    $el.live('click', function(){
       // Wen activating the tab
       // and focussing we can then type in and receive key events
       $(this).attr({'tabindex':'1'});

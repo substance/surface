@@ -19,16 +19,15 @@ var TextNode = function(font, size){
     // insert('w|c') -> inserts word|char at current caret position/line
     function _addChar(ch, pos){
       var id = _.uniqueId('char-')
-      ,   width = fontSizes[font][size][ch]
+      // ,   width = fontSizes[font][size][ch] //disabled for now, firefox doesnt seem to like it
       ,   character = {
           "id" : id,
           "dom" :  null,
           "value" :  ch,
-          "width" : width
+          "width" : 0
         };
 
       _editChar(character, pos);
-
     }
 
     // updates the char array

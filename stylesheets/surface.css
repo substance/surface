@@ -4,9 +4,11 @@ body{
   margin: 0;
   padding: 0;
   background-color: #eef2e6;
-	font-family: "Trebuchet MS", Verdana, Arial, Helvetica, sans-serif;
-/*we force the scroll to avoid glitches in cm for now*/
-	 overflow-y: scroll;
+  font-family: 'OpenSans', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  /*we force the scroll to avoid glitches in cm for now*/
+  overflow-y: scroll;
+
 }
 
 .main{
@@ -69,13 +71,32 @@ section.doc{
 
 /*endtext*/
 
+.intro{
+	color: #4a4b48;
+}
+
+.intro h2{
+	font: 15px 'OpenSansBold';
+}
+
+.intro p{
+	font: 12px 'OpenSansSemibold';
+}
+
+.intro ul li{
+	color: #373835;
+	list-style-type: circle;
+	padding: 4px;
+	font: 11px 'OpenSansLight';
+}
+
 .surface {
 	cursor: text;
 	width: 90%;
 	float: left;
 	padding: 20px;
 	white-space:'pre';
-	font: 15px Georgia, "Times New Roman", Times, serif;
+	font: 15px 'OpenSansRegular', sans-serif;
 	border-radius: 3px;
 	border-style: solid;
 	border-width: 1px;
@@ -85,7 +106,7 @@ section.doc{
 .surface:focus {
     outline:0;
     outline:none;
-	border: 1px dashed #eef2e6;
+	border: 1px dashed #d5d9ce;
 }
 
 ::selection {
@@ -104,12 +125,25 @@ section.doc{
 	float: left;
 }
 
+.surface span:first-child{
+	border-left-width: 1px;
+	border-left-style: solid;
+	border-left-color: transparent;
+}
+
+.surface span#caret.first.caret{
+	border-left-width: 1px;
+	border-left-style: solid;
+	border-left-color: black;
+	border-right-color: transparent;
+}
+
 .surface:focus .caret:not(.placeholder){
 	border-right-color: black;
 }
 
 .surface .placeholder.placeholder.empty{
-	color: #eef2e6;
+	color: #d5d9ce;
 }
 
 .placeholder:not(.empty){

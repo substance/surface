@@ -65,11 +65,6 @@ function KeyEvents(){
 
   var _handled = false;
 
-  var _specialKeyMap = {
-      'KEY_F1': KeyEvents.handleF1,
-      'KEY_ESCAPE': KeyEvents.handleEscape
-  };
-
   /* Safari sets keyCode to these special values onkeypress. */
   var __specialMacKeys = {
     3: 'KEY_ENTER',
@@ -166,7 +161,6 @@ function KeyEvents(){
   return{
       specialKeys:        _specialKeys,
       specialMacKeys:     _specialMacKeys,
-      specialKeyMap:      _specialKeyMap,
       handled:            _handled
   }
 

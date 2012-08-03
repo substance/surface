@@ -18,8 +18,6 @@ var TextNode = function(font, size){
     // Becomes:
     // insert('w|c') -> inserts word|char at current caret position/line
     function _addChar(ch, pos){
-      var pos = pos || _chars.length;
-
       var id = _.uniqueId('char-')
       ,   width = fontSizes[font][size][ch]
       ,   character = {
@@ -37,9 +35,9 @@ var TextNode = function(font, size){
     function _editChar(ch, pos){
 
       var ch = ch || null;
-
+      var len = _chars.length;
       // distance to the end of the array
-      var right = _chars.length - pos;
+      var right = len - pos;
       
       // if we are passing null ch it means we are deleting
       // so we offset the tail by one

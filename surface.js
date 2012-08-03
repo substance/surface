@@ -24,10 +24,8 @@
     ,   $plh = $(tpl('empty-placeholder', {'text':tagLine}))
     ,   contWidth = $el.width()
     ,   node = new TextNode(cFont, fSize)
-    ,   newLineChar = '\\n'
-    ,   caret = new Caret()
-    ,   modifiers = {};
-
+    ,   caret = new Caret(node)
+    ,   newLineChar = '\\n';
 
     // Helpers
     // -------
@@ -54,7 +52,7 @@
   
     // Caret ticker
     w.setInterval(function(){
-      var $marked = $el.find('#caret').toggleClass('caret');
+      $el.find('#caret').toggleClass('caret');
     }, 500);
 
     function phEmpty(){
@@ -76,60 +74,69 @@
     // Note: We're storing a handled flag to work around a Safari bug: 
     // http://bugs.webkit.org/show_bug.cgi?id=3387
     $el.live('keydown', function(e){
+      
       if (!keyEvents.handled) {
 
         var k ={};
         k.code = e.keyCode;
         k.string = (keyEvents.specialKeys[k.code] || 'KEY_UNKNOWN');
+        k.alt = e.altKey;
+        k.ctrl = e.ctrlKey;
+        k.meta = e.metaKey || false; // IE and Opera punt here
+        k.shift = e.shiftKey;
+        k.any = k.alt || k.ctrl || k.shift || k.meta;
 
-        // var fn = keyEvents.specialKeyMap[k.string];
-        // console.log(fn);
-        // if (fn) {
-        //   fn();
-        // }
+        switch(k.string){
 
-        switch(k.code){
-
-          // Return|Enter
-          case 13:
+          case 'KEY_ENTER':
              // insert the new character
             node.addChar('newLineChar', caret.getPos());
             // update caret
             caret.goRight();
-
-            // store used modifier to disable elsewhere
-            modifiers[k.code] = true;
+            e.preventDefault();
             break;
 
-          // LEFT
-          case 37:
-            caret.goLeft();
-            // store used modifier to disable elsewhere
-            modifiers[k.code] = true;
+          case 'KEY_ARROW_LEFT':
+            if(k.alt){
+              caret.goWordLeft();
+            }else{
+              caret.goLeft();
+            }
+            e.preventDefault();
             break;
 
-          // RIGHT
-          case 39:
-            caret.goRight();
-            // store used modifier to disable elsewhere
-            modifiers[k.code] = true;
+          case 'KEY_ARROW_RIGHT':
+            if(k.alt){
+              caret.goWordRight();
+            }else{
+              caret.goRight();
+            }
+            e.preventDefault();
             break;
 
-          // DELETE
-          case 8:
+          case 'KEY_PAGE_UP':
+          case 'KEY_HOME':
+            caret.goDocStart();
+            e.preventDefault();
+            break;
+
+          case 'KEY_PAGE_DOWN':
+          case 'KEY_END':
+            caret.goDocEnd();
+            e.preventDefault();
+            break;
+
+          case 'KEY_BACKSPACE':
             e.preventDefault();
             node.del(caret.getPos());
             caret.goLeft(true);
-            // store used modifier to disable elsewhere
-            modifiers[k.code] = true;
             break;
 
-          // SUPR
-          case 46:
+          case 'KEY_DELETE':
             node.del(caret.getPos()+1);
-            // store used modifier to disable elsewhere
-            modifiers[k.code] = true;
+            e.preventDefault();
             break;
+
         }
       }
       keyEvents.handled = true;
@@ -138,8 +145,8 @@
 
     // Targets special chars and resets keyEvents.handled hack back to false
     $el.live('keyup', function(e){
-      keyEvents.handled = false; //needs to be set back to false
       // var k ={}; k.code = e.keyCode; k.string = (keyEvents.specialKeys[k.code] || 'KEY_UNKNOWN');
+      keyEvents.handled = false; //needs to be set back to false
     });
 
     // Targets all printable characters
@@ -165,17 +172,14 @@
           k.string = String.fromCharCode(k.code);
       }
 
-      // make sure it's not a modifier
-      if(!modifiers[k.code]){
-
-        // insert the new character
-        node.addChar(k.string, caret.getPos());
-        // update caret
-        caret.goRight();
-        render();
-      }
+      // insert the new character
+      node.addChar(k.string, caret.getPos());
+      // update caret
+      caret.goRight(e);
+      render();
 
     });
+
 
     // Deals with deactivation
     $el.blur(function(){
@@ -227,9 +231,11 @@
           // Set the caret marker
           if(i === caret.getPos()-1){
             $span.attr({id:'caret'});
+          }else if(caret.getPos() === 0){
+            $(chars[0].dom).attr({id:'caret'}).addClass('first');
           }
 
-          // _char.dom = $span; probably won't need that
+          _char.dom = $span;// is this necessary?
           $span.data(_char);
 
           $span.click(function(){

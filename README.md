@@ -2,21 +2,22 @@
 
 Surface is being developed under the context of the [Substance](http://substance.io) project. It's aim is to be a replacement for the traditional web textarea. It will provide basic text manipulation like textareas, and on top of that will expose a reliable API to provide functionaly to manipulate the rendering of the Surface or retrieve information about it's state. (Once we have that we will be able to implement an Annotator and ```risch editors``` such as [Text](http://interior.substance.io/modules/text.html) on top of it)
 
-## API (work-in-progress)
+## API (work-in-progress)  
 
-### Create a new surface
-
-```js var options = {
-	"lang":"en" // set the language for the spellchecking
-	"checkSpelling": true
-};´´´
+### Create a new surface  
 
 ```js
+var options = {
+	"lang":"en" // set the language for the spellchecking
+	"checkSpelling": true
+};
+
 var surface = new Surface({
   el: '#content', options
 });
+```  
 
-### Operations
+### Operations  
 
 In a near future, the Surface will be transformed using commands. Commands are either issues progammatically or triggered by the user (e.g. by entering text). Commands are either issues progammatically or triggered by the user (e.g. by entering text)
 
@@ -47,13 +48,13 @@ surface.on('operation', function(operation) {
 
 ### Commands
 
-```js setContent" ´´´
-```js getContent" ´´´
-```js setRange´´´
-```js getRange" ´´´
-```js setStyle´´´
-```js getStyle´´´
-```js ...´´´
+```js setContent ```
+```js getContent ```
+```js setRange```
+```js getRange ```
+```js setStyle```
+```js getStyle```
+```js ...```
 
 ### Listening for state changes
 

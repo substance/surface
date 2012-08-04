@@ -48,13 +48,20 @@ surface.on('operation', function(operation) {
 
 ### Commands
 
-```js setContent ```
-```js getContent ```
-```js setRange```
-```js getRange ```
-```js setStyle```
-```js getStyle```
-```js ...```
+```js 
+setContent ```  
+```js 
+getContent ```  
+```js 
+setRange```  
+```js 
+getRange ```  
+```js 
+setStyle```  
+```js 
+getStyle```  
+```js 
+...```  
 
 ### Listening for state changes
 

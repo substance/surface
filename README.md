@@ -53,8 +53,8 @@ surface.on('operation', function(operation) {
 ``` setRange ```  
 ``` getRange ```  
 ``` setStyle ```  
-``` getStyle```  
-```...```  
+``` getStyle ``` 
+...  
 
 ### Listening for state changes
 

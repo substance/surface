@@ -16,16 +16,17 @@
     
     // Vars
     var $el = $('.surface')
-    ,   _caret = 0
-    ,   keyEvents = new KeyEvents()
-    ,   cFont = 'OpenSansRegular' //fixed font for now as grabbing it from the css proviqued bugs
+    ,   cFont = 'OpenSansRegular' //fixed font name for now since grabbing it from the css provoqued bugs
     ,   fSize = $el.css('font-size')
     ,   tagLine = 'Eventually Consistent™'
     ,   $plh = $(tpl('empty-placeholder', {'text':tagLine}))
-    ,   contWidth = $el.width()
+    ,   contWidth
     ,   node = new TextNode(cFont, fSize)
     ,   caret = new Caret(node)
     ,   newLineChar = '\\n';
+
+
+    contWidth = $el.innerWidth() - (parseInt($el.css('padding-left')) + parseInt($el.css('padding-right')));
 
     // Helpers
     // -------
@@ -39,20 +40,19 @@
     function isdef(passed){
       return typeof passed !== 'undefined';
     }
-
-    // Formats json stringas html
-    function jsonDebug(_json){
-      return JSON.stringify(_json, null, 4).replace(/\n/g, '<br>').replace(/[ \f\n\r\t\v]/g, '&nbsp;');
-    }
-
-    // Prints out the datastructure
-    function debug(){
-      $('#debug').show().html(jsonDebug(_lines));
-    }
   
+    function $getCurrent(){
+      return $el.find('span.char:eq(' + (caret.getPos()-1) + ')');
+    }
+
+    function $getNext(){
+      return $el.find('span.char:eq(' + (caret.getPos()) + ')');
+    }
+
     // Caret ticker
     w.setInterval(function(){
-      $el.find('#caret').toggleClass('caret');
+      var $curr = $getCurrent();
+      $curr.toggleClass('caret');
     }, 500);
 
     function phEmpty(){
@@ -65,104 +65,30 @@
         $plh.html(tagLine);
     }
 
+    function refresh(){
+      $el.find('span').removeClass('caret');
+    }
 
-    // Events
-    // ------
-    // Note: Based on Mochikit Key_Events
-  
-    // Targets special modifiers and special chars
-    // Note: We're storing a handled flag to work around a Safari bug: 
-    // http://bugs.webkit.org/show_bug.cgi?id=3387
-    $el.live('keydown', function(e){
-      
-      if (!keyEvents.handled) {
+    function activate(){
+      // Wen activating the tab
+      // and focussing we can then type in and receive key events
+      $el.attr({'tabindex':'1'});
+      $el.focus();
 
-        var k ={};
-        k.code = e.keyCode;
-        k.string = (keyEvents.specialKeys[k.code] || 'KEY_UNKNOWN');
-        k.alt = e.altKey;
-        k.ctrl = e.ctrlKey;
-        k.meta = e.metaKey || false; // IE and Opera punt here
-        k.shift = e.shiftKey;
-        k.any = k.alt || k.ctrl || k.shift || k.meta;
+      if(node.getChars().length === 0){
+        phEmpty();
+      } 
+    }
 
-        switch(k.string){
-
-          case 'KEY_ENTER':
-             // insert the new character
-            node.addChar('newLineChar', caret.getPos());
-            // update caret
-            caret.goRight();
-            e.preventDefault();
-            break;
-
-          case 'KEY_ARROW_LEFT':
-            if(k.alt){
-              caret.goWordLeft();
-            }else{
-              caret.goLeft();
-            }
-            e.preventDefault();
-            break;
-
-          case 'KEY_ARROW_RIGHT':
-            if(k.alt){
-              caret.goWordRight();
-            }else{
-              caret.goRight();
-            }
-            e.preventDefault();
-            break;
-
-          case 'KEY_PAGE_UP':
-          case 'KEY_HOME':
-            caret.goDocStart();
-            e.preventDefault();
-            break;
-
-          case 'KEY_PAGE_DOWN':
-          case 'KEY_END':
-            caret.goDocEnd();
-            e.preventDefault();
-            break;
-
-          case 'KEY_BACKSPACE':
-            node.del(caret.getPos());
-            caret.goLeft(true);
-            e.preventDefault();
-            break;
-
-          case 'KEY_DELETE':
-            node.del(caret.getPos()+1);
-            e.preventDefault();
-            break;
-
-        }
-      }
-      keyEvents.handled = true;
-      render();
-    });
-
-    // Targets special chars and resets keyEvents.handled hack back to false
-    $el.live('keyup', function(e){
-      // var k ={}; k.code = e.keyCode; k.string = (keyEvents.specialKeys[k.code] || 'KEY_UNKNOWN');
-      keyEvents.handled = false; //needs to be set back to false
-    });
-
-    // Targets all printable characters
-    // Note:
-    //  IE: does not fire keypress events for special keys
-    //  FF: sets charCode to 0, and sets the correct keyCode
-    //  Safari: sets keyCode and charCode to something stupid
-    $el.live('keypress', function(e){
+    //Note: IE does not fire keypress events for special keys
+    //Note: FF sets charCode to 0, and sets the correct keyCode
+    //Note: Safari sets keyCode and charCode to something stupid
+    function eToKey(e){
       var k ={};
-
       k.code = 0;
       k.string = '';
 
-      if (typeof(e.charCode) != 'undefined' &&
-          e.charCode !== 0 &&
-          !keyEvents.specialMacKeys[e.charCode]) {
+      if (typeof(e.charCode) != 'undefined' && e.charCode !== 0) {
           k.code = e.charCode;
           k.string = String.fromCharCode(k.code);
       } else if (e.keyCode &&
@@ -170,87 +96,117 @@
           k.code = e.keyCode;
           k.string = String.fromCharCode(k.code);
       }
-
-        if(k.code !== 0){ //This shouldnt happen!
-          // insert the new character
-          node.addChar(k.string, caret.getPos());
-          // update caret
-          caret.goRight(e);
-          render();
-       }
+      return k;
+    }
 
 
+    // Events
+    // ------
+
+    // Special keys
+    Mousetrap.bind('backspace', function(e) {
+      e.preventDefault();      
+      var $curr = $getCurrent();
+      $curr.remove();
+      node.del(caret.getPos());
+      caret.goLeft(true);
     });
 
+    Mousetrap.bind('del', function(e) {
+      e.preventDefault();      
+      var $next = $getNext();
+      $next.remove();
+      node.del(caret.getPos());
+    });
 
-    // Deals with deactivation
-    $el.live('blur', function(){
-      var chars = node.getChars();
-      if(chars.length === 0){
-        phTagline();
-        init();
-      }      
+    Mousetrap.bind('left', function(e) {
+      e.preventDefault();
+      caret.goLeft();
+    });
+
+    Mousetrap.bind('alt+left', function(e) {
+      e.preventDefault();
+      caret.goWordLeft();
+    });
+
+    Mousetrap.bind('right', function(e) {
+      e.preventDefault();
+      caret.goRight();
+    });
+
+    Mousetrap.bind('alt+right', function(e) {
+      e.preventDefault();
+      caret.goWordRight();
+    });
+
+    Mousetrap.bind(['home', 'pageup'], function(e) {
+      e.preventDefault();
+      caret.goDocStart();
+    });
+
+    Mousetrap.bind(['end', 'pagedown'], function(e) {
+      e.preventDefault();
+      caret.goDocEnd();
+    });
+
+    Mousetrap.bind('return', function(e) {
+      e.preventDefault();
+      node.addChar(newLineChar, caret.getPos());
+      caret.goRight();
+    });
+
+    // printable characters
+    $el.keypress( function(e){
+      var k = eToKey(e);
+      if(k.code !== 0){ // FF: sets charCode to 0
+        node.addChar(k.string, caret.getPos());
+        caret.goRight();
+      }
+    });
+
+    caret.on('caret:moved', function(e){
+      refresh();
+    });
+
+    node.on('char:added', function(oCh){
+      var val = oCh.value;
+       // override characters here
+      if(oCh.value === ' ') val = '&nbsp;';
+ 
+      var $span = $(tpl('char', {'id':oCh.id, 'ch':val}));
+      if(oCh.value === newLineChar ) $span.addClass('br');
+      $span.data(oCh);
+
+      if(node.getChars().length === 0){
+        $el.html('');
+        $el.append($span);
+      }else{
+        $span.insertAfter($getCurrent());
+      }
+    });
+
+    $el.find('span').live('click', function(e){
+      e.preventDefault();
+      // we need to retrieve the character back 
+      // from the textnode to get the updated offset x
+      var id = $(this).data().id;
+      var curr = node.getChar(id) || {x:0};
+      caret.goTo(curr.x+1);
     });
 
     // Activates the surface making it editable
     $el.live('click', function(){
-      // Wen activating the tab
-      // and focussing we can then type in and receive key events
-      $(this).attr({'tabindex':'1'});
-      $(this).focus();
-      render();
+      activate();
     });
 
+    // Deals with deactivation
+    $el.live('blur', function(){
+      $(this).removeAttr('tabindex');
 
-    // Render
-    // ------
-
-    // Renders the data structure into the surface
-    function render(){
-
-      var val
-      ,   $span
-      ,   $line = $(tpl('line'))
-      ,   chars = node.getChars();
-
-      if(chars.length === 0){
-        phEmpty();
-        $line.append($plh);
-      }else{
-        _.each(chars, function(_char, i){
-
-          val = _char.value;
-          // Process chars here for html representation of the data
-          if(val === ' ') val = '&nbsp;';
-
-          $span = $(tpl('char', {'_char':val}));
-
-          if(val === 'newLineChar'){
-            $span.text('&nbsp;');
-            $span.addClass('br');
-          }
-
-          // Set the caret marker
-          if(i === caret.getPos()-1){
-            $span.attr({id:'caret'});
-          }else if(caret.getPos() === 0){
-            $(chars[0].dom).attr({id:'caret'}).addClass('first');
-          }
-
-          _char.dom = $span;// is this necessary?
-          $span.data(_char);
-
-          $span.click(function(){
-            caret.goTo(i + 1);
-            render();
-          });
-
-          $line.append($span);
-        });
-      }
-      
-      $el.html($line);
-    }
+      if(node.getChars().length === 0){
+        phTagline();
+      }      
+    });
 
 
     // Init

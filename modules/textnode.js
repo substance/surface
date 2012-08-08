@@ -5,28 +5,27 @@
 // Todo: implement function delWordRight () {}
 // Todo: implement function delLine () {}
 // Todo: implement function delAll () {}
-// Todo: check boundaries left and right when moving around
-// Todo: search for all the blanks and newlines with underscore will return an array for quick browsing
-// Todo: wrap methods like this: surface.apply({method: "add-annotation", "data": {"start": 10, ...}});
 
 var TextNode = function(font, size){
 
-    var _chars = [];
+    var _chars = []
+    ,   events = _.extend({}, Events);
 
     // Inserts a character at the specified position
-    // Todo: implement function insChar
-    // Becomes:
-    // insert('w|c') -> inserts word|char at current caret position/line
     function _addChar(ch, pos){
+
       var id = _.uniqueId('char-')
       ,   width = fontSizes[font][size][ch]
       ,   character = {
           "id" : id,
-          "dom" :  null,
+          "x": 0,
+          "y": 0,
           "value" :  ch,
           "width" : width
         };
 
+      this.trigger('char:added', character);
+      
       _editChar(character, pos);
     }
 
@@ -50,8 +49,13 @@ var TextNode = function(font, size){
       if(ch === null){
         _chars = _.union(pre, post);
       }else{
-        _chars = _.union(pre, [ch], post);
+        _chars = _.union(pre, ch, post);
       }
+      
+      // reindex
+      _.each(_chars, function(ch, i){
+        ch.x = i;
+      });
 
     }
 
@@ -64,8 +68,14 @@ var TextNode = function(font, size){
     }
 
     // returns a char object
+    // from the specified object
+    function _getChar(id){
+      return _.find(_chars, function (ch){ return ch.id === id});
+    }
+
+    // returns a char object
     // from the specified position
-    function _getChar(pos){
+    function _getCharAt(pos){
       return _chars[pos-1];
     }
 
@@ -76,10 +86,14 @@ var TextNode = function(font, size){
 
     return {
 
-      addChar:       _addChar,
-      del:           _del,
-      getChar:       _getChar,
-      getChars:     _getCars
+      addChar:      _addChar,
+      del:          _del,
+      getChar:      _getChar,
+      getCharAt:    _getCharAt,
+      getChars:     _getCars,
+      on:           events.on,
+      off:          events.off,
+      trigger:      events.trigger
 
     };
 

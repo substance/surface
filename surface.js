@@ -52,7 +52,12 @@
     // Caret ticker
     w.setInterval(function(){
       var $curr = $getCurrent();
-      $curr.toggleClass('caret');
+      if($curr.length > 0) {
+        $curr.toggleClass('caret');
+      }else{
+        // initial emtpy placeholder
+        $('#caret').toggleClass('caret');
+      }
     }, 500);
 
     function phEmpty(){

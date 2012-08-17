@@ -5,6 +5,17 @@ Surface exposes an API that will make it possible to build more complex text edi
 
 (for a demo please try [this link](http://interior.substance.io/surface/))
 
+## On the screen
+
+Using a fixed width font with nice styles could give us the opportunity to spread some type writer feeling. It would also be easier to implement character-measurements etc. It will be a challenge to get word-wrap right though.
+
+![](https://raw.github.com/substance/surface/gh-pages/assets/surface-cursor.png)
+
+Also annotations could be visualized nicely in a block-ish fashion.
+
+![](https://raw.github.com/substance/surface/gh-pages/assets/surface-annotation.png)
+
+
 ## Desired API
 
 ### Create a new surface

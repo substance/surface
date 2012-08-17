@@ -11,25 +11,28 @@
 
 var Caret = function (node) {
 
-  var _pos = 0;
+  var _pos = 0
+  ,   events = _.extend({}, Events);
 
   // Moves the caret one character to its left
   function _goLeft(){
-    _goTo(_getPos()-1);
+    this.goTo(_getPos()-1);
   }
 
   // Moves the caret one character to its right
   function _goRight(e){
-    _goTo(_getPos()+1);
+    this.goTo(_getPos()+1);
   }
 
   // Sets the caret's position to a specified offset
   function _goTo(pos){
+
     if(pos < 0) pos = 0;
     var string = node.getChars();
     var end = string.length;
     if(pos > end)  pos = end;
     _pos = pos;
+    this.trigger('caret:moved', pos, this);
   }
 
   // Returns current caret position
@@ -71,32 +74,37 @@ var Caret = function (node) {
 
   // moves the caret one word left
   function _goWordLeft(){
-    _goTo(_prevBlank());
+    this.goTo(_prevBlank());
   }
 
   // moves the caret one word left
   function _goWordRight(){
-    _goTo(_nextBlank());
+    this.goTo(_nextBlank());
   }
 
   // moves caret to the end of the string
   function goDocStart(){
-    _goTo(0);
+    this.goTo(0);
   }
   // moves caret to the end of the string
   function goDocEnd(){
     var string = node.getChars();
-    _goTo(string.length);
+    this.goTo(string.length);
   }
 
   return {
-    goLeft      : _goLeft,
-    goRight     : _goRight,
-    goTo        : _goTo,
-    getPos      : _getPos,
-    goWordLeft  : _goWordLeft,
-    goWordRight : _goWordRight,
-    goDocEnd    : goDocEnd,
-    goDocStart  : goDocStart
+
+    goLeft:       _goLeft,
+    goRight:      _goRight,
+    goTo:         _goTo,
+    getPos:       _getPos,
+    goWordLeft:   _goWordLeft,
+    goWordRight:  _goWordRight,
+    goDocEnd:     goDocEnd,
+    goDocStart:   goDocStart,
+    on:           events.on,
+    off:          events.off,
+    trigger:      events.trigger
+
   };
 }

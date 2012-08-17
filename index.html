@@ -11,6 +11,8 @@
   <link rel="stylesheet" href="stylesheets/surface.css">
   <script src="lib/jquery.js"></script>
   <script src="lib/underscore-min.js"></script>
+  <script src="lib/events.js"></script>
+  <script src="lib/mousetrap.min.js"></script>
 
 <!-- Templates -->
   <script type="text/plain" name="empty-placeholder">
@@ -20,17 +22,16 @@
     <div class="line"></div>
   </script>
   <script type="text/plain" name="char">
-    <span><%= _char %></span>
+    <span class="char" id="<%= id %>"><%= ch %></span>
   </script>
   <script type="text/plain" name="br">
     <span class="br">-</span>
   </script>
 
 <!-- Source -->
-  <script src="OpenSansRegular-15px.js"></script>
-  <script src="KeyEvents.js"></script>
-  <script src="TextNode.js"></script>
-  <script src="Caret.js"></script>
+  <script src="modules/opensansregular-15px.js"></script>
+  <script src="modules/textnode.js"></script>
+  <script src="modules/caret.js"></script>
   <script src="surface.js"></script>
 
 <!-- Boot -->
@@ -73,9 +74,6 @@
       <div class="clear"></div>
     </section>
 
-    <div class="debug">
-      
-    </div>
   </div>
 </body>
 </html>

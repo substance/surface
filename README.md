@@ -44,13 +44,14 @@ surface.on('text:change', function(delta, content) {
 
 And for changes regarding the annotations:
 
+```js
 surface.on('annotation:change', function(operation) {
   // Example is one of these:
   // ["insert", {"id": "annotation:x", type": "em", "pos": [10,5]}]
   // ["update", {"id": "annotation:y", type": "comment", "pos": [20,25], "properties": {"content": "Foo"}}]
   // ["delete", {"id": "annotation:x"}]
 });
-
+```
 
 ### Selections
 

@@ -81,9 +81,6 @@ section.text{
 }
 
 .text #toolbar a{
-	margin-right: 3px;
-	margin-left: 0;
-	margin-bottom: 0;
 	float: left;
 	background-color: #90938c;
 	padding: 3px 5px 5px;
@@ -93,6 +90,7 @@ section.text{
 	font-size: 13px;
 	text-align: center;
 	vertical-align: middle;
+	margin: 7px 3px 0 0;
 }
 
 #toolbar a.tool.active {

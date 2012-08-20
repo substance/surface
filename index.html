@@ -1,79 +1,172 @@
-<!doctype html>
 <html>
 <head>
-<Meta http-equiv = "expires" content = "0">
-<title>Substance/Surface</title>
-<meta charset="utf-8">
-<link rel="stylesheet" href="stylesheets/opensans.css">
-<link rel="stylesheet" href="stylesheets/surface.css">
+  <title>Substance &middot; Surface</title>
 
-<!-- Libraries -->
+  <link href='http://fonts.googleapis.com/css?family=Merriweather:400,700,300,900' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="stylesheets/surface.css">
-  <script src="lib/jquery.js"></script>
-  <script src="lib/underscore-min.js"></script>
-  <script src="lib/events.js"></script>
-  <script src="lib/mousetrap.min.js"></script>
+  <!-- Libs -->
+  <script type="text/javascript" src="lib/underscore.js"></script>
+  <script type="text/javascript" src="lib/jquery-min.js"></script>
+  <script type="text/javascript" src="lib/dmp.js"></script>
+  <script type="text/javascript" src="lib/rangy/core.js"></script>
+  <script type="text/javascript" src="lib/rangy/dom.js"></script>
+  <script type="text/javascript" src="lib/rangy/domrange.js"></script>
+  <script type="text/javascript" src="lib/rangy/wrappedrange.js"></script>
+  <script type="text/javascript" src="lib/rangy/wrappedselection.js"></script>
+  <script type="text/javascript" src="lib/rangy/cssclassapplier.js"></script>
 
-<!-- Templates -->
-  <script type="text/plain" name="empty-placeholder">
-    <span id="caret" class="placeholder empty"><%= text %></span>
+  <!-- Templates -->
+  <script type="text/html" name="toolbar">
+    <div id="toolbar"></div>
   </script>
-  <script type="text/plain" name="line">
-    <div class="line"></div>
-  </script>
-  <script type="text/plain" name="char">
-    <span class="char" id="<%= id %>"><%= ch %></span>
-  </script>
-  <script type="text/plain" name="br">
-    <span class="br">-</span>
+ 
+  <script type="text/html" name="tool">
+    <a class="tool <%= type %>" data-command="<%= type %>" href="#<%= type %>"><%= text %></a>
   </script>
 
-<!-- Source -->
-  <script src="modules/opensansregular-15px.js"></script>
-  <script src="modules/textnode.js"></script>
-  <script src="modules/caret.js"></script>
-  <script src="surface.js"></script>
 
-<!-- Boot -->
-<!-- Todo: refactor based on the API -->
+  <!-- Source -->
+  <script type="text/plain" name="content">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo
+  consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</script>
+  
+  
+  <script type="text/javascript" src="surface.js"></script>
+
   <script type="text/javascript">
-  $(function(){
-    var surface = new Surface().init();
-  });
+    $(function() {
+
+      // Helpers
+      // -------------
+
+      _.tpl = function(tpl, ctx) {
+        source = $("script[name="+tpl+"]").html();
+        return _.template(source, ctx);
+      };
+
+      // small function to poppulate tool links
+      function addTools(_type, callback){
+
+        var text
+        ,   type;
+
+        if(typeof _type === 'object'){
+
+          if(typeof _type.type === 'undefined'){
+            _type.type = 'cmd';
+          }
+
+          text = _type.text || _type.type
+          type = _type.type;
+        }else{
+          text = type = _type;
+        }
+
+        $tool = $(_.tpl('tool', {'type':type, 'text':text}));
+
+        $tool.click(type, callback);
+        $toolbar.append($tool);
+      }
+      
+      // init Surface
+      // ------------
+
+      var elSelector = '.content',
+
+      surface = new Substance.Surface({
+        el: elSelector,
+        content: $('script[name=content]').text(),
+        annotations: [{
+          "id": "a:1",
+          "type": "comment",
+          "pos": [0,4],
+          "properties": {"content": "This is a comment for you"}
+        }]
+      }),
+
+      styles = ['em', 'str'],
+      $toolbar = $($('script[name=toolbar]').html()),
+      $el = $(elSelector);
+
+      $el.wrap('<div class="text" />');
+      $text = $('.text');
+      $toolbar.insertBefore($el);
+
+      // Regular text attributes
+      $.each(styles, function(k, type){
+        addTools(type, function(){
+          surface.apply(["insert", {"type": type}]);
+        });
+      });
+
+      // Adding links
+      addTools({type:'link', text:'Link'}, function(type){
+        // optional link attributes
+        var attr = {
+              "href" : "#",
+              "prompt" : "Add a valid URL",
+              "placeholder" : "http://"
+            };
+        surface.apply(["insert", {"type": type, "attributes": attr}]);
+      });
+
+      // Adding comments
+      addTools({type:'comment', text:'Add comment'}, function(type){
+        surface.apply(["insert", {"type": type}]);
+      });
+
+      // Adding comments
+      addTools({text:'Test programmatic selection (before and after annotations)'}, function(type){
+        surface.select(305, 310);
+      });
+
+
+      // Events
+      // ------
+      
+      surface.on('annotation:change', function(ann){
+        $('.' + ann[1].type).addClass('active');
+      });
+
+      surface.on('annotation:remove', function(type){
+        $('.' + type).removeClass('active');
+      });
+      
+      surface.on('surface:active', function(){
+        $text.addClass('active');
+      });
+
+      surface.on('surface:inactive', function(){
+        $text.removeClass('active');
+      });
+
+      // Returns all annotations matching that selection
+      surface.on('selection:change', function(sel) {
+        // var annotation = surface.annotations(sel);
+        console.log('selection:change', sel);
+      });
+
+      // Debug
+      // --------------
+
+      surface.on('text:change', function(delta, content) {
+        console.log("DELTA", delta);
+      });
+
+    });
   </script>
 </head>
 <body>
   <header>
-    <nav>
-      <ul>
-        <li><a title="Substance/Surface" href="http://interior.substance.io/modules/surface.html">Substance Surface</a></li>
-      </ul>
-    </nav>
-  </header>
-  <div class="main">
-
-    <section class="doc intro">
-      <h2>Surface Demo</h2>
-      <p>The current features are:</p>
-      <ul>
-        <li>Custom font for the surface!</li>
-        <li>Inserting text via the keyboard</li>
-        <li>Clicking within the text to change the cursor's' location</li>
-        <li>Deleting or insering text in the selected location</li>
-        <li>Inserting new lines via the enter key</li>
-        <li>Navigating by characters right and left with the arrows</li>
-        <li>Navigating by words right and left with the arrows using alt</li>
-        <li>Use Home and End to go to the beginning or end of the text</li>
-        <li>PageUp and PageDown to go to the beginning or end of the text</li>
-      </ul>
-      <div class="clear"></div>
-    </section>
-
-    <section class="doc">
-      <div class="surface"></div>
-      <div class="clear"></div>
-    </section>
-
+      <nav>
+        <ul>
+          <li><a title="Substance/Surface" href="http://interior.substance.io/modules/surface.html">Substance Surface</a></li>
+        </ul>
+      </nav>
+    </header>
+    <div class="main">
+      <section class="text">
+        <div id="content" class="content" contenteditable="true"></div>
+        <div class="clear"></div>
+      </section>
   </div>
 </body>
-</html>

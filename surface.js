@@ -296,7 +296,6 @@
 
     // Applies the operations
     function apply(operation){
-
       var op = operation[0]
       ,   prop = operation[1]
       ,   type = prop.type.data || prop.type
@@ -397,6 +396,7 @@
         events.trigger('selection:change', matchingAnnotations());
       }else{
         selectionIsValid = false;
+        events.trigger('surface:noselection');
       }
     });
 

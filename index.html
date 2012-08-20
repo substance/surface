@@ -139,10 +139,17 @@
         $text.removeClass('active');
       });
 
+      surface.on('surface:noselection', function(){
+        $('.tool').removeClass('active');
+      });
+
       // Returns all annotations matching that selection
-      surface.on('selection:change', function(sel) {
-        // var annotation = surface.annotations(sel);
-        console.log('selection:change', sel);
+      surface.on('selection:change', function(ann) {
+
+        $.each(ann, function(i){
+          $('.' + ann[i].type).addClass('active');
+        });
+        console.log('selection:change', ann);
       });
 
       // Debug

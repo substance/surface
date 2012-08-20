@@ -86,11 +86,13 @@ section.text{
 	margin-bottom: 0;
 	float: left;
 	background-color: #90938c;
-	padding: 5px;
-	height: 20px;
+	padding: 3px 5px 5px;
 	border-radius: 3px;
 	color: #fff;
 	text-decoration: none;
+	font-size: 13px;
+	text-align: center;
+	vertical-align: middle;
 }
 
 #toolbar a.tool.active {

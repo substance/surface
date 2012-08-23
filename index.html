@@ -94,24 +94,24 @@
       // Regular text attributes
       $.each(styles, function(k, type){
         addTools(type, function(){
-          surface.apply(["insert", {"type": type}]);
+          surface.annotate({"type": type});
         });
       });
 
       // Adding links
-      addTools({type:'link', text:'Link'}, function(type){
-        // optional link attributes
-        var attr = {
-              "href" : "#",
-              "prompt" : "Add a valid URL",
-              "placeholder" : "http://"
-            };
-        surface.apply(["insert", {"type": type, "attributes": attr}]);
-      });
+      // addTools({type:'link', text:'Link'}, function(type){
+      //   // optional link attributes
+      //   var attr = {
+      //         "href" : "#",
+      //         "prompt" : "Add a valid URL",
+      //         "placeholder" : "http://"
+      //       };
+      //   surface.annotate({"type": type, "attributes": attr});
+      // });
 
       // Adding comments
       addTools({type:'comment', text:'Add comment'}, function(type){
-        surface.apply(["insert", {"type": type}]);
+        surface.annotate({"type": type});
       });
 
       // Adding comments
@@ -124,11 +124,11 @@
       // ------
       
       surface.on('annotation:change', function(ann){
-        $('.' + ann[1].type).addClass('active');
+        $('.tool.' + ann.type).addClass('active');
       });
 
       surface.on('annotation:remove', function(type){
-        $('.' + type).removeClass('active');
+        $('.tool.' + type).removeClass('active');
       });
       
       surface.on('surface:active', function(){
@@ -147,7 +147,7 @@
       surface.on('selection:change', function(ann) {
 
         $.each(ann, function(i){
-          $('.' + ann[i].type).addClass('active');
+          $('.tool.' + ann[i].type).addClass('active');
         });
         console.log('selection:change', ann);
       });

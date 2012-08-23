@@ -152,6 +152,17 @@
   // ..... and see if we acn do a better using rangy's
   // ..... functionality
 
+  // TODO: if we replace the position technique, we still need to
+  // ..... solve what to do when ranges are split in two if you apply
+  // ..... an annotation inside another one
+  // NOTE: it shouldnt be a problem if we get a proper offset 
+  // ..... and length of the selection for the end.
+  
+  // TODO: When we type inside a selection we need to update the annotation position
+  // ..... which we could do getting the current node contents and checking its length
+  // ..... on each keysotroke. The question is how to communicate this with the composer
+  // ..... or if we should even do that from surface
+
   Substance.Surface = function(options) {
 
     var $el = $(options.el)
@@ -166,8 +177,27 @@
     // Fire off rangy
     rangy.init();
 
+
+    // TODO: We should be able to loop trough the passed in annotations
+    // ..... and make them visible from the same method
+    // if(annotations.length > 0){
+    //   _.each(annotations, function(annotation) {
+    //     annotate(annotation);
+    //   });
+    // }
+
     // Returns the absolute offset from the top of the container
     function getCharacterOffsetWithin(sel, node) {
+
+      // Tryin'g out Butchala's suggestion here...in progress
+      // if we manage to set a position attribute in the span
+      // it's probably going to work well
+
+      // var sel = rangy.getSelection();
+      // var off = sel.anchorOffset;
+      // var end = sel.focusOffset;
+      // var prev = sel.anchorNode.previousSibling;
+      // if(prev) console.log(prev);
 
       var range = sel.getRangeAt(0)
       ,   lefOffset = 0
@@ -295,93 +325,96 @@
     }
 
     // Applies the operations
-    function apply(operation){
-      var op = operation[0]
-      ,   prop = operation[1]
-      ,   type = prop.type.data || prop.type
-      ,   attr = prop.attributes || {}
-      ,   operation = [op]
-      ,   id = _.uniqueId('annotation:')
-      ,   opAttr = {'id' : id, 'type': type};
+    // Suggested api looks like this:
+    // surface.annotate({id: "annotation:2", type: "comment", pos: [0,10], properties: {"content": "Hi, I'm a comment"}});
+    function annotate(annotation) {
 
-      // Types of Operations
-      switch (op){
+      // TODO: separate annotation generation from annotation apply
+      // TODO: once this is separated, we can see if an annotation has been passed and just apply it
+      // ....  Probably we should apply them in order from left to right to keep the ranges valid and
+      // ....  be able to pick the parent node for the new annotation from the last applyed span
 
-        case 'insert':
+      var id = annotation.id || _.uniqueId('annotation:'),
+          annt = {'id' : id},
+          type = annotation.type.data || annotation.type,
+          properties = annotation.properties || {},
+          options = {ignoreWhiteSpace: true},
+          displayOnly  = annotation.id ? true:false;
 
-          var sel = rangy.getSelection()
-          ,   options = {ignoreWhiteSpace: true}
-          ,   annt = {'id' : id}
-          ,   pos = getCharacterOffsetWithin(sel, $el[0]);
+      if(!displayOnly){
+        sel = rangy.getSelection(),
+        pos = getCharacterOffsetWithin(sel, $el[0]);
+      }
 
-          // Types of annotations
-          switch (type) {
+      // Types of annotations
+      switch (type) {
 
-            // Inserting a link annotation
-            case 'link':
+        // Inserting a link annotation – disabled for now
+        // case 'link':
 
-              var prmpt = attr.prompt || "Add a valid URL"
-              ,   href = attr.href || "#"
-              ,   placeholder = attr.placeholder || "http://"
-              ,   url = prompt(prmpt, placeholder);
+        //   var prmpt = properties.prompt || "Add a valid URL"
+        //   ,   href = properties.href || "#"
+        //   ,   placeholder = properties.placeholder || "http://"
+        //   ,   url = prompt(prmpt, placeholder);
 
-              options.elementTagName = "a";
-              options.elementProperties = {
-                href: href,
-                onclick: function() { 
-                  window.location.href = url;
-                  return false;
-                }
-              };
+        //   options.elementTagName = "a";
+        //   options.elementProperties = {
+        //     href: href,
+        //     onclick: function() { 
+        //       window.location.href = url;
+        //       return false;
+        //     }
+        //   };
 
-              opAttr.properties = {"url": url};
-              annt.url = url;
-              break;
+        //   annt.url = url;
+        //   break;
 
-            // Inserting a link annotation
-            case 'comment':
-              var prmpt = attr.prompt || "Your comment"
-              ,   placeholder = attr.placeholder || ""
-              ,   comment = prompt(prmpt, placeholder);
+        // Inserting a comment annotation
+        case 'comment':
+          var prmpt = properties.prompt || "Your comment"
+          ,   placeholder = properties.placeholder || ""
+          ,   comment = properties.content || prompt(prmpt, placeholder);
 
-              opAttr.properties = {"content": comment};
-              annt.comment = comment;
-              break;
-
-            // Inserting generic annotation
-            default:
-              break;
-          }
-
-          annCss = rangy.createCssClassApplier(type, options);
-          var existing = doesMatch();
-          if(existing){
-            // we must remove the annotation too here
-            annCss.undoToSelection();
-            removeAnnotation(existing);
-            events.trigger('annotation:remove', type);
-          }else{
-            // We only anotate when there's at least one character selected
-            if(selectionIsValid){
-              // and when we have more tha one character selected         
-              annCss.applyToSelection();
-              annt.beg = pos.beg;
-              annt.end = pos.end;
-              annt.type = type;
-              annt.data = sel.toString();
-
-              annotations.push(annt);
-              console.log(annt);
-              opAttr.pos = [pos.beg, pos.end];
-
-              operation.push(opAttr);
-              events.trigger('annotation:change', operation);
-            }
-          }
-
+          annt.comment = comment;
           break;
 
+        // Inserting generic annotations
+        default:
+          break;
       }
+
+      // options.elementProperties = {'id': 'char-offset-' + pos.beg};
+      annCss = rangy.createCssClassApplier(type, options);
+      
+      if(!displayOnly){
+        var existing = doesMatch();
+        if(existing){
+          // we must remove the annotation too here
+          annCss.undoToSelection();
+          removeAnnotation(existing);
+          events.trigger('annotation:remove', type);
+        }else{
+          // We only anotate when there's at least one character selected
+          if(selectionIsValid || !displayOnly){
+            // and when we have more tha one character selected         
+            annCss.applyToSelection();
+            annt.beg = pos.beg;
+            annt.end = pos.end;
+            annt.type = type;
+            annt.data = sel.toString();
+
+            annotations.push(annt);
+            events.trigger('annotation:change', annt);
+          }
+        }
+      }else{
+        var rn = rangy.createRange();
+        rn.setStart($el[0], annotation.pos[0]);
+        rn.setEnd($el[0], annotation.pos[1]);
+        annCss.applyToSelection();
+      }
+      
+
     }
 
 
@@ -429,7 +462,7 @@
       off:         function () { events.off.apply(events, arguments); },
       trigger:     function () { events.trigger.apply(events, arguments); },
 
-      apply:        apply,
+      annotate:        annotate,
       selection:    selection,
       getText:      getText,
       select:       select

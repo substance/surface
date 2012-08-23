@@ -143,7 +143,7 @@ Here's an example of how an application can use the API based on an application-
 
 ```js
 $('a.em').click(function() {
-  surface.apply(["insert", {"type": "em"}]);
+  surface.annotate({"type": "em"}]);
 });
 ```
 

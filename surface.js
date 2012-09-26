@@ -188,11 +188,9 @@
     // Operations
     // ---------------
 
-    function deleteSelection(selection) {
-      console.log('deleteing selection');
-      // 1. deleteing the affected characters
-      // 2. updating concerned annotations
-      // 3. update cursor position accordingly
+    function deleteRange(range) {
+      $el.find('span, br').slice(range[0], range[0]+ range[1]).remove();
+      select(range[0]);
     }
 
 
@@ -229,13 +227,13 @@
       if (ch === " ") ch = "&nbsp;";
 
       // Is there an active selection?
-      var sel = selection();
+      var range = selection();
 
-      if (sel[1]) {
-        deleteSelection(sel);
+      if (range[1]) {
+        deleteRange(range);
       }
 
-      insertCharacter(ch, sel[0]);
+      insertCharacter(ch, range[0]);
 
       // Update selection
       return false;
@@ -269,7 +267,8 @@
     
     return {
       select: select,
-      selection: selection
+      selection: selection,
+      deleteRange: deleteRange
     };
   }
 })(window);

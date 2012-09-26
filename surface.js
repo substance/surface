@@ -134,6 +134,19 @@
     ,   prevText = options.content
     ,   events = _.extend({}, _.Events);
 
+
+
+    function renderAnnotations() {
+      // Cleanup
+      $el.find('span, br').removeClass();
+
+      // Render annotations
+      _.each(annotations, function(a) {
+        elements(a.pos).addClass(a.type);
+      });
+    }
+
+
     // Initialize Surface
     // ---------------
 
@@ -143,10 +156,17 @@
           $el.append('<br/>');
         } else {
           $el.append($('<span>'+ch+'</span>'));
+
         }
       });
+
+      renderAnnotations();
     }
 
+
+    function elements(range) {
+      return $el.find('span, br').slice(range[0], range[0] + range[1]);
+    }
 
     // Set selection
     // ---------------
@@ -185,11 +205,34 @@
       return [index, length];
     }
 
+    // Transformers
+    // ---------------
+
+    function insertTransformer(index, offset) {
+      // TODO: optimize
+      _.each(annotations, function(a) {
+        var start = a.pos[0],
+            end   = start + a.pos[1];
+
+        // Case1: Offset affected
+        if ((start <= index && end >= index) || (start <= index+offset && end >= index+offset)) {
+          console.log(a.type + ' is affected directly');
+          a.pos[1] += offset;
+        } else if (start > index) {
+          // Case2: Startpos needs to be pushed
+          console.log(a.type + ' start is being pushed');
+          a.pos[0] += offset;
+        }
+      });
+      renderAnnotations();
+    }
+
+
     // Operations
     // ---------------
 
     function deleteRange(range) {
-      $el.find('span, br').slice(range[0], range[0]+ range[1]).remove();
+      elements(range).remove();
       select(range[0]);
     }
 
@@ -203,12 +246,14 @@
 
       var successor = $el.find('span, br')[index];
       if (successor) $('<span>'+char+'</span>').insertBefore(successor);
+      insertTransformer(index, 1);
       select(index+1);
     }
 
     // Used for pasting content
     function insertText(text, index) {
       // TODO: implement
+      insertTransformer(index, text.length);
     }
 
 
@@ -246,6 +291,8 @@
 
     function handlePaste(e) {
       console.log('TODO: handle pasted events.', e);
+      
+      
       return false;
     }
 

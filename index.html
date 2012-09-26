@@ -11,7 +11,7 @@
   <script type="text/javascript" src="surface.js"></script>
 
   <script type="text/plain" name="content">Hello World!
-Bla</script>
+BlaX</script>
 
   <script>
     $(function() {
@@ -19,10 +19,11 @@ Bla</script>
         el: '.content',
         content: $('script[name=content]').text(),
         annotations: [
-          {id: "abc", pos: [4,6]}
+          { id: "annotation-1", type: "em", pos: [0,3] },
+          { id: "annotation-2", type: "str", pos: [7,4] },
+          { id: "annotation-3", type: "comment", pos: [13,3] }
         ]
       });
-
 
       function log(message) {
         $('.debug-console').append($('<div class="log-entry">'+message+'</div>'))
@@ -40,7 +41,7 @@ Bla</script>
 
 </head>
 <body>
-  <div class="content" spellcheck="false" contenteditable="true"></div>
+  <div id="content" class="content" spellcheck="false" contenteditable="true"></div>
 
   <div class="debug">
     <h1>Actions (Open Console)</h1>

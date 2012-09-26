@@ -71,7 +71,13 @@ section.text{
 	border: 1px solid #ccc;
 	margin: 100px;
 	padding: 10px;
+	font-family: 'Merriweather';
+    outline: none;
+    font-size: 18px;
+    border: 1px dashed #ccc;
 
+    border-radius: 3px;
+    padding: 10px;
 }
 
 .debug {
@@ -114,16 +120,6 @@ section.text{
 	background-color: #4f4f4f;
 }
 
-.text #content{
-	font-family: 'Merriweather';
-    outline: none;
-    border: 1px dashed transparent;
-    border-radius: 3px;
-    padding: 10px;
-	float: left;
-	clear: both;
-	margin: 40px 10px 10px;
-}
 
 .text.active #content{
 	margin: 10px;

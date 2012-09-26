@@ -66,6 +66,23 @@ section.text{
 	padding: 30px;
 }
 
+.content {
+	background: #fff;
+	border: 1px solid #ccc;
+	margin: 100px;
+	padding: 10px;
+
+}
+
+.debug {
+	margin: 0 100px;
+}
+
+.debug-console {
+	background: black;
+	color: #fff;
+}
+
 
 /*endtext*/
 
@@ -112,6 +129,7 @@ section.text{
 	margin: 10px;
 	border: 1px dashed #e9e9e9;
 }  
+
 
 .comment{
 	background-color: #B9CE3F;

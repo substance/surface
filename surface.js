@@ -122,46 +122,9 @@
   if (!w.Substance || !Substance) { w.Substance = Substance = {}; }
 
 
-  // Util
-  // ---------
-
-  // Given an original text and a changed text, compute an operation reflecting
-  // the changes.
-
-  function extractOperation(baseText, newText) {
-    var dmp = new diff_match_patch();
-
-    var changes = dmp.diff_main(baseText, newText);
-    var ops = [];
-
-    function mapOp(change) {
-      var m = change[0],
-          d = change[1];
-
-      return m === 1 ? ["ins", d] : (m === -1 ? ["del", d.length] : ["ret", d.length])
-    }
-    
-    return _.map(changes, mapOp);
-  }
-
 
   // Surface
   // ---------
-
-  // TODO: revise all the string search releted scripts
-  // ..... and see if we acn do a better using rangy's
-  // ..... functionality
-
-  // TODO: if we replace the position technique, we still need to
-  // ..... solve what to do when ranges are split in two if you apply
-  // ..... an annotation inside another one
-  // NOTE: it shouldnt be a problem if we get a proper offset 
-  // ..... and length of the selection for the end.
-  
-  // TODO: When we type inside a selection we need to update the annotation position
-  // ..... which we could do getting the current node contents and checking its length
-  // ..... on each keysotroke. The question is how to communicate this with the composer
-  // ..... or if we should even do that from surface
 
   Substance.Surface = function(options) {
 
@@ -171,302 +134,142 @@
     ,   prevText = options.content
     ,   events = _.extend({}, _.Events);
 
-    // Inject content
-    $el.html(options.content);
+    // Initialize Surface
+    // ---------------
 
-    // Fire off rangy
-    rangy.init();
-
-
-    // TODO: We should be able to loop trough the passed in annotations
-    // ..... and make them visible from the same method
-    // if(annotations.length > 0){
-    //   _.each(annotations, function(annotation) {
-    //     annotate(annotation);
-    //   });
-    // }
-
-    // Returns the absolute offset from the top of the container
-    function getCharacterOffsetWithin(sel, node) {
-
-      // Tryin'g out Butchala's suggestion here...in progress
-      // if we manage to set a position attribute in the span
-      // it's probably going to work well
-
-      // var sel = rangy.getSelection();
-      // var off = sel.anchorOffset;
-      // var end = sel.focusOffset;
-      // var prev = sel.anchorNode.previousSibling;
-      // if(prev) console.log(prev);
-
-      var range = sel.getRangeAt(0)
-      ,   lefOffset = 0
-      ,   begining = 0
-      ,   end = 0
-      ,   prev = range.startContainer
-
-      ,   treeWalker = document.createTreeWalker( node, NodeFilter.SHOW_TEXT, function(node) {
-            var filter = NodeFilter.FILTER_REJECT
-            ,   nodeRange = rangy.createRange();
-
-            nodeRange.selectNodeContents(node);
-
-            if( nodeRange.compareBoundaryPoints( Range.END_TO_END, range ) === -1 ){
-              filter = NodeFilter.FILTER_ACCEPT;
-            }
-
-            return filter;
-            },
-          false );
-
-      // Let's calculate the offset 
-      while (treeWalker.nextNode()) {
-        lefOffset += treeWalker.currentNode.length;
-      }
-      // and add the accumulated offset to the range
-      if (prev.nodeType == 3) {
-        begining += lefOffset + range.startOffset;
-        end += lefOffset + range.endOffset;
-      }
-
-      // string index fallback for when miss-matched selections occur
-      var selStr = sel.toString();
-      var selStrLen = selStr.length;
-      
-      // We have a miss-matched selection here!
-      if(range.endOffset - range.startOffset !== selStrLen){
-        // we rely on the string search results then 
-        // which works great if selection is longer than 3 characters ;) !
-        var content = getText();
-      
-        var begining = content.indexOf(selStr);
-        var end = begining + selStrLen;
-      }
-
-      return {'beg':begining, 'end':end};
-    }
-
-    // Returns all the matcing annotations within the current selection
-    function matchingAnnotations(){
-      var sel = rangy.getSelection();
-      var pos = getCharacterOffsetWithin(sel, $el[0]);
-      var matched = _.filter(annotations, function(ann){ return ann.beg >= pos.beg && ann.end <= pos.end; });
-      return matched;
-    }
-
-    // Returns if the current position/selection is within an existing annotation !!! only exact match
-    function doesMatch(){
-      var sel = rangy.getSelection();
-      var pos = getCharacterOffsetWithin(sel, $el[0]);
-      
-      var matched = _.find(annotations, function(ann){ return ann.beg === pos.beg && ann.end === pos.end; });
-      return matched !== undefined ? matched : false ;
-    }
-
-    // returns a selection array
-    function selection(){
-      var sel = rangy.getSelection();
-      var pos = getCharacterOffsetWithin(sel, $el[0]);
-
-      return [pos.beg, pos.end];
-    }
-
-    // retrieves the plain text contained in our surface
-    function getText(){
-      return $el.text();
-    }
-
-    // removes passed in annotation
-    function removeAnnotation(annot){
-      annotations = _.without(annotations, annot);
-    }
-
-    // Modify the selection programmatically
-    function select(beg, end){
-      var range = rangy.createRange()
-      ,   el = $el.contents(0)[0]
-      ,   off = 0;
-
-      // To select aftet some annotations happened:
-      if(annotations.length > 0){
-        // first find out what we are trying to select in a clean scenario
-        // then iterate trough the nodes looking for that value
-        // after we find it based on the relative offsetted within that node
-        // apply that selection
-        var buffSize = 5 // we grab some extra text to make the search more specific
-        ,   txt = getText()
-        ,   findStart = txt.charAt(beg - buffSize)
-        ,   findText = ''
-        ,   i = beg - buffSize;
-
-        for (; i < end; i++) {
-          findText += txt.charAt(i);
+    function init() {
+      _.each(options.content.split(''), function(ch) {
+        if (ch === "\n") {
+          $el.append('<br/>');
+        } else {
+          $el.append($('<span>'+ch+'</span>'));
         }
-        var walker = document.createTreeWalker( $el[0], NodeFilter.SHOW_TEXT, function(node){
-          // TODO: should implement a similar function to what we use for applying here
-          // ..... also probably it's better to leverage rangy's functions to accomplish this
-          // ..... in both parts
-          return true;
-        }, false );
-        while (walker.nextNode()) {
-          var found = walker.currentNode.nodeValue.indexOf(findText);
-          if(found > 0){
-            found = found + buffSize;
-            end = found + (end - beg);
-            beg = found;
-            el = walker.currentNode;
-          }
-        }
-      }
-
-      range.setStart(el, beg);
-      range.setEnd(el, end);
-      rangy.getSelection().setSingleRange(range);
+      });
     }
 
-    // Applies the operations
-    // Suggested api looks like this:
-    // surface.annotate({id: "annotation:2", type: "comment", pos: [0,10], properties: {"content": "Hi, I'm a comment"}});
-    function annotate(annotation) {
 
-      // TODO: separate annotation generation from annotation apply
-      // TODO: once this is separated, we can see if an annotation has been passed and just apply it
-      // ....  Probably we should apply them in order from left to right to keep the ranges valid and
-      // ....  be able to pick the parent node for the new annotation from the last applyed span
+    // Set selection
+    // ---------------
 
-      var id = annotation.id || _.uniqueId('annotation:'),
-          annt = {'id' : id},
-          type = annotation.type.data || annotation.type,
-          properties = annotation.properties || {},
-          options = {ignoreWhiteSpace: true},
-          displayOnly  = annotation.id ? true:false;
+    function select(start, end) {
+      var sel = window.getSelection();
+      var startNode = $el.find('span, br')[start];
+      var endNode = end ? $el.find('span, br')[end] : startNode;
 
-      if(!displayOnly){
-        sel = rangy.getSelection(),
-        pos = getCharacterOffsetWithin(sel, $el[0]);
-      }
-
-      // Types of annotations
-      switch (type) {
-
-        // Inserting a link annotation – disabled for now
-        // case 'link':
-
-        //   var prmpt = properties.prompt || "Add a valid URL"
-        //   ,   href = properties.href || "#"
-        //   ,   placeholder = properties.placeholder || "http://"
-        //   ,   url = prompt(prmpt, placeholder);
-
-        //   options.elementTagName = "a";
-        //   options.elementProperties = {
-        //     href: href,
-        //     onclick: function() { 
-        //       window.location.href = url;
-        //       return false;
-        //     }
-        //   };
-
-        //   annt.url = url;
-        //   break;
-
-        // Inserting a comment annotation
-        case 'comment':
-          var prmpt = properties.prompt || "Your comment"
-          ,   placeholder = properties.placeholder || ""
-          ,   comment = properties.content || prompt(prmpt, placeholder);
-
-          annt.comment = comment;
-          break;
-
-        // Inserting generic annotations
-        default:
-          break;
-      }
-
-      // options.elementProperties = {'id': 'char-offset-' + pos.beg};
-      annCss = rangy.createCssClassApplier(type, options);
-      
-      if(!displayOnly){
-        var existing = doesMatch();
-        if(existing){
-          // we must remove the annotation too here
-          annCss.undoToSelection();
-          removeAnnotation(existing);
-          events.trigger('annotation:remove', type);
-        }else{
-          // We only anotate when there's at least one character selected
-          if(selectionIsValid || !displayOnly){
-            // and when we have more tha one character selected         
-            annCss.applyToSelection();
-            annt.beg = pos.beg;
-            annt.end = pos.end;
-            annt.type = type;
-            annt.data = sel.toString();
-
-            annotations.push(annt);
-            events.trigger('annotation:change', annt);
-          }
-        }
-      }else{
-        var rn = rangy.createRange();
-        rn.setStart($el[0], annotation.pos[0]);
-        rn.setEnd($el[0], annotation.pos[1]);
-        annCss.applyToSelection();
+      var range = document.createRange();
+      range.setStartBefore(startNode);
+      if(endNode) {
+        range.setEndBefore(endNode);
+      }else {
+        range.setEndAfter($el.find(':last')[0]);
       }
       
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
 
+    // Get current selection
+    // ---------------
+
+    function selection() {
+        var range = window.getSelection().getRangeAt(0),
+            node = $el[0];
+
+      var length = range.cloneContents().childNodes.length;
+      var index = $el.find('span, br').index(range.startContainer.parentElement);
+
+      // There's an edge case at the very beginning
+      if (range.startOffset !== 0) index += 1;
+      if (range.startOffset > 1) index = range.startOffset;
+
+      return [index, length];
+    }
+
+    // Operations
+    // ---------------
+
+    function deleteSelection(selection) {
+      console.log('deleteing selection');
+      // 1. deleteing the affected characters
+      // 2. updating concerned annotations
+      // 3. update cursor position accordingly
+    }
+
+
+    // Stateful
+    function insertCharacter(char, index) {
+      // 1. DOM insert after index
+      // 2. update concerned annotations
+
+      console.log('inserting character..');
+
+      var successor = $el.find('span, br')[index];
+      if (successor) $('<span>'+char+'</span>').insertBefore(successor);
+      select(index+1);
+    }
+
+    // Used for pasting content
+    function insertText(text, index) {
+      // TODO: implement
     }
 
 
     // Events
     // ------
 
-    $el.on('mouseup', function(){
-      var sel = rangy.getSelection();
+    init();
 
-      if(sel.toString().length > 0){
-        selectionIsValid = true;
-        events.trigger('selection:change', matchingAnnotations());
-      }else{
-        selectionIsValid = false;
-        events.trigger('surface:noselection');
-      }
-    });
+    // Interceptors
+    // -----------------
+    // 
+    // Overriding clusy default behavior of contenteditable
 
-    // Active/Inactive states
-    $(document).click(function(e){
-      var $clicked = $(e.srcElement);
-      if($clicked.hasClass('tool') || $clicked.hasClass('content') || $clicked.is("span")) {
-        events.trigger('surface:active');
-      }else{
-        events.trigger('surface:inactive');
-        
-        if(!$clicked.hasClass('text')){
-          var newText = getText();
-          if (prevText !== newText) {
-            // Calculate operation
-            var delta = extractOperation(prevText, getText());
-            events.trigger('text:change', delta, getText());
-            prevText = newText;
-          }
-        }
+    function handleKey(e) {
+      var ch = String.fromCharCode(e.keyCode);
+      if (ch === " ") ch = "&nbsp;";
+
+      // Is there an active selection?
+      var sel = selection();
+
+      if (sel[1]) {
+        deleteSelection(sel);
       }
-    });
-    
+
+      insertCharacter(ch, sel[0]);
+
+      // Update selection
+      return false;
+    }
+
+    function handleEnter(e) {
+      console.log('TODO: handle enter key');
+      return false;
+    }
+
+    function handlePaste(e) {
+      console.log('TODO: handle pasted events.', e);
+      return false;
+    }
+
+    // Bind Events
+    // ------
+
+    // Paste
+    $el[0].onpaste = handlePaste;
+
+    // Inserting new characters
+    $el.keypress(handleKey);
+
+    // Deal with enter key
+    key('enter', handleEnter);
+
 
     // Exposed API
     // -----------------
     
     return {
-      on:          function () { events.on.apply(events, arguments); },
-      off:         function () { events.off.apply(events, arguments); },
-      trigger:     function () { events.trigger.apply(events, arguments); },
-
-      annotate:        annotate,
-      selection:    selection,
-      getText:      getText,
-      select:       select
+      select: select,
+      selection: selection
     };
-
   }
 })(window);

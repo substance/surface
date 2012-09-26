@@ -135,7 +135,6 @@
     ,   events = _.extend({}, _.Events);
 
 
-
     function renderAnnotations() {
       // Cleanup
       $el.find('span, br').removeClass();
@@ -156,7 +155,6 @@
           $el.append('<br/>');
         } else {
           $el.append($('<span>'+ch+'</span>'));
-
         }
       });
 
@@ -214,10 +212,10 @@
         var start = a.pos[0],
             end   = start + a.pos[1];
 
-        // Case1: Offset affected
-        if ((start <= index && end >= index) || (start <= index+offset && end >= index+offset)) {
-          console.log(a.type + ' is affected directly');
+        if (start <= index && end >= index) {
+          // Case1: Offset affected
           a.pos[1] += offset;
+          console.log(a.type + ' affected directly');
         } else if (start > index) {
           // Case2: Startpos needs to be pushed
           console.log(a.type + ' start is being pushed');
@@ -237,13 +235,13 @@
     }
 
 
+    function wrapText(str) {
+      str.split('').wrapAll('<span/>');
+
+    }
+
     // Stateful
     function insertCharacter(char, index) {
-      // 1. DOM insert after index
-      // 2. update concerned annotations
-
-      console.log('inserting character..');
-
       var successor = $el.find('span, br')[index];
       if (successor) $('<span>'+char+'</span>').insertBefore(successor);
       insertTransformer(index, 1);
@@ -252,7 +250,13 @@
 
     // Used for pasting content
     function insertText(text, index) {
-      // TODO: implement
+      var chars = _.map(text.split(''), function(ch, offset) {
+        return '<span>'+ch+'</span>';
+      });
+
+      var successor = $el.find('span, br')[index];
+      $(chars.join('')).insertBefore(successor);
+
       insertTransformer(index, text.length);
     }
 
@@ -289,11 +293,36 @@
       return false;
     }
 
+
+
     function handlePaste(e) {
       console.log('TODO: handle pasted events.', e);
-      
-      
-      return false;
+      var sel = selection();
+      deleteRange(sel);
+
+      function getPastedContent (callback) {
+        // TODO: michael, explain why these css properties are needed -- timjb
+        var tmpEl = $('<div id="proper_tmp_el" contenteditable="true" />')
+          .css({
+            position: 'fixed', top: '20px', left: '20px',
+            opacity: '0', 'z-index': '10000',
+            width: '1px', height: '1px'
+          })
+          .appendTo(document.body)
+          .focus();
+        setTimeout(function () {
+          tmpEl.remove();
+          callback(tmpEl);
+        }, 10);
+      }
+
+      getPastedContent(function (node) {
+        var txt = $(node).text();
+        insertText(txt, sel[0]);
+        select(sel[0]+txt.length);
+      });
+
+      // return false;
     }
 
     // Bind Events

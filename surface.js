@@ -198,23 +198,24 @@
       var range = document.createRange();
 
       if (!lastpos) {
-        console.log('bla');
         range.setStartBefore(startNode);
         if (endNode) {
-          console.log('ble');
           range.setEndBefore(endNode);
         } else {
-          console.log('bli');
           range.setEndAfter($el.find(':last')[0]);
         }
       } else {
-        console.log('blo');
         range.setStart(startNode, 1);
         range.setEnd(startNode, 1);
       }
       
       sel.removeAllRanges();
       sel.addRange(range);
+    }
+
+    function insertAnnotation(a) {
+      annotations.push(a);
+      renderAnnotations();
     }
 
     // Get current selection
@@ -470,6 +471,7 @@
     this.selection = selection;
     this.getContent = getContent;
     this.deleteRange = deleteRange;
+    this.insertAnnotation = insertAnnotation;
   };
 
   _.extend(Substance.Surface.prototype, _.Events);

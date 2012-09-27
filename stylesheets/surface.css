@@ -128,7 +128,7 @@ section.text{
 
 
 .comment{
-	background-color: #B9CE3F;
+	background-color: #b9ce3f;
 }
 
 .em{
@@ -140,5 +140,13 @@ section.text{
 }
 
 .str{
-	font-weight: bold;
+  font-weight: bold;
+}
+
+.marker{
+  background-color: #fafb1e;
+}
+
+.comment.marker{
+  background-color: #d9e724;
 }

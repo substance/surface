@@ -54,6 +54,12 @@ Will come to you</script>
       $('a.delete-selection').click(function(sel) {
         surface.deleteRange([0, 3]);
       });
+
+      $('a.insert-annotation').click(function(sel) {
+        surface.insertAnnotation({ id: "annotation-4", type: "comment", pos: [65,10] });
+        surface.insertAnnotation({ id: "annotation-5", type: "marker", pos: [74,3] });
+      });
+
     });
   </script>
 
@@ -64,10 +70,11 @@ Will come to you</script>
   <div class="debug">
     <h1>Actions</h1>
     <div class="actions">
-      <a href="#" class="show-selection">Get Selection</a>
+<!--       <a href="#" class="show-selection">Get Selection</a>
       <a href="#" class="get-content">Get Content</a>
       <a href="#" class="set-selection">Set selection</a>
-      <a href="#" class="delete-selection">Delete Range [0..3]</a>
+      <a href="#" class="delete-selection">Delete Range [0..3]</a> -->
+      <a href="#" class="insert-annotation">Insert Annotation & Marker</a>
     </div>
     <div class="debug-console">
     </div>

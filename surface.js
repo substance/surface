@@ -383,6 +383,8 @@
 
     function handleKey(e) {
 
+      if (e.ctrlKey) { return; }
+
       var ch = String.fromCharCode(e.keyCode);
       if (ch === " ") ch = "&nbsp;";
 

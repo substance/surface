@@ -10,8 +10,10 @@
   <script type="text/javascript" src="lib/keymaster.js"></script>
   <script type="text/javascript" src="surface.js"></script>
 
-  <script type="text/plain" name="content">Hello World!
-BlaX</script>
+  <script type="text/plain" name="content">When you wish upon a star
+Makes no difference who you are
+Anything your heart desires
+Will come to you</script>
 
   <script>
     $(function() {
@@ -19,9 +21,11 @@ BlaX</script>
         el: '.content',
         content: $('script[name=content]').text(),
         annotations: [
-          { id: "annotation-1", type: "em", pos: [0,3] },
-          { id: "annotation-2", type: "str", pos: [8,4] },
-          { id: "annotation-3", type: "comment", pos: [13,3] }
+          // { id: "annotation-1", type: "em", pos: [0,3] },
+          { id: "annotation-1", type: "str", pos: [9,4] },
+          { id: "annotation-2", type: "em", pos: [58,8] },
+          { id: "annotation-3", type: "comment", pos: [35,10] }
+          // { id: "annotation-3", type: "comment", pos: [17,3] }
         ]
       });
 

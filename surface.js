@@ -228,21 +228,46 @@
 
     function deleteTransformer(index, offset) {
       // TODO: optimize
-      _.each(annotations, function(a) {
-        var start = a.pos[0],
-            end   = start + a.pos[1];
 
-        if (start <= index && end >= index) {
-          // Case1: Offset affected
-          a.pos[1] += offset;
-          console.log(a.type + ' affected directly');
-        } else if (start > index) {
-          // Case2: Startpos needs to be pushed
-          console.log(a.type + ' start is being pushed back');
-          a.pos[0] -= offset;
+      _.each(annotations, function(a) {
+        var aStart = a.pos[0],
+            aEnd   = aStart + a.pos[1],
+            sStart = index,
+            sEnd   = index + offset;
+
+        // Case1: Full overlap -> delete annotation
+        if (aStart === sStart && aEnd === sEnd) {
+          a.deleted = true;
+          console.log('Case1:Full overlap', a.type + ' will be deleted');
         }
-        console.log('updating annotations according to delete command');
+        // Case2: inner overlap -> decrease offset length by the lenth of the selection
+        else if (aStart < sStart && aEnd > sEnd) {
+          console.log(a);
+          a.pos[1] = a.pos[1] - offset;
+          console.log('Case2:inner overlap', a.type + ' decrease offset length by ' + offset);
+        }
+        // Case3: before no overlap -> reposition all the following annotation indexes by the lenth of the selection
+        else if (aStart > sStart && sEnd < aStart) {
+          a.pos[0] -= offset;
+          console.log('Case3:before no overlap', a.type + ' index repositioned');
+        }
+        // Case4: partial rightside overlap -> decrease offset length by the lenth of the overlap
+        else if(sStart <= aEnd && sEnd >= aEnd){
+          var delta = aEnd - sStart;
+          a.pos[1] -= delta;
+          console.log('Case4:partial rightside overlap', a.type + ' decrease offset length by ' + delta);
+        }
+        // Case5: partial leftSide -> reposition index of the afected annotation to the begining of the selection
+        // ...... and decrease the offset according to the length of the overlap
+        else if(sStart <= aStart && sEnd >= aStart ){
+          var delta = sEnd - aStart;
+          a.pos[0] = sStart;
+          a.pos[1] -= delta;
+          console.log('Case5:partial leftSide',  a.type + 'reposition index and decrease the offset by ' + delta);
+        }
+
       });
+
       renderAnnotations();
     }
 

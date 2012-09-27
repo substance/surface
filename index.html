@@ -60,6 +60,17 @@ Will come to you</script>
         surface.insertAnnotation({ id: "annotation-5", type: "marker", pos: [74,3] });
       });
 
+      key('ctrl+m', function() {
+        surface.insertAnnotation({ id: "annotation-5", type: "marker", pos: surface.selection() });
+        return false;
+      });
+
+      key('ctrl+x', function() {
+        var pos = surface.selection();
+        var matching = surface.getAnnotations(pos[0]);
+        surface.deleteAnnotation(matching[0]);
+      });
+
     });
   </script>
 

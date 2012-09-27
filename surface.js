@@ -188,8 +188,7 @@
       // TODO: improve handling of lastpos
       // ..... we need to find a better way to address this
       // ..... i.e. we could cache the whole $(span br) selection
-      content = getContent();
-      var lastpos = start > content.length-1;
+      var lastpos = start > getContent().length-1;
 
       var sel = window.getSelection();
       var startNode = !lastpos ? $el.find('span, br')[start] : $el.find(':last')[0];
@@ -233,6 +232,25 @@
       if (range.startOffset > 1) index = range.startOffset;
 
       return [index, length];
+    }
+
+    // Get all matching annotations
+    // ---------------
+
+    function getAnnotations(start, end) {
+      if(start && end){
+        return _.filter(annotations, function(a){ return a.pos[0] <= start && a.pos[0] + a.pos[1] >= end; });
+      }else if(start && !end){
+        return _.filter(annotations, function(a){ return a.pos[0] <= start && (a.pos[0] + a.pos[1]) >= start; });
+      }else{
+        return annotations;
+      }
+    }
+
+    // Deletes passed in annotation
+    // ---------------------------
+    function deleteAnnotation(ann) {
+      annotations = _.without(annotations, ann);
     }
 
     // Transformers
@@ -368,6 +386,7 @@
     // Overriding clusy default behavior of contenteditable
 
     function handleKey(e) {
+
       var ch = String.fromCharCode(e.keyCode);
       if (ch === " ") ch = "&nbsp;";
 
@@ -380,6 +399,7 @@
 
       insertCharacter(ch, range[0]);
       return false;
+      // e.preventDefault();
     }
 
     function handleEnter(e) {
@@ -472,6 +492,8 @@
     this.getContent = getContent;
     this.deleteRange = deleteRange;
     this.insertAnnotation = insertAnnotation;
+    this.getAnnotations = getAnnotations;
+    this.deleteAnnotation = deleteAnnotation;
   };
 
   _.extend(Substance.Surface.prototype, _.Events);

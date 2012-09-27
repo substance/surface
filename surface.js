@@ -404,7 +404,7 @@
 
       getPastedContent(function (node) {
         var txt = $(node).text();
-        insertText(txt, sel[0]);
+        insertText(txt.trim().replace(/\n/g, ""), sel[0]);
         select(sel[0]+txt.length);
         pasting = false;
       });

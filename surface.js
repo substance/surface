@@ -185,8 +185,10 @@
     // ---------------
 
     function select(start, end) {
-      // TODO: handling of lastpos is quite hacky, fix soon!
-
+      // TODO: improve handling of lastpos
+      // ..... we need to find a better way to address this
+      // ..... i.e. we could cache the whole $(span br) selection
+      content = getContent();
       var lastpos = start > content.length-1;
 
       var sel = window.getSelection();
@@ -196,13 +198,17 @@
       var range = document.createRange();
 
       if (!lastpos) {
+        console.log('bla');
         range.setStartBefore(startNode);
         if (endNode) {
+          console.log('ble');
           range.setEndBefore(endNode);
         } else {
+          console.log('bli');
           range.setEndAfter($el.find(':last')[0]);
         }
       } else {
+        console.log('blo');
         range.setStart(startNode, 1);
         range.setEnd(startNode, 1);
       }
@@ -382,8 +388,9 @@
 
     function handlePaste(e) {
       var sel = selection();
-      deleteRange(sel);
-
+      if(sel[1] > 0){
+        deleteRange(sel);
+      }
       pasting = true;
 
       function getPastedContent (callback) {
@@ -403,8 +410,8 @@
       }
 
       getPastedContent(function (node) {
-        var txt = $(node).text();
-        insertText(txt.trim().replace(/\n/g, ""), sel[0]);
+        var txt = $(node).text().trim().replace(/\n/g, "");
+        insertText(txt, sel[0]);
         select(sel[0]+txt.length);
         pasting = false;
       });
@@ -418,7 +425,6 @@
 
     function activateSurface() {
       if (pasting) return;
-      console.log('meeh');
       renderAnnotations();
     }
 

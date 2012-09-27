@@ -33,6 +33,10 @@ BlaX</script>
         log("SELECTION: "+ surface.selection());
       });
 
+      $('a.get-content').click(function(sel) {
+        log("CONTENT: <br/><pre>"+ surface.content()+"</pre>");
+      });
+
       $('a.delete-selection').click(function(sel) {
         surface.deleteRange([0, 3]);
       });
@@ -47,6 +51,7 @@ BlaX</script>
     <h1>Actions (Open Console)</h1>
     <div class="actions">
       <a href="#" class="show-selection">Get Selection</a>
+      <a href="#" class="get-content">Get Content</a>
       <a href="#" class="delete-selection">Delete Range [0..3]</a>
     </div>
     <div class="debug-console">

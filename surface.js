@@ -226,19 +226,51 @@
     }
 
 
+    function deleteTransformer(index, offset) {
+      // TODO: optimize
+      _.each(annotations, function(a) {
+        var start = a.pos[0],
+            end   = start + a.pos[1];
+
+        if (start <= index && end >= index) {
+          // Case1: Offset affected
+          a.pos[1] += offset;
+          console.log(a.type + ' affected directly');
+        } else if (start > index) {
+          // Case2: Startpos needs to be pushed
+          console.log(a.type + ' start is being pushed back');
+          a.pos[0] -= offset;
+        }
+        console.log('updating annotations according to delete command');
+      });
+      renderAnnotations();
+    }
+
+
+    // State
+    // ---------------
+
+    function content() {
+      var res = "";
+      _.each($el.find("span, br"), function(el) {
+        res += el.tagName === "BR" ? "\n" : $(el).text();
+      });
+      return res;
+    }
+
     // Operations
     // ---------------
 
     function deleteRange(range) {
+      if (range[0]<0) return;
       elements(range).remove();
       select(range[0]);
+      deleteTransformer(range[0], range[1]);
     }
 
-
-    function wrapText(str) {
-      str.split('').wrapAll('<span/>');
-
-    }
+    // function wrapText(str) {
+    //   str.split('').wrapAll('<span/>');
+    // }
 
     // Stateful
     function insertCharacter(char, index) {
@@ -284,7 +316,8 @@
 
       insertCharacter(ch, range[0]);
 
-      // Update selection
+      // trigger('content:updated', '');
+
       return false;
     }
 
@@ -293,10 +326,7 @@
       return false;
     }
 
-
-
     function handlePaste(e) {
-      console.log('TODO: handle pasted events.', e);
       var sel = selection();
       deleteRange(sel);
 
@@ -321,8 +351,13 @@
         insertText(txt, sel[0]);
         select(sel[0]+txt.length);
       });
+    }
 
-      // return false;
+
+    function handleBackspace() {
+      var sel = selection();
+      sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0]-1, 1]);
+      return false;
     }
 
     // Bind Events
@@ -337,6 +372,9 @@
     // Deal with enter key
     key('enter', handleEnter);
 
+    // Backspace key
+    key('backspace', handleBackspace);
+
 
     // Exposed API
     // -----------------
@@ -344,7 +382,11 @@
     return {
       select: select,
       selection: selection,
+      content: content,
       deleteRange: deleteRange
     };
-  }
+  };
+
+  _.extend(Substance.Surface, _.Events);
+
 })(window);

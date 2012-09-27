@@ -248,6 +248,7 @@
     // ---------------------------
     function deleteAnnotation(ann) {
       annotations = _.without(annotations, ann);
+      renderAnnotations();
     }
 
     // Transformers

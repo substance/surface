@@ -69,6 +69,7 @@ Will come to you</script>
         var pos = surface.selection();
         var matching = surface.getAnnotations(pos[0]);
         surface.deleteAnnotation(matching[0]);
+        return false;
       });
 
     });

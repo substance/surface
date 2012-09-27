@@ -171,10 +171,7 @@
     }
 
     function initStatic() {
-      initContent();
-      // $el.empty();
-      // $el.html(options.content.replace(/\n/g, "<br/>"));
-      // TODO: use spans for annotations
+      $el.find('.comment').removeClass('comment');
     }
 
     function elements(range) {
@@ -188,8 +185,7 @@
       // TODO: improve handling of lastpos
       // ..... we need to find a better way to address this
       // ..... i.e. we could cache the whole $(span br) selection
-      content = getContent();
-      var lastpos = start > content.length-1;
+      var lastpos = start > getContent().length-1;
 
       var sel = window.getSelection();
       var startNode = !lastpos ? $el.find('span, br')[start] : $el.find(':last')[0];
@@ -297,7 +293,6 @@
           a.pos[1] -= delta;
           console.log('Case5:partial leftSide',  a.type + 'reposition index and decrease the offset by ' + delta);
         }
-
       });
 
       renderAnnotations();
@@ -360,7 +355,7 @@
     // ------
 
     // init();
-    initStatic();
+    initContent();
 
     // Interceptors
     // -----------------
@@ -427,18 +422,19 @@
     function activateSurface() {
       if (pasting) return;
       renderAnnotations();
+      that.trigger('surface:active', content, prevContent);
     }
 
     function deactivateSurface() {
       if (pasting) return;
-      // 1. store new content
-      prevContent = content;
+
       content = getContent();
+      if (prevContent !== content) {
+        that.trigger('content:changed', content, prevContent);
+        prevContent = content;
+      }
 
-      // 2. Notify user about the change
-      that.trigger('content:changed', content, prevContent);
-
-      // 3. Static re-init
+      // Slow
       initStatic();
     }
 

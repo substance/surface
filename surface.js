@@ -45,7 +45,6 @@
         node.callback = callback;
         calls[event] = {tail: tail, next: list ? list.next : node};
       }
-
       return this;
     },
 
@@ -117,22 +116,24 @@
 
   };
 
+
   // Substance
   // ---------
+
   if (!w.Substance || !Substance) { w.Substance = Substance = {}; }
-
-
 
   // Surface
   // ---------
 
   Substance.Surface = function(options) {
 
-    var $el = $(options.el)
-    ,   selectionIsValid = false
-    ,   annotations = options.annotations
-    ,   prevText = options.content
-    ,   events = _.extend({}, _.Events);
+    var $el = $(options.el),
+        selectionIsValid = false,
+        annotations = options.annotations,
+        prevContent = options.content,
+        content = options.content,
+        active = false,
+        that = this;
 
 
     function renderAnnotations() {
@@ -141,26 +142,39 @@
 
       // Render annotations
       _.each(annotations, function(a) {
+        if (a.deleted) return;
         elements(a.pos).addClass(a.type);
       });
     }
 
-
     // Initialize Surface
     // ---------------
 
-    function init() {
-      _.each(options.content.split(''), function(ch) {
+    function initContent() {
+      $el.empty();
+      _.each(content.split(''), function(ch) {
         if (ch === "\n") {
           $el.append('<br/>');
         } else {
           $el.append($('<span>'+ch+'</span>'));
         }
       });
+    }
 
+    // Regular init
+    // TODO: obsolete?
+
+    function init() {
+      initContent();
       renderAnnotations();
     }
 
+    function initStatic() {
+      initContent();
+      // $el.empty();
+      // $el.html(options.content.replace(/\n/g, "<br/>"));
+      // TODO: use spans for annotations
+    }
 
     function elements(range) {
       return $el.find('span, br').slice(range[0], range[0] + range[1]);
@@ -170,16 +184,26 @@
     // ---------------
 
     function select(start, end) {
+      // TODO: handling of lastpos is quite hacky, fix soon!
+
+      var lastpos = start > content.length-1;
+
       var sel = window.getSelection();
-      var startNode = $el.find('span, br')[start];
+      var startNode = !lastpos ? $el.find('span, br')[start] : $el.find(':last')[0];
       var endNode = end ? $el.find('span, br')[end] : startNode;
 
       var range = document.createRange();
-      range.setStartBefore(startNode);
-      if(endNode) {
-        range.setEndBefore(endNode);
-      }else {
-        range.setEndAfter($el.find(':last')[0]);
+
+      if (!lastpos) {
+        range.setStartBefore(startNode);
+        if (endNode) {
+          range.setEndBefore(endNode);
+        } else {
+          range.setEndAfter($el.find(':last')[0]);
+        }
+      } else {
+        range.setStart(startNode, 1);
+        range.setEnd(startNode, 1);
       }
       
       sel.removeAllRanges();
@@ -250,7 +274,7 @@
     // State
     // ---------------
 
-    function content() {
+    function getContent() {
       var res = "";
       _.each($el.find("span, br"), function(el) {
         res += el.tagName === "BR" ? "\n" : $(el).text();
@@ -268,17 +292,19 @@
       deleteTransformer(range[0], range[1]);
     }
 
-    // function wrapText(str) {
-    //   str.split('').wrapAll('<span/>');
-    // }
-
     // Stateful
     function insertCharacter(char, index) {
       var successor = $el.find('span, br')[index];
-      if (successor) $('<span>'+char+'</span>').insertBefore(successor);
+      if (successor) {
+        $('<span>'+char+'</span>').insertBefore(successor);
+      } else {
+        $('<span>'+char+'</span>').appendTo($el);
+      }
+
       insertTransformer(index, 1);
       select(index+1);
     }
+
 
     // Used for pasting content
     function insertText(text, index) {
@@ -287,7 +313,11 @@
       });
 
       var successor = $el.find('span, br')[index];
-      $(chars.join('')).insertBefore(successor);
+      if (successor) {
+        $(chars.join('')).insertBefore(successor);
+      } else {
+        $(chars.join('')).appendTo($el);
+      }
 
       insertTransformer(index, text.length);
     }
@@ -296,7 +326,8 @@
     // Events
     // ------
 
-    init();
+    // init();
+    initStatic();
 
     // Interceptors
     // -----------------
@@ -315,9 +346,6 @@
       }
 
       insertCharacter(ch, range[0]);
-
-      // trigger('content:updated', '');
-
       return false;
     }
 
@@ -353,11 +381,26 @@
       });
     }
 
-
     function handleBackspace() {
       var sel = selection();
       sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0]-1, 1]);
       return false;
+    }
+
+    function activateSurface() {
+      renderAnnotations();
+    }
+
+    function deactivateSurface() {
+      // 1. store new content
+      prevContent = content;
+      content = getContent();
+
+      // 2. Notify user about the change
+      that.trigger('content:changed', content, prevContent);
+
+      // 3. Static re-init
+      initStatic();
     }
 
     // Bind Events
@@ -375,18 +418,22 @@
     // Backspace key
     key('backspace', handleBackspace);
 
+    // Activate surface
+    $el.focus(activateSurface);
+
+    // Deactivate surface
+    $el.blur(deactivateSurface);
+
 
     // Exposed API
     // -----------------
-    
-    return {
-      select: select,
-      selection: selection,
-      content: content,
-      deleteRange: deleteRange
-    };
+
+    this.select = select;
+    this.selection = selection;
+    this.getContent = getContent;
+    this.deleteRange = deleteRange;
   };
 
-  _.extend(Substance.Surface, _.Events);
+  _.extend(Substance.Surface.prototype, _.Events);
 
 })(window);

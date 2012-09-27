@@ -133,6 +133,7 @@
         prevContent = options.content,
         content = options.content,
         active = false,
+        pasting = false,
         that = this;
 
 
@@ -383,6 +384,8 @@
       var sel = selection();
       deleteRange(sel);
 
+      pasting = true;
+
       function getPastedContent (callback) {
         // TODO: michael, explain why these css properties are needed -- timjb
         var tmpEl = $('<div id="proper_tmp_el" contenteditable="true" />')
@@ -403,6 +406,7 @@
         var txt = $(node).text();
         insertText(txt, sel[0]);
         select(sel[0]+txt.length);
+        pasting = false;
       });
     }
 
@@ -413,10 +417,13 @@
     }
 
     function activateSurface() {
+      if (pasting) return;
+      console.log('meeh');
       renderAnnotations();
     }
 
     function deactivateSurface() {
+      if (pasting) return;
       // 1. store new content
       prevContent = content;
       content = getContent();

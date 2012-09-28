@@ -10,10 +10,8 @@
 
   // Regular expression used to split event strings
   var eventSplitter = /\s+/;
-  // Create a local reference to slice/splice.
-  var slice = Array.prototype.slice;
-  var splice = Array.prototype.splice;
 
+  var slice = Array.prototype.slice;
   // A module that can be mixed in to *any object* in order to provide it with
   // custom events. You may bind with `on` or remove with `off` callback functions
   // to an event; trigger`-ing an event fires all callbacks in succession.
@@ -140,7 +138,7 @@
 
     function renderAnnotations() {
       // Cleanup
-      $el.find('span, br').removeClass();
+      $(el.childNodes).removeClass();
 
       // Render annotations
       _.each(annotations, function(a) {
@@ -172,12 +170,9 @@
     }
 
     function initStatic() {
-      $el.find('.comment').removeClass('comment');
+      $(el.childNodes).removeClass('comment');
     }
 
-    function elements(range) {
-      return $el.find('span, br').slice(range[0], range[0] + range[1]);
-    }
 
     // Set selection
     // ---------------
@@ -236,9 +231,9 @@
     // ---------------
 
     function getAnnotations(start, end) {
-      if (start && end) {
+      if (start>=0 && end >=0) {
         return _.filter(annotations, function(a) { return a.pos[0] <= start && a.pos[0] + a.pos[1] >= end; });
-      } else if (start && !end){
+      } else if (start >= 0 && _.isUndefined(end)) {
         return _.filter(annotations, function(a) { return a.pos[0] <= start && (a.pos[0] + a.pos[1]) >= start; });
       } else {
         return annotations;
@@ -264,10 +259,10 @@
         if (start <= index && end >= index) {
           // Case1: Offset affected
           a.pos[1] += offset;
-          console.log(a.type + ' affected directly');
+          // console.log(a.type + ' affected directly');
         } else if (start > index) {
           // Case2: Startpos needs to be pushed
-          console.log(a.type + ' start is being pushed');
+          // console.log(a.type + ' start is being pushed');
           a.pos[0] += offset;
         }
       });
@@ -287,24 +282,24 @@
         // Case1: Full overlap -> delete annotation
         if (aStart === sStart && aEnd === sEnd) {
           a.deleted = true;
-          console.log('Case1:Full overlap', a.type + ' will be deleted');
+          // console.log('Case1:Full overlap', a.type + ' will be deleted');
         }
         // Case2: inner overlap -> decrease offset length by the lenth of the selection
         else if (aStart < sStart && aEnd > sEnd) {
-          console.log(a);
+          // console.log(a);
           a.pos[1] = a.pos[1] - offset;
-          console.log('Case2:inner overlap', a.type + ' decrease offset length by ' + offset);
+          // console.log('Case2:inner overlap', a.type + ' decrease offset length by ' + offset);
         }
         // Case3: before no overlap -> reposition all the following annotation indexes by the lenth of the selection
         else if (aStart > sStart && sEnd < aStart) {
           a.pos[0] -= offset;
-          console.log('Case3:before no overlap', a.type + ' index repositioned');
+          // console.log('Case3:before no overlap', a.type + ' index repositioned');
         }
         // Case4: partial rightside overlap -> decrease offset length by the lenth of the overlap
         else if (sStart <= aEnd && sEnd >= aEnd) {
           var delta = aEnd - sStart;
           a.pos[1] -= delta;
-          console.log('Case4:partial rightside overlap', a.type + ' decrease offset length by ' + delta);
+          // console.log('Case4:partial rightside overlap', a.type + ' decrease offset length by ' + delta);
         }
         // Case5: partial leftSide -> reposition index of the afected annotation to the begining of the selection
         // ...... and decrease the offset according to the length of the overlap
@@ -312,7 +307,7 @@
           var delta = sEnd - aStart;
           a.pos[0] = sStart;
           a.pos[1] -= delta;
-          console.log('Case5:partial leftSide',  a.type + 'reposition index and decrease the offset by ' + delta);
+          // console.log('Case5:partial leftSide',  a.type + 'reposition index and decrease the offset by ' + delta);
         }
       });
 
@@ -331,31 +326,45 @@
       return res;
     }
 
+    function elements(range) {
+      return $(slice.call(el.childNodes, range[0], range[0] + range[1]));
+    }
+
     // Operations
     // ---------------
 
     function deleteRange(range) {
       if (range[0]<0) return;
+
       elements(range).remove();
+
       select(range[0]);
       deleteTransformer(range[0], range[1]);
     }
 
     // Stateful
-    function insertCharacter(char, index) {
+    function insertCharacter(ch, index) {
+      if (ch == " ") ch = "&nbsp;";
       var matched = getAnnotations(index),
           classes = '';
+
       _.each(matched, function(a) {
         classes += ' ' + a.type;
       });
-      var successor = $el.find('span, br')[index];
+
+      var successor = el.childNodes[index];
+
+      var newCh = document.createElement('span');
+      newCh.innerHTML = ch;
+      newCh.className = classes;
+
       if (successor) {
-        $('<span class="' + classes + '">'+char+'</span>').insertBefore(successor);
+        el.insertBefore(newCh, successor);
       } else {
-        $('<span class="' + classes + '">'+char+'</span>').appendTo($el);
+        el.appendChild(newCh);
       }
 
-      insertTransformer(index, 1);
+      // insertTransformer(index, 1);
       select(index+1);
     }
 
@@ -364,13 +373,13 @@
     function insertText(text, index) {
       var chars = _.map(text.split(''), function(ch, offset) {
         return '<span>'+ch+'</span>';
-      });
+      }).join('');
 
-      var successor = $el.find('span, br')[index];
+      var successor = el.childNodes[index];
       if (successor) {
-        $(chars.join('')).insertBefore(successor);
+        $(chars).insertBefore(successor);
       } else {
-        $(chars.join('')).appendTo($el);
+        $(chars).appendTo($el);
       }
 
       insertTransformer(index, text.length);
@@ -380,8 +389,7 @@
     // Events
     // ------
 
-    // init();
-    initContent();
+    init();
 
     // Interceptors
     // -----------------
@@ -390,9 +398,7 @@
 
     function handleKey(e) {
       if (e.ctrlKey || e.metaKey) { return; }
-
       var ch = String.fromCharCode(e.keyCode);
-      if (ch === " ") ch = "&nbsp;";
 
       // Is there an active selection?
       var range = selection();
@@ -408,7 +414,7 @@
     }
 
     function handleEnter(e) {
-      console.log('TODO: handle enter key');
+      // console.log('TODO: handle enter key');
       e.preventDefault();
       e.stopPropagation();
     }
@@ -502,6 +508,8 @@
     this.selection = selection;
     this.getContent = getContent;
     this.deleteRange = deleteRange;
+    this.insertCharacter = insertCharacter;
+    this.insertText = insertText;
     this.insertAnnotation = insertAnnotation;
     this.getAnnotations = getAnnotations;
     this.deleteAnnotation = deleteAnnotation;

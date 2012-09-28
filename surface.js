@@ -271,7 +271,7 @@
           a.pos[0] += offset;
         }
       });
-      renderAnnotations();
+      // renderAnnotations();
     }
 
 
@@ -343,14 +343,20 @@
 
     // Stateful
     function insertCharacter(char, index) {
+      var matched = getAnnotations(index),
+          classes = '';
+      _.each(matched, function(a) {
+        classes += ' ' + a.type;
+      });
       var successor = $el.find('span, br')[index];
       if (successor) {
-        $('<span>'+char+'</span>').insertBefore(successor);
+        $('<span class="' + classes + '">'+char+'</span>').insertBefore(successor);
       } else {
-        $('<span>'+char+'</span>').appendTo($el);
+        $('<span class="' + classes + '">'+char+'</span>').appendTo($el);
       }
 
       insertTransformer(index, 1);
+      console.log('arewehere?');
       select(index+1);
     }
 
@@ -384,8 +390,7 @@
     // Overriding clusy default behavior of contenteditable
 
     function handleKey(e) {
-
-      if (e.ctrlKey) { return; }
+      // if (e.ctrlKey || e.metaKey) { return; }
 
       var ch = String.fromCharCode(e.keyCode);
       if (ch === " ") ch = "&nbsp;";
@@ -447,6 +452,7 @@
     function activateSurface() {
       if (pasting) return;
       renderAnnotations();
+      active = true;
       that.trigger('surface:active', content, prevContent);
     }
 
@@ -458,6 +464,7 @@
         that.trigger('content:changed', content, prevContent);
         prevContent = content;
       }
+      active = false;
 
       // Slow
       initStatic();
@@ -469,14 +476,16 @@
     // Paste
     $el[0].onpaste = handlePaste;
 
-    // Inserting new characters
-    $el.keypress(handleKey);
 
+    
     // Deal with enter key
     key('enter', handleEnter);
 
     // Backspace key
     key('backspace', handleBackspace);
+
+    // Inserting new characters
+    $el.keypress(handleKey);
 
     // Activate surface
     $el.focus(activateSurface);

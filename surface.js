@@ -128,6 +128,7 @@
   Substance.Surface = function(options) {
 
     var $el = $(options.el),
+        el = document.querySelector(options.el),
         selectionIsValid = false,
         annotations = options.annotations,
         prevContent = options.content,
@@ -219,8 +220,7 @@
     // ---------------
 
     function selection() {
-        var range = window.getSelection().getRangeAt(0),
-            node = $el[0];
+        var range = window.getSelection().getRangeAt(0);
 
       var length = range.cloneContents().childNodes.length;
       var index = $el.find('span, br').index(range.startContainer.parentElement);
@@ -236,11 +236,11 @@
     // ---------------
 
     function getAnnotations(start, end) {
-      if(start && end){
-        return _.filter(annotations, function(a){ return a.pos[0] <= start && a.pos[0] + a.pos[1] >= end; });
-      }else if(start && !end){
-        return _.filter(annotations, function(a){ return a.pos[0] <= start && (a.pos[0] + a.pos[1]) >= start; });
-      }else{
+      if (start && end) {
+        return _.filter(annotations, function(a) { return a.pos[0] <= start && a.pos[0] + a.pos[1] >= end; });
+      } else if (start && !end){
+        return _.filter(annotations, function(a) { return a.pos[0] <= start && (a.pos[0] + a.pos[1]) >= start; });
+      } else {
         return annotations;
       }
     }
@@ -301,14 +301,14 @@
           console.log('Case3:before no overlap', a.type + ' index repositioned');
         }
         // Case4: partial rightside overlap -> decrease offset length by the lenth of the overlap
-        else if(sStart <= aEnd && sEnd >= aEnd){
+        else if (sStart <= aEnd && sEnd >= aEnd) {
           var delta = aEnd - sStart;
           a.pos[1] -= delta;
           console.log('Case4:partial rightside overlap', a.type + ' decrease offset length by ' + delta);
         }
         // Case5: partial leftSide -> reposition index of the afected annotation to the begining of the selection
         // ...... and decrease the offset according to the length of the overlap
-        else if(sStart <= aStart && sEnd >= aStart ){
+        else if (sStart <= aStart && sEnd >= aStart ) {
           var delta = sEnd - aStart;
           a.pos[0] = sStart;
           a.pos[1] -= delta;
@@ -356,7 +356,6 @@
       }
 
       insertTransformer(index, 1);
-      console.log('arewehere?');
       select(index+1);
     }
 
@@ -390,7 +389,7 @@
     // Overriding clusy default behavior of contenteditable
 
     function handleKey(e) {
-      // if (e.ctrlKey || e.metaKey) { return; }
+      if (e.ctrlKey || e.metaKey) { return; }
 
       var ch = String.fromCharCode(e.keyCode);
       if (ch === " ") ch = "&nbsp;";
@@ -403,13 +402,15 @@
       }
 
       insertCharacter(ch, range[0]);
-      return false;
-      // e.preventDefault();
+
+      e.preventDefault();
+      e.stopPropagation(); // needed?
     }
 
     function handleEnter(e) {
       console.log('TODO: handle enter key');
-      return false;
+      e.preventDefault();
+      e.stopPropagation();
     }
 
     function handlePaste(e) {
@@ -443,20 +444,22 @@
       });
     }
 
-    function handleBackspace() {
+    function handleBackspace(e) {
       var sel = selection();
       sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0]-1, 1]);
-      return false;
+
+      e.preventDefault();
+      e.stopPropagation();
     }
 
-    function activateSurface() {
+    function activateSurface(e) {
       if (pasting) return;
       renderAnnotations();
       active = true;
       that.trigger('surface:active', content, prevContent);
     }
 
-    function deactivateSurface() {
+    function deactivateSurface(e) {
       if (pasting) return;
 
       content = getContent();
@@ -474,10 +477,8 @@
     // ------
 
     // Paste
-    $el[0].onpaste = handlePaste;
+    el.addEventListener('paste', handlePaste);
 
-
-    
     // Deal with enter key
     key('enter', handleEnter);
 
@@ -485,14 +486,14 @@
     key('backspace', handleBackspace);
 
     // Inserting new characters
-    $el.keypress(handleKey);
+    el.addEventListener('keypress', handleKey);
 
     // Activate surface
-    $el.focus(activateSurface);
+    el.addEventListener('focus', activateSurface);
 
+  
     // Deactivate surface
-    $el.blur(deactivateSurface);
-
+    el.addEventListener('blur', deactivateSurface);
 
     // Exposed API
     // -----------------

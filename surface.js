@@ -111,7 +111,6 @@
 
       return this;
     }
-
   };
 
 
@@ -126,7 +125,7 @@
   Substance.Surface = function(options) {
 
     var $el = $(options.el),
-        el = document.querySelector(options.el),
+        el = options.el,
         selectionIsValid = false,
         annotations = options.annotations,
         prevContent = options.content,
@@ -135,6 +134,7 @@
         pasting = false,
         that = this;
 
+    var dirtyNodes = {};
 
     function renderAnnotations() {
       // Cleanup
@@ -207,7 +207,8 @@
     }
 
     function insertAnnotation(a) {
-      annotations.push(a);
+      annotations[a.id] = a;
+      dirtyNodes[a.id] = "insert";
       renderAnnotations();
     }
 
@@ -247,6 +248,12 @@
       renderAnnotations();
     }
 
+
+    function makeDirty(id) {
+      if (dirtyNodes[id] === "insert") return; // new node -> leave untouched
+      dirtyNodes[id] = "update";
+    }
+
     // Transformers
     // ---------------
 
@@ -259,14 +266,15 @@
         if (start <= index && end >= index) {
           // Case1: Offset affected
           a.pos[1] += offset;
+          makeDirty(a.id); // Mark annotation dirty
           // console.log(a.type + ' affected directly');
         } else if (start > index) {
           // Case2: Startpos needs to be pushed
           // console.log(a.type + ' start is being pushed');
           a.pos[0] += offset;
+          makeDirty(a.id); // Mark annotation as dirty
         }
       });
-      // renderAnnotations();
     }
 
 
@@ -281,24 +289,29 @@
 
         // Case1: Full overlap -> delete annotation
         if (aStart === sStart && aEnd === sEnd) {
-          a.deleted = true;
+          dirtyNodes[a.id] = "delete";
+          delete annotations[a.id];
+          
           // console.log('Case1:Full overlap', a.type + ' will be deleted');
         }
         // Case2: inner overlap -> decrease offset length by the lenth of the selection
         else if (aStart < sStart && aEnd > sEnd) {
           // console.log(a);
           a.pos[1] = a.pos[1] - offset;
+          makeDirty(a.id); // Mark annotation dirty
           // console.log('Case2:inner overlap', a.type + ' decrease offset length by ' + offset);
         }
         // Case3: before no overlap -> reposition all the following annotation indexes by the lenth of the selection
         else if (aStart > sStart && sEnd < aStart) {
           a.pos[0] -= offset;
+          makeDirty(a.id); // Mark annotation dirty
           // console.log('Case3:before no overlap', a.type + ' index repositioned');
         }
         // Case4: partial rightside overlap -> decrease offset length by the lenth of the overlap
         else if (sStart <= aEnd && sEnd >= aEnd) {
           var delta = aEnd - sStart;
           a.pos[1] -= delta;
+          makeDirty(a.id); // Mark annotation dirty
           // console.log('Case4:partial rightside overlap', a.type + ' decrease offset length by ' + delta);
         }
         // Case5: partial leftSide -> reposition index of the afected annotation to the begining of the selection
@@ -307,6 +320,7 @@
           var delta = sEnd - aStart;
           a.pos[0] = sStart;
           a.pos[1] -= delta;
+          makeDirty(a.id); // Mark annotation dirty
           // console.log('Case5:partial leftSide',  a.type + 'reposition index and decrease the offset by ' + delta);
         }
       });
@@ -465,12 +479,40 @@
       that.trigger('surface:active', content, prevContent);
     }
 
+
+    function annotationUpdates() {
+      var ops = [];
+      var deletedAnnotations = [];
+
+      _.each(dirtyNodes, function(method, key) {
+        if (method === "delete") return deletedAnnotations.push(key);
+        var a = annotations[key];
+
+        if (method === "insert") {
+          ops.push(["insert", {id: a.id, type: a.type, data: {pos: a.pos}}]);
+        } else if (method === "update") {
+          ops.push(["update", {id: a.id, data: {pos: a.pos}}]);
+        }
+      });
+
+      if (deletedAnnotations.length > 0) {
+        ops.push(["delete", {"nodes": deletedAnnotations}]);
+      }
+
+      return ops;
+    }
+
     function deactivateSurface(e) {
+
       if (pasting) return;
 
       content = getContent();
-      if (prevContent !== content) {
-        that.trigger('content:changed', content, prevContent);
+
+      var ops = annotationUpdates();
+
+      if (prevContent !== content || ops.length > 0) {
+        dirtyNodes = {};
+        that.trigger('content:changed', content, prevContent, ops);
         prevContent = content;
       }
       active = false;
@@ -497,7 +539,6 @@
     // Activate surface
     el.addEventListener('focus', activateSurface);
 
-  
     // Deactivate surface
     el.addEventListener('blur', deactivateSurface);
 

@@ -364,7 +364,7 @@
         el.appendChild(newCh);
       }
 
-      // insertTransformer(index, 1);
+      insertTransformer(index, 1);
       select(index+1);
     }
 

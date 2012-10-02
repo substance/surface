@@ -128,6 +128,7 @@
         el = options.el,
         selectionIsValid = false,
         annotations = options.annotations,
+        types = options.types,
         prevContent = options.content,
         content = options.content,
         active = false,
@@ -173,6 +174,10 @@
       $(el.childNodes).removeClass('comment');
     }
 
+    // Determines if a certain annotation is inclusive or not
+    function isInclusive(a) {
+      return (types.hasOwnProperty(a.type)) ? types[a.type].inclusive : true;
+    }
 
     // Set selection
     // ---------------
@@ -268,17 +273,36 @@
         var start = a.pos[0],
             end   = start + a.pos[1];
 
+
         if (start <= index && end >= index) {
-          // Case1: Offset affected
-          a.pos[1] += offset;
-          makeDirty(a.id); // Mark annotation dirty
-          // console.log(a.type + ' affected directly');
+          // Case1: operating in current annotation -> Offset affected
+                    
+          if (!isInclusive(a)) {
+            // non inclusive type of annotations
+
+            if (start === index) {            
+              // user is typing at the beginning of the annotation
+              a.pos[0] += offset;
+              makeDirty(a.id); // Mark annotation dirty
+              console.log('not inclusive, we push the offset');
+            }
+
+          } else {
+            // inclusive type of annotations (default)
+            a.pos[1] += offset;
+            makeDirty(a.id); // Mark annotation dirty
+            console.log(a.type + ' affected directly');
+          }
+         
+
         } else if (start > index) {
-          // Case2: Startpos needs to be pushed
+          // Case2: subsequent annotations -> Startpos needs to be pushed
           // console.log(a.type + ' start is being pushed');
           a.pos[0] += offset;
           makeDirty(a.id); // Mark annotation as dirty
         }
+        
+
       });
     }
 
@@ -367,7 +391,7 @@
           classes = '';
 
       _.each(matched, function(a) {
-        classes += ' ' + a.type;
+        if (isInclusive(a)) classes += ' ' + a.type;
       });
 
       var successor = el.childNodes[index];

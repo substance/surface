@@ -18,7 +18,7 @@ Will come to you</script>
   <script>
     $(function() {
       window.surface = new Substance.Surface({
-        el: '.content',
+        el: $('.content')[0],
         content: $('script[name=content]').text(),
         annotations: [
           // { id: "annotation-1", type: "em", pos: [0,3] },

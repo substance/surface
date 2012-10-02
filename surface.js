@@ -179,29 +179,30 @@
 
     function select(start, end) {
       if (!active) return;
-      // TODO: improve handling of lastpos
-      // ..... we need to find a better way to address this
-      // ..... i.e. we could cache the whole $(span br) selection
-      var lastpos = start > getContent().length-1;
 
       var sel = window.getSelection();
-      var startNode = !lastpos ? $el.find('span, br')[start] : $el.find(':last')[0];
-      var endNode = end ? $el.find('span, br')[end] : startNode;
-
       var range = document.createRange();
+      var children = el.childNodes;
+      var numChild = children.length-1;
+      var isLastNode = start > numChild;
+      var startNode = isLastNode ? children[numChild] : children[start];
+      var endNode = end ? children[end] : startNode;
 
-      if (!lastpos) {
-        range.setStartBefore(startNode);
-        if (endNode) {
-          range.setEndBefore(endNode);
+      if (children.length > 0) {
+      // here is text in the container
+        if (!isLastNode) {
+          range.setStartBefore(startNode);
         } else {
-          range.setEndAfter($el.find(':last')[0]);
+          range.setStart(startNode, 1);
+          range.setEnd(startNode, 1);
         }
+
       } else {
-        range.setStart(startNode, 1);
-        range.setEnd(startNode, 1);
+      // No characters left in the container
+        range.setStart(el, 0);
+        range.setEnd(el, 0);
       }
-      
+
       sel.removeAllRanges();
       sel.addRange(range);
     }
@@ -216,10 +217,15 @@
     // ---------------
 
     function selection() {
-        var range = window.getSelection().getRangeAt(0);
-
+  
+      var range = window.getSelection().getRangeAt(0);
       var length = range.cloneContents().childNodes.length;
-      var index = $el.find('span, br').index(range.startContainer.parentElement);
+      var startContainer = range.startContainer;
+      var parent = startContainer.parentElement;
+      var indexOf = Array.prototype.indexOf;
+
+      // if(startContainer.nodeType === 3) index = $el.find('span, br').index(range.startContainer.parentElement);
+      var index = startContainer.nodeType === 3 ? indexOf.call(el.childNodes, parent) : 0;
 
       // There's an edge case at the very beginning
       if (range.startOffset !== 0) index += 1;
@@ -247,7 +253,6 @@
       annotations = _.without(annotations, ann);
       renderAnnotations();
     }
-
 
     function makeDirty(id) {
       if (dirtyNodes[id] === "insert") return; // new node -> leave untouched
@@ -287,12 +292,11 @@
             sStart = index,
             sEnd   = index + offset;
 
-        // Case1: Full overlap -> delete annotation
-        if (aStart === sStart && aEnd === sEnd) {
+        // Case1: Full overlap or wrap around overlap -> delete annotation
+        if (sStart <= aStart && sEnd >= aEnd) {
           dirtyNodes[a.id] = "delete";
           delete annotations[a.id];
-          
-          // console.log('Case1:Full overlap', a.type + ' will be deleted');
+          console.log('Case1:Full overlap', a.type + ' will be deleted');
         }
         // Case2: inner overlap -> decrease offset length by the lenth of the selection
         else if (aStart < sStart && aEnd > sEnd) {
@@ -324,7 +328,6 @@
           // console.log('Case5:partial leftSide',  a.type + 'reposition index and decrease the offset by ' + delta);
         }
       });
-
       renderAnnotations();
     }
 
@@ -358,7 +361,8 @@
 
     // Stateful
     function insertCharacter(ch, index) {
-      if (ch == " ") ch = "&nbsp;";
+      if (ch === " ") ch = "&nbsp;";
+      
       var matched = getAnnotations(index),
           classes = '';
 
@@ -367,10 +371,13 @@
       });
 
       var successor = el.childNodes[index];
+      var newEl = 'span';
 
-      var newCh = document.createElement('span');
-      newCh.innerHTML = ch;
-      newCh.className = classes;
+      if (ch === "\n") newEl = 'br';
+
+      var newCh = document.createElement(newEl);
+      if (ch !== "\n") newCh.innerHTML = ch;
+      if (ch !== "\n") newCh.className = classes;
 
       if (successor) {
         el.insertBefore(newCh, successor);
@@ -381,7 +388,6 @@
       insertTransformer(index, 1);
       select(index+1);
     }
-
 
     // Used for pasting content
     function insertText(text, index) {
@@ -416,21 +422,16 @@
 
       // Is there an active selection?
       var range = selection();
+      var index = range[0] < 0 ? 0 : range[0];
 
       if (range[1]) {
         deleteRange(range);
       }
 
-      insertCharacter(ch, range[0]);
+      insertCharacter(ch, index);
 
       e.preventDefault();
       e.stopPropagation(); // needed?
-    }
-
-    function handleEnter(e) {
-      // console.log('TODO: handle enter key');
-      e.preventDefault();
-      e.stopPropagation();
     }
 
     function handlePaste(e) {
@@ -441,8 +442,7 @@
       pasting = true;
 
       function getPastedContent (callback) {
-        // TODO: michael, explain why these css properties are needed -- timjb
-        var tmpEl = $('<div id="proper_tmp_el" contenteditable="true" />')
+        var tmpEl = $('<div contenteditable="true" />')
           .css({
             position: 'fixed', top: '20px', left: '20px',
             opacity: '0', 'z-index': '10000',
@@ -465,9 +465,27 @@
     }
 
     function handleBackspace(e) {
-      var sel = selection();
-      sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0]-1, 1]);
+      if (active) {
+        var sel = selection();
+        sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0]-1, 1]);
+        
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
 
+    // AFTERLUNCH:
+    // ===========
+
+    // deletions should take away containing annotations too
+    // select and delete
+    // select and replace (means delete and then insert)
+    // etc 
+
+    function handleNewline(e) {
+      if (!active) return;
+
+      insertCharacter('\n', selection()[0]);
       e.preventDefault();
       e.stopPropagation();
     }
@@ -478,7 +496,6 @@
       active = true;
       that.trigger('surface:active', content, prevContent);
     }
-
 
     function annotationUpdates() {
       var ops = [];
@@ -524,14 +541,20 @@
     // Bind Events
     // ------
 
-    // Paste
-    el.addEventListener('paste', handlePaste);
-
-    // Deal with enter key
-    key('enter', handleEnter);
-
     // Backspace key
     key('backspace', handleBackspace);
+
+    key('ctrl+d', function() {
+      if (!active) return;
+      console.log('test', selection());
+      return false;
+    });
+
+    // Enter key for new lines
+    key('shift+enter', handleNewline);
+
+    // Paste
+    el.addEventListener('paste', handlePaste);
 
     // Inserting new characters
     el.addEventListener('keypress', handleKey);

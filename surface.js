@@ -130,7 +130,7 @@
         annotations = options.annotations,
         types = options.types,
         content = options.content || '',
-        content = options.content,
+        prevContent = content,
         active = false,
         pasting = false,
         that = this;

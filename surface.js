@@ -128,7 +128,7 @@
         el = options.el,
         selectionIsValid = false,
         annotations = options.annotations,
-        types = options.types,
+        types = options.types || {},
         content = options.content || '',
         prevContent = content,
         active = false,
@@ -176,7 +176,7 @@
 
     // Determines if a certain annotation is inclusive or not
     function isInclusive(a) {
-      return (types.hasOwnProperty(a.type)) ? types[a.type].inclusive : true;
+      return (types[a.type]) ? types[a.type].inclusive : true;
     }
 
     // Set selection

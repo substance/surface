@@ -129,7 +129,7 @@
         selectionIsValid = false,
         annotations = options.annotations,
         types = options.types,
-        prevContent = options.content,
+        content = options.content || '',
         content = options.content,
         active = false,
         pasting = false,

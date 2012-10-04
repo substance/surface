@@ -239,17 +239,20 @@
       return [index, length];
     }
 
-    // Get all matching annotations
+    // Matching annotations [xxxx.]
     // ---------------
 
-    function getAnnotations(start, end) {
-      if (start>=0 && end >=0) {
-        return _.filter(annotations, function(a) { return a.pos[0] <= start && a.pos[0] + a.pos[1] >= end; });
-      } else if (start >= 0 && _.isUndefined(end)) {
-        return _.filter(annotations, function(a) { return a.pos[0] <= start && (a.pos[0] + a.pos[1]) >= start; });
-      } else {
-        return annotations;
-      }
+    function getAnnotations(sel, types) {
+      var sStart = sel[0],
+          sEnd   = sel[0] + sel[1];
+
+      return _.filter(annotations, function(a) {
+        if (!sel) return true; // return all annotations
+        var aStart = a.pos[0], aEnd = aStart + a.pos[1];
+        var intersects = aStart <= sEnd && aEnd >= sStart;
+        // Intersects and satisfies type filter
+        return intersects && (types ? _.include(types, a.type) : true);
+      });
     }
 
     // Deletes passed in annotation
@@ -387,7 +390,7 @@
     function insertCharacter(ch, index) {
       if (ch === " ") ch = "&nbsp;";
       
-      var matched = getAnnotations(index),
+      var matched = getAnnotations([index,0]),
           classes = '';
 
       _.each(matched, function(a) {
@@ -588,6 +591,12 @@
 
     // Deactivate surface
     el.addEventListener('blur', deactivateSurface);
+
+    // Selection changed
+    document.addEventListener('selectionchange', function() {
+      if (!active) return;
+      that.trigger('selection:changed', selection());
+    });
 
     // Exposed API
     // -----------------

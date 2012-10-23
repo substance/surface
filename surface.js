@@ -266,9 +266,10 @@
       renderAnnotations();
     }
 
-    function makeDirty(id) {
-      if (dirtyNodes[id] === "insert") return; // new node -> leave untouched
-      dirtyNodes[id] = "update";
+    function makeDirty(a) {
+      if (dirtyNodes[a.id] === "insert") return; // new node -> leave untouched
+      dirtyNodes[a.id] = "update";
+      a.dirty = true;
     }
 
     // Transformers
@@ -277,38 +278,55 @@
     function insertTransformer(index, offset) {
       // TODO: optimize
       _.each(annotations, function(a) {
-        var start = a.pos[0],
-            end   = start + a.pos[1];
+        var aStart = a.pos[0],
+            aEnd   = aStart + a.pos[1];
 
+        if (aStart === index) {
+        // Case1: insertion matching beginning
+        console.log('Case1: insertion matching beginning');
 
-        if (start <= index && end >= index) {
-          // Case1: operating in current annotation -> Offset affected
-                    
-          if (!isInclusive(a)) {
-            // non inclusive type of annotations
-
-            if (start === index) {            
-              // user is typing at the beginning of the annotation
-              a.pos[0] += offset;
-              makeDirty(a.id); // Mark annotation dirty
-              console.log('not inclusive, we push the offset');
-            }
-
-          } else {
-            // inclusive type of annotations (default)
-            a.pos[1] += offset;
-            makeDirty(a.id); // Mark annotation dirty
-            console.log(a.type + ' affected directly');
+          if (isInclusive(a)) {
+          // CaseA: inclusive
+            makeDirty(a); // Mark annotation dirty
+            a.pos[1] += offset; // offseting tail 
+            console.log('inclusive, we mark dirty');
+          }else{
+            // if not including we have to push the begining
+            console.log('not including, we push the begining');
+            a.pos[0] += offset;
+            a.dirty = false;
           }
-         
 
-        } else if (start > index) {
-          // Case2: subsequent annotations -> Startpos needs to be pushed
-          // console.log(a.type + ' start is being pushed');
-          a.pos[0] += offset;
-          makeDirty(a.id); // Mark annotation as dirty
-        }
+
+
+        } else if (aStart < index && aEnd > index) {
+        // Case2: insertion within annotation boundries
+        console.log('Case2: insertion within annotation boundries');
+        // both inclusive and noninclusive react alike
         
+        // marking dirty and offseting tail
+        makeDirty(a);
+        a.pos[1] += offset;
+
+      } else if (aEnd == index) {
+        // Case3: insertion matching ending
+        console.log('Case3: insertion matching ending');
+
+        if (isInclusive(a)) {
+          // CaseA: inclusive
+          // Only inclusive affects the annotation
+          console.log('CaseA: inclusive');
+          makeDirty(a);
+          a.pos[1] += offset;
+        }else{
+          a.dirty = false;
+        }
+
+      } else if (aStart > index) {
+        // Case2: subsequent annotations -> Startpos needs to be pushed
+        a.pos[0] += offset;
+        makeDirty(a); // Mark annotation as dirty
+      }
 
       });
     }
@@ -333,20 +351,20 @@
         else if (aStart < sStart && aEnd > sEnd) {
           // console.log(a);
           a.pos[1] = a.pos[1] - offset;
-          makeDirty(a.id); // Mark annotation dirty
+          makeDirty(a); // Mark annotation dirty
           // console.log('Case2:inner overlap', a.type + ' decrease offset length by ' + offset);
         }
         // Case3: before no overlap -> reposition all the following annotation indexes by the lenth of the selection
         else if (aStart > sStart && sEnd < aStart) {
           a.pos[0] -= offset;
-          makeDirty(a.id); // Mark annotation dirty
+          makeDirty(a); // Mark annotation dirty
           // console.log('Case3:before no overlap', a.type + ' index repositioned');
         }
         // Case4: partial rightside overlap -> decrease offset length by the lenth of the overlap
         else if (sStart <= aEnd && sEnd >= aEnd) {
           var delta = aEnd - sStart;
           a.pos[1] -= delta;
-          makeDirty(a.id); // Mark annotation dirty
+          makeDirty(a); // Mark annotation dirty
           // console.log('Case4:partial rightside overlap', a.type + ' decrease offset length by ' + delta);
         }
         // Case5: partial leftSide -> reposition index of the afected annotation to the begining of the selection
@@ -355,7 +373,7 @@
           var delta = sEnd - aStart;
           a.pos[0] = sStart;
           a.pos[1] -= delta;
-          makeDirty(a.id); // Mark annotation dirty
+          makeDirty(a); // Mark annotation dirty
           // console.log('Case5:partial leftSide',  a.type + 'reposition index and decrease the offset by ' + delta);
         }
       });
@@ -398,8 +416,13 @@
       var matched = getAnnotations([index,0]),
           classes = '';
 
+      // we perform the transformation before
+      // to check the inclusive/noninclusive
+      // in order to apply the class or not
+      insertTransformer(index, 1);
+
       _.each(matched, function(a) {
-        if (isInclusive(a)) classes += ' ' + a.type;
+        if (a.dirty) classes += ' ' + a.type;
       });
 
       var successor = el.childNodes[index];
@@ -417,7 +440,6 @@
         el.appendChild(newCh);
       }
 
-      insertTransformer(index, 1);
       select(index+1);
       that.trigger('changed');
     }
@@ -537,7 +559,8 @@
 
       _.each(dirtyNodes, function(method, key) {
         if (method === "delete") return deletedAnnotations.push(key);
-        var a = annotations[key];
+        // var a = annotations[key];
+        var a = _.find(annotations, function(_a){ return _a.id == key; });
 
         if (method === "insert") {
           ops.push(["insert", {id: a.id, type: a.type, pos: a.pos}]);

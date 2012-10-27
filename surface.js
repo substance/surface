@@ -1,4 +1,5 @@
 //     (c) 2012 Victor Saiz, Michael Aufreiter
+
 //     Surface is freely distributable under the MIT license.
 //     For all details and documentation:
 //     http://github.com/surface/surface
@@ -143,7 +144,7 @@
 
       // Render annotations
       _.each(annotations, function(a) {
-        if (a.deleted) return;
+        if (dirtyNodes[a.id] === 'delete') return;
         elements(a.pos).addClass(a.type);
       });
     }
@@ -170,8 +171,19 @@
       renderAnnotations();
     }
 
-    function initStatic() {
-      $(el.childNodes).removeClass('comment');
+    // function initStatic() {
+    //   // $(el.childNodes).removeClass('comment');
+    // }
+
+    // Highlight a particular annotation
+    function highlight(id) {
+      // var a = annotationById[id]; // is this outta synch?
+      if (typeof id === 'string') {
+        var a = annotationById(id);
+        elements(a.pos).addClass('highlight');
+      } else {
+        $el.find('.highlight').removeClass('highlight');
+      }
     }
 
     // Determines if a certain annotation is inclusive or not
@@ -243,17 +255,33 @@
     // Matching annotations [xxxx.]
     // ---------------
 
-    function getAnnotations(sel, types) {
-      var sStart = sel[0],
-          sEnd   = sel[0] + sel[1];
+    function getAnnotations(sel, aTypes) {
 
-      return _.filter(annotations, function(a) {
-        if (!sel) return true; // return all annotations
-        var aStart = a.pos[0], aEnd = aStart + a.pos[1];
-        var intersects = aStart <= sEnd && aEnd >= sStart;
-        // Intersects and satisfies type filter
-        return intersects && (types ? _.include(types, a.type) : true);
+      if (sel) {
+        var sStart = sel[0],
+        sEnd   = sel[0] + sel[1];
+
+        return _.filter(annotations, function(a) {
+          var aStart = a.pos[0], aEnd = aStart + a.pos[1];
+          
+          if(types[a.type] && types[a.type].inclusive === false){
+            // its a non inclusive annotation
+            // so intersects doesnt include the prev and last chars
+            var intersects = (aStart + 1) <= sEnd && (aEnd - 1) >= sStart;
+          } else {
+            var intersects = aStart <= sEnd && aEnd >= sStart;
+          }
+          // Intersects and satisfies type filter
+          return intersects && (aTypes ? _.include(aTypes, a.type) : true);
       });
+
+      } else {
+        return annotations; // return all annotations
+      }
+    }
+
+    function annotationById(id){
+      return _.find(annotations, function(ann){ return ann.id == id; });
     }
 
     // Deletes passed in annotation
@@ -269,7 +297,6 @@
     function makeDirty(a) {
       if (dirtyNodes[a.id] === "insert") return; // new node -> leave untouched
       dirtyNodes[a.id] = "update";
-      a.dirty = true;
     }
 
     // Transformers
@@ -288,16 +315,15 @@
           if (isInclusive(a)) {
           // CaseA: inclusive
             makeDirty(a); // Mark annotation dirty
+            a.isAffected = true;
             a.pos[1] += offset; // offseting tail 
-            console.log('inclusive, we mark dirty');
+            console.log('inclusive, annotation is affected');
           }else{
             // if not including we have to push the begining
             console.log('not including, we push the begining');
             a.pos[0] += offset;
-            a.dirty = false;
+            a.isAffected = false;
           }
-
-
 
         } else if (aStart < index && aEnd > index) {
         // Case2: insertion within annotation boundries
@@ -306,6 +332,7 @@
         
         // marking dirty and offseting tail
         makeDirty(a);
+        a.isAffected = true;
         a.pos[1] += offset;
 
       } else if (aEnd == index) {
@@ -317,20 +344,21 @@
           // Only inclusive affects the annotation
           console.log('CaseA: inclusive');
           makeDirty(a);
+          a.isAffected = true;
           a.pos[1] += offset;
         }else{
-          a.dirty = false;
+          a.isAffected = false;
         }
 
       } else if (aStart > index) {
         // Case2: subsequent annotations -> Startpos needs to be pushed
         a.pos[0] += offset;
         makeDirty(a); // Mark annotation as dirty
+        a.isAffected = true;
       }
 
       });
     }
-
 
     function deleteTransformer(index, offset) {
       // TODO: optimize
@@ -344,7 +372,8 @@
         // Case1: Full overlap or wrap around overlap -> delete annotation
         if (sStart <= aStart && sEnd >= aEnd) {
           dirtyNodes[a.id] = "delete";
-          delete annotations[a.id];
+          annotations = _.without(annotations, a);
+
           console.log('Case1:Full overlap', a.type + ' will be deleted');
         }
         // Case2: inner overlap -> decrease offset length by the lenth of the selection
@@ -400,7 +429,7 @@
     // ---------------
 
     function deleteRange(range) {
-      if (range[0]<0) return;
+      if (range[0] < 0) return;
 
       elements(range).remove();
 
@@ -416,13 +445,12 @@
       var matched = getAnnotations([index,0]),
           classes = '';
 
-      // we perform the transformation before
-      // to check the inclusive/noninclusive
-      // in order to apply the class or not
+      // we perform the transformation before to see if the inclusive/noninclusive
+      // affects in order to apply the class or not
       insertTransformer(index, 1);
 
       _.each(matched, function(a) {
-        if (a.dirty) classes += ' ' + a.type;
+        if (a.isAffected) classes += ' ' + a.type;
       });
 
       var successor = el.childNodes[index];
@@ -530,13 +558,15 @@
       }
     }
 
-    // AFTERLUNCH:
-    // ===========
-
-    // deletions should take away containing annotations too
-    // select and delete
-    // select and replace (means delete and then insert)
-    // etc 
+    function handleDel(e) {
+      if (active) {
+        var sel = selection();
+        sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0], 1]);
+        
+        e.preventDefault();
+        e.stopPropagation();
+      }
+    }
 
     function handleNewline(e) {
       if (!active) return;
@@ -560,7 +590,7 @@
       _.each(dirtyNodes, function(method, key) {
         if (method === "delete") return deletedAnnotations.push(key);
         // var a = annotations[key];
-        var a = _.find(annotations, function(_a){ return _a.id == key; });
+        var a = annotationById(key);
 
         if (method === "insert") {
           ops.push(["insert", {id: a.id, type: a.type, pos: a.pos}]);
@@ -592,7 +622,7 @@
       active = false;
 
       // Slow
-      initStatic();
+      // initStatic();
     }
 
     // Bind Events
@@ -600,6 +630,7 @@
 
     // Backspace key
     key('backspace', handleBackspace);
+    key('del', handleDel);
 
     key('ctrl+d', function() {
       if (!active) return;
@@ -641,6 +672,7 @@
     this.insertAnnotation = insertAnnotation;
     this.getAnnotations = getAnnotations;
     this.deleteAnnotation = deleteAnnotation;
+    this.highlight = highlight;
   };
 
   _.extend(Substance.Surface.prototype, _.Events);

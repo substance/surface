@@ -42,6 +42,16 @@ Will come to you</script>
         console.log('updated text from', prevContent, 'to: ', content);
       });
 
+      // Update comments panel according to marker context
+      surface.on('selection:changed', function(sel) {
+        var marker = surface.getAnnotations(sel, ["comment"])[0];
+        if (marker) {
+          surface.highlight(marker.id);
+        } else {
+          surface.highlight(null);
+        }
+      });
+
       function log(message) {
         $('.debug-console').append($('<div class="log-entry">'+message+'</div>'))
       }

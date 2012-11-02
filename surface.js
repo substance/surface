@@ -591,12 +591,6 @@
       e.stopPropagation();
     }
 
-    function activateSurface(e) {
-      if (pasting) return;
-      renderAnnotations();
-      active = true;
-      that.trigger('surface:active', content, prevContent);
-    }
 
     function annotationUpdates() {
       var ops = [];
@@ -621,8 +615,15 @@
       return ops;
     }
 
-    function deactivateSurface(e) {
+    function activateSurface(e) {
+      if (pasting) return;
+      renderAnnotations();
+      active = true;
+      Substance.Surface.activeSurface = that;
+      that.trigger('surface:active', content, prevContent);
+    }
 
+    function deactivateSurface(e) {
       if (pasting) return;
 
       content = getContent();
@@ -636,8 +637,8 @@
       }
       active = false;
 
-      // Slow
-      // initStatic();
+      // Reset activeSurface reference
+      Substance.Surface.activeSurface = null;
     }
 
     // Bind Events
@@ -668,12 +669,6 @@
     // Deactivate surface
     el.addEventListener('blur', deactivateSurface);
 
-    // Selection changed
-    document.addEventListener('selectionchange', function() {
-      if (!active) return;
-      that.trigger('selection:changed', selection());
-    });
-
     // Exposed API
     // -----------------
 
@@ -691,5 +686,18 @@
   };
 
   _.extend(Substance.Surface.prototype, _.Events);
+
+
+  // Global Event Handlers
+  // -----------------
+
+  // Selection changed
+  // For some reason however when switching between two editable elements
+  // onselectionchange gets fired twice for the new element.
+
+  document.onselectionchange = function(e) {
+    var target = Substance.Surface.activeSurface;
+    if (target) target.trigger('selection:changed', target.selection());
+  };
 
 })(window);

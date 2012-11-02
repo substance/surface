@@ -228,7 +228,7 @@
       annotations[a.id] = a;
       dirtyNodes[a.id] = "insert";
       renderAnnotations();
-      that.trigger('changed');
+      that.trigger('annotations:changed');
     }
 
     // Get current selection
@@ -305,7 +305,7 @@
       delete annotations[ann];
       // Flag as deleted so update events are sent appropriately
       dirtyNodes[ann] = "delete";
-      that.trigger('changed');
+      that.trigger('annotations:changed');
       renderAnnotations();
     }
 

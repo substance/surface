@@ -255,6 +255,20 @@
     // Matching annotations [xxxx.]
     // ---------------
 
+    // Original version (for reference)
+    // function getAnnotations(sel, types) {
+    //   var sStart = sel[0],
+    //       sEnd   = sel[0] + sel[1];
+    //
+    //   return _.filter(annotations, function(a) {
+    //     if (!sel) return true; // return all annotations
+    //     var aStart = a.pos[0], aEnd = aStart + a.pos[1];
+    //     var intersects = aStart <= sEnd && aEnd >= sStart;
+    //     // Intersects and satisfies type filter
+    //     return intersects && (types ? _.include(types, a.type) : true);
+    //   });
+    // }
+
     function getAnnotations(sel, aTypes) {
 
       if (sel) {

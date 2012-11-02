@@ -144,7 +144,6 @@
 
       // Render annotations
       _.each(annotations, function(a) {
-        if (dirtyNodes[a.id] === 'delete') return;
         elements(a.pos).addClass(a.type);
       });
     }
@@ -171,19 +170,11 @@
       renderAnnotations();
     }
 
-    // function initStatic() {
-    //   // $(el.childNodes).removeClass('comment');
-    // }
-
     // Highlight a particular annotation
     function highlight(id) {
-      // var a = annotationById[id]; // is this outta synch?
-      if (typeof id === 'string') {
-        var a = annotationById(id);
-        elements(a.pos).addClass('highlight');
-      } else {
-        $el.find('.highlight').removeClass('highlight');
-      }
+      $el.find('.highlight').removeClass('highlight');
+      var a = annotationById(id);
+      if (a) elements(a.pos).addClass('highlight');
     }
 
     // Determines if a certain annotation is inclusive or not
@@ -325,24 +316,24 @@
 
         if (aStart === index) {
         // Case1: insertion matching beginning
-        console.log('Case1: insertion matching beginning');
+        // console.log('Case1: insertion matching beginning');
 
           if (isInclusive(a)) {
           // CaseA: inclusive
             makeDirty(a); // Mark annotation dirty
             a.isAffected = true;
             a.pos[1] += offset; // offseting tail 
-            console.log('inclusive, annotation is affected');
+            // console.log('inclusive, annotation is affected');
           }else{
             // if not including we have to push the begining
-            console.log('not including, we push the begining');
+            // console.log('not including, we push the begining');
             a.pos[0] += offset;
             a.isAffected = false;
           }
 
         } else if (aStart < index && aEnd > index) {
         // Case2: insertion within annotation boundries
-        console.log('Case2: insertion within annotation boundries');
+        // console.log('Case2: insertion within annotation boundries');
         // both inclusive and noninclusive react alike
         
         // marking dirty and offseting tail
@@ -352,12 +343,12 @@
 
       } else if (aEnd == index) {
         // Case3: insertion matching ending
-        console.log('Case3: insertion matching ending');
+        // console.log('Case3: insertion matching ending');
 
         if (isInclusive(a)) {
           // CaseA: inclusive
           // Only inclusive affects the annotation
-          console.log('CaseA: inclusive');
+          // console.log('CaseA: inclusive');
           makeDirty(a);
           a.isAffected = true;
           a.pos[1] += offset;
@@ -377,7 +368,6 @@
 
     function deleteTransformer(index, offset) {
       // TODO: optimize
-
       _.each(annotations, function(a) {
         var aStart = a.pos[0],
             aEnd   = aStart + a.pos[1],
@@ -387,9 +377,9 @@
         // Case1: Full overlap or wrap around overlap -> delete annotation
         if (sStart <= aStart && sEnd >= aEnd) {
           dirtyNodes[a.id] = "delete";
-          annotations = _.without(annotations, a);
 
-          console.log('Case1:Full overlap', a.type + ' will be deleted');
+          // console.log('Case1:Full overlap', a.type + ' will be deleted');
+          deleteAnnotation(a.id);
         }
         // Case2: inner overlap -> decrease offset length by the lenth of the selection
         else if (aStart < sStart && aEnd > sEnd) {
@@ -686,7 +676,6 @@
   };
 
   _.extend(Substance.Surface.prototype, _.Events);
-
 
   // Global Event Handlers
   // -----------------

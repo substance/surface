@@ -141,10 +141,20 @@
     function renderAnnotations() {
       // Cleanup
       $(el.childNodes).removeClass();
-
       // Render annotations
       _.each(annotations, function(a) {
-        elements(a.pos).addClass(a.type);
+
+        if(active && typeof types[a.type] !== 'undefined' 
+          && (types[a.type].visibility === 'both' 
+            || types[a.type].visibility === 'active') 
+          ){
+          elements(a.pos).addClass(a.type);
+        } else if (!active && typeof types[a.type] !== 'undefined' 
+          && (types[a.type].visibility === 'both' 
+            || types[a.type].visibility === 'inactive') 
+          ){
+          elements(a.pos).addClass(a.type);
+        }
       });
     }
 
@@ -503,7 +513,7 @@
     // Interceptors
     // -----------------
     // 
-    // Overriding clusy default behavior of contenteditable
+    // Overriding clumsy default behavior of contenteditable
 
     function handleKey(e) {
       if (e.ctrlKey || e.metaKey) { return; }
@@ -607,8 +617,8 @@
 
     function activateSurface(e) {
       if (pasting) return;
-      renderAnnotations();
       active = true;
+      renderAnnotations();
       Substance.Surface.activeSurface = that;
       that.trigger('surface:active', content, prevContent);
     }
@@ -626,7 +636,7 @@
         prevContent = content;
       }
       active = false;
-
+      renderAnnotations();
       // Reset activeSurface reference
       Substance.Surface.activeSurface = null;
     }

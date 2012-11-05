@@ -20,23 +20,26 @@ Will come to you</script>
       window.surface = new Substance.Surface({
         el: $('.content')[0],
         content: $('script[name=content]').text(),
-        annotations: [
-          // { id: "annotation-1", type: "em", pos: [0,3] },
-          { id: "annotation-1", type: "str", pos: [9,4] },
-          { id: "annotation-2", type: "em", pos: [58,8] },
-          { id: "annotation-3", type: "comment", pos: [35,10] }
+        annotations: {
+          "annotation-1" : { id: "annotation-1", type: "str", pos: [9,4] },
+          "annotation-2" : { id: "annotation-2", type: "em", pos: [58,8] },
+          "annotation-3" : { id: "annotation-3", type: "comment", pos: [35,10] }
           // { id: "annotation-3", type: "comment", pos: [17,3] }
-        ],
+        },
         types: {
+            "str": {
+              "visibility" : 'both'
+            },
            "em": {
-              "inclusive": false
+              "inclusive": false,
+              "visibility" : 'both' // active / inactive
            },
            "comment": {
-              "inclusive": false
+              "inclusive": false,
+              "visibility" : 'active' // active
            }
         }
       });
-
 
       surface.on('content:changed', function(content, prevContent) {
         console.log('updated text from', prevContent, 'to: ', content);

@@ -1,7 +1,7 @@
 body{
   margin: 0;
   padding: 0;
-  background-color: transparent;
+  background-color: #F0F1EB;
   font-family: 'OpenSans', sans-serif;
   -webkit-font-smoothing: antialiased;
   /*we force the scroll to avoid glitches in cm for now*/

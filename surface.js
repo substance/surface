@@ -143,22 +143,7 @@
       $(el.childNodes).removeClass();
       // Render annotations
       _.each(annotations, function(a) {
-
-        if (typeof types[a.type] !== 'undefined') { // visibility is set
-          
-          if (active) {
-            if (types[a.type].visibility === 'both' || types[a.type].visibility === 'active') {
-              elements(a.pos).addClass(a.type);
-            }
-          } else {
-            if (types[a.type].visibility === 'both' || types[a.type].visibility === 'inactive') {
-              elements(a.pos).addClass(a.type);
-            }
-          }
-        } else { // visibility is not set
-          elements(a.pos).addClass(a.type);
-        }
-
+        elements(a.pos).addClass(a.type);
       });
     }
 
@@ -640,7 +625,6 @@
         prevContent = content;
       }
       active = false;
-      renderAnnotations();
       // Reset activeSurface reference
       Substance.Surface.activeSurface = null;
     }

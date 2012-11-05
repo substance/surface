@@ -144,16 +144,17 @@
       // Render annotations
       _.each(annotations, function(a) {
 
-        // can be smartified
-        if (active && typeof types[a.type] !== 'undefined' 
-          && (types[a.type].visibility === 'both' 
-            || types[a.type].visibility === 'active') 
-          ) {
-          elements(a.pos).addClass(a.type);
-        } else if (!active && typeof types[a.type] !== 'undefined' 
-          && (types[a.type].visibility === 'both' 
-            || types[a.type].visibility === 'inactive') 
-          ){
+        if (active && typeof types[a.type] !== 'undefined') { // visibility is set
+          
+          if (active) {
+            if (types[a.type].visibility === 'both' || types[a.type].visibility === 'active') {
+              elements(a.pos).addClass(a.type);
+            }
+          } else {
+            if (types[a.type].visibility === 'both' || types[a.type].visibility === 'inactive') {
+              elements(a.pos).addClass(a.type);
+            }
+        } else { // visibility is not set
           elements(a.pos).addClass(a.type);
         }
 

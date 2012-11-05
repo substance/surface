@@ -154,6 +154,7 @@
             if (types[a.type].visibility === 'both' || types[a.type].visibility === 'inactive') {
               elements(a.pos).addClass(a.type);
             }
+          }
         } else { // visibility is not set
           elements(a.pos).addClass(a.type);
         }

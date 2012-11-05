@@ -144,10 +144,11 @@
       // Render annotations
       _.each(annotations, function(a) {
 
-        if(active && typeof types[a.type] !== 'undefined' 
+        // can be smartified
+        if (active && typeof types[a.type] !== 'undefined' 
           && (types[a.type].visibility === 'both' 
             || types[a.type].visibility === 'active') 
-          ){
+          ) {
           elements(a.pos).addClass(a.type);
         } else if (!active && typeof types[a.type] !== 'undefined' 
           && (types[a.type].visibility === 'both' 
@@ -155,6 +156,7 @@
           ){
           elements(a.pos).addClass(a.type);
         }
+
       });
     }
 

@@ -9,9 +9,6 @@ body{
 
 }
 
-.main{
-	padding-bottom: 60px;
-}
 
 .clear{
 	clear: both;
@@ -69,15 +66,14 @@ section.text{
 .content {
 	background: #fff;
 	border: 1px solid #ccc;
-	margin: 100px;
 	padding: 10px;
 	font-family: 'Merriweather';
-    outline: none;
-    font-size: 18px;
-    border: 1px dashed #ccc;
+  outline: none;
+  font-size: 18px;
+  border: 1px dashed #ccc;
 
-    border-radius: 3px;
-    padding: 10px;
+  border-radius: 3px;
+  padding: 10px;
 }
 
 .debug {

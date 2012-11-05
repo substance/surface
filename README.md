@@ -3,8 +3,9 @@
 Surface provides a low-level interface for –in browser– plain text manipulation. It allows the instertion, deletion of text characters, keyboard navigation, along with range selections.
 Surface exposes an API that will make it possible to build more complex text editors on top of it, offering the possibility to manipulate user-defined annotations. For an implementation of a Rich Text Editor and several examples please refer to [Substance Text](https://github.com/substance/text).
 
-(for a demo please try [this link](http://interior.substance.io/surface/))
+(for a demo please try [this link](http://interior.substance.io/modules/surface.html))
 
+<!--
 ## On the screen
 
 Using a fixed width font with nice styles could give us the opportunity to spread some type writer feeling. It would also be easier to implement character-measurements etc. It will be a challenge to get word-wrap right though.
@@ -175,7 +176,7 @@ surface.on('selection:change', function(sel) {
 });
 ```
 
-<!--
+
 
 #### Write a list of commands that need to be implemented:
 

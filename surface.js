@@ -607,6 +607,7 @@
     function activateSurface(e) {
       if (pasting) return;
       active = true;
+      $(this).addClass('selected');
       renderAnnotations();
       Substance.Surface.activeSurface = that;
       that.trigger('surface:active', content, prevContent);
@@ -614,7 +615,7 @@
 
     function deactivateSurface(e) {
       if (pasting) return;
-
+      $(this).removeClass('selected');
       content = getContent();
 
       var ops = annotationUpdates();

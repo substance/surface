@@ -144,7 +144,7 @@
       // Render annotations
       _.each(annotations, function(a) {
 
-        if (active && typeof types[a.type] !== 'undefined') { // visibility is set
+        if (typeof types[a.type] !== 'undefined') { // visibility is set
           
           if (active) {
             if (types[a.type].visibility === 'both' || types[a.type].visibility === 'active') {

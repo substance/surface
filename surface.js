@@ -506,6 +506,9 @@
 
     function handleKey(e) {
       if (e.ctrlKey || e.metaKey) { return; }
+
+      var code= 'charCode' in event? event.charCode : 'which' in event? event.which : event.keyCode;
+      console.log('code', code);
       var ch = String.fromCharCode(e.keyCode);
 
       // Is there an active selection?

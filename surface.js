@@ -225,7 +225,7 @@
     // ---------------
 
     function selection() {
-  
+
       var range = window.getSelection().getRangeAt(0);
       var length = range.cloneContents().childNodes.length;
       var startContainer = range.startContainer;
@@ -235,9 +235,18 @@
       // if(startContainer.nodeType === 3) index = $el.find('span, br').index(range.startContainer.parentElement);
       var index = startContainer.nodeType === 3 ? indexOf.call(el.childNodes, parent) : 0;
 
+      // its a "noninsert" carcater such as accents
+      if (startContainer.length > 1) { 
+        var next = startContainer.textContent[1];// we store the second char
+        startContainer.textContent = startContainer.textContent[0]; //just use first char for the current pos
+        insertCharacter(next, index+1);// insert the character separatedly
+        index += 2; // reindex one step per operation
+      }
+    
       // There's an edge case at the very beginning
       if (range.startOffset !== 0) index += 1;
       if (range.startOffset > 1) index = range.startOffset;
+
 
       return [index, length];
     }
@@ -507,8 +516,6 @@
     function handleKey(e) {
       if (e.ctrlKey || e.metaKey) { return; }
 
-      var code= 'charCode' in event? event.charCode : 'which' in event? event.which : event.keyCode;
-      console.log('code', code);
       var ch = String.fromCharCode(e.keyCode);
 
       // Is there an active selection?
@@ -688,7 +695,7 @@
 
   document.onselectionchange = function(e) {
     var target = Substance.Surface.activeSurface;
-    if (target) target.trigger('selection:changed', target.selection());
+    if (target) target.trigger('selection:changed');
   };
 
 })(window);

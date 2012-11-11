@@ -77,10 +77,13 @@ section.text{
 }
 
   #content span{
-    background-color: #dff;
     margin-right: 1px;
     line-height:34px;
     padding: 5px;
+  }
+
+   #content span:not(.comment){
+    background-color: #dff;
   }
 
 .content hr{

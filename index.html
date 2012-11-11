@@ -15,6 +15,7 @@
   </style>
   <script>
     $(function() {
+
       window.surface = new Substance.Surface({
         el: $('.content')[0],
         content: $('script[name=content]').text(),
@@ -47,6 +48,16 @@
           surface.highlight(null);
         }
       });
+
+      // temporary id generator
+      function nextAnnId(){
+        var ann = surface.getAnnotations();
+        var size = 0, key;
+        for (key in ann) {
+            size++;
+        }
+        return 'annotation-' + (parseInt(size) +1);
+      }
 
       function log(message) {
         $('.debug-console').append($('<div class="log-entry">'+message+'</div>'))
@@ -83,6 +94,24 @@
         var pos = surface.selection();
         var matching = surface.getAnnotations(pos[0]);
         surface.deleteAnnotation(matching[0]);
+        return false;
+      });
+
+      key('⌘+b', function() {
+        // bypass the default contenteditable bold
+        surface.insertAnnotation({ id: nextAnnId(), type: "str", pos: surface.selection() });
+        return false;
+      });
+
+      key('⌘+m', function() {
+        // bypass the default contenteditable bold
+        surface.insertAnnotation({ id: nextAnnId(), type: "comment", pos: surface.selection() });
+        return false;
+      });
+
+      key('⌘+i', function() {
+        surface.insertAnnotation({ id: nextAnnId(), type: "em", pos: surface.selection() });
+        // bypass the default contenteditable italics
         return false;
       });
 

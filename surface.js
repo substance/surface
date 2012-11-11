@@ -192,28 +192,19 @@
       var startNode = isLastNode ? children[numChild] : children[start];
       var endNode = end ? children[end] : startNode;
 
-      console.log('startNode', startNode);
       if (children.length > 0) {
        // here is text in the container
         if (!isLastNode) {
           range.setStartBefore(startNode);
         } else {
-
           // <br> nodes have a length of 0 we dont reindex
           if (startNode.attributes.length > 0) {
             range.setStart(startNode, 1);
             range.setEnd(startNode, 1);
           } else {
-            console.log('<br>');
-            console.log('endNode', endNode);
-            range.setStart(startNode, 0);
-            range.setEnd(startNode, 0);
-
-            // var currentRange = sel.getRangeAt(0);
-            // console.log('currentRange', currentRange);
-            // startNode = currentRange.endContainer;
-            // range.setStart(startNode, 1);
-            // range.setEnd(startNode, 1);
+            console.log('mononode');
+            range.setStartAfter(startNode);
+            range.setEndAfter(startNode);
           }
         }
 
@@ -225,6 +216,7 @@
 
       sel.removeAllRanges();
       sel.addRange(range);
+
       that.trigger('selection:changed');
     }
 
@@ -471,7 +463,10 @@
       var successor = el.childNodes[index];
       var newEl = 'span';
 
-      if (ch === "\n") newEl = 'br';
+      if (ch === "\n") newEl = 'hr';
+      // if (ch === "\n") newEl = 'br';
+      // if (ch === "\n") ch = '↵';
+      // if (ch === "\n") ch = '<br>';
 
       var newCh = document.createElement(newEl);
       if (ch !== "\n") newCh.innerHTML = ch;
@@ -516,7 +511,6 @@
     // Overriding clumsy default behavior of contenteditable
 
     function handleKey(e) {
-
       if (e.data !== '\n'){
         var ch = e.data;
   

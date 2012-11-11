@@ -456,8 +456,9 @@
       // if (ch === "\n") newEl = 'br';
 
       var newCh = document.createElement(newEl);
-      if (ch !== "\n") newCh.innerHTML = ch;
-      if (ch !== "\n") newCh.className = classes;
+      // if (ch !== "\n") newCh.innerHTML = ch;
+      newCh.innerHTML = ch;
+      if (ch !== "&#8629;") newCh.className = classes;
 
 
       if (successor) {

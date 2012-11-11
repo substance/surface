@@ -192,20 +192,28 @@
       var startNode = isLastNode ? children[numChild] : children[start];
       var endNode = end ? children[end] : startNode;
 
+      console.log('startNode', startNode);
       if (children.length > 0) {
        // here is text in the container
         if (!isLastNode) {
           range.setStartBefore(startNode);
         } else {
+
           // <br> nodes have a length of 0 we dont reindex
           if (startNode.attributes.length > 0) {
             range.setStart(startNode, 1);
             range.setEnd(startNode, 1);
           } else {
+            console.log('<br>');
+            console.log('endNode', endNode);
+            range.setStart(startNode, 0);
+            range.setEnd(startNode, 0);
+
             // var currentRange = sel.getRangeAt(0);
-            // startNode = currentRange.startContainer;
-            // range.setStart(currentRange, 1);
-            // range.setEnd(currentRange, 1);
+            // console.log('currentRange', currentRange);
+            // startNode = currentRange.endContainer;
+            // range.setStart(startNode, 1);
+            // range.setEnd(startNode, 1);
           }
         }
 

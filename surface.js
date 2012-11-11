@@ -452,7 +452,7 @@
 
       // if (ch === "\n") newEl = 'hr';
       // if (ch === "\n") newEl = 'br';
-      if (ch === "\n") ch = '↵';
+      if (ch === "\n") ch = '&#8629;';
       // if (ch === "\n") newEl = 'br';
 
       var newCh = document.createElement(newEl);

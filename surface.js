@@ -199,14 +199,8 @@
           range.setStartBefore(startNode);
         } else {
           // <br> nodes have a length of 0 we dont reindex
-          if (startNode.attributes.length > 0) {
-            range.setStart(startNode, 1);
-            range.setEnd(startNode, 1);
-          } else {
-            console.log('mononode');
-            range.setStartAfter(startNode);
-            range.setEndAfter(startNode);
-          }
+          range.setStart(startNode, 1);
+          range.setEnd(startNode, 1);
         }
 
       } else {
@@ -459,7 +453,7 @@
       if (ch !== "\n") newCh.className = classes;
 
       if (ch === "\n") ch = '<br>';
-      
+
       if (successor) {
         el.insertBefore(newCh, successor);
       } else {

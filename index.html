@@ -35,8 +35,8 @@
         }
       });
 
-      surface.on('content:changed', function(content, prevContent) {
-        console.log('updated text from', prevContent, 'to: ', content);
+      surface.on('content:changed', function(content, prevContent, ops) {
+        console.log('updated text from', prevContent, 'to: ', content, 'ops:', ops);
       });
 
       // Update comments panel according to marker context
@@ -92,7 +92,7 @@
 
       key('ctrl+x', function() {
         var pos = surface.selection();
-        var matching = surface.getAnnotations(pos[0]);
+        var matching = surface.getAnnotations(pos);
         surface.deleteAnnotation(matching[0]);
         return false;
       });

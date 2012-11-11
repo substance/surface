@@ -226,6 +226,18 @@
       that.trigger('annotations:changed');
     }
 
+    function updateAnnotation(options) {
+      var id = options.id;
+      delete options.id;
+      var annotation = annotationById(id);
+
+      // Update properties
+      _.extend(annotation, options);
+      makeDirty(annotation);
+
+      renderAnnotations()
+    }
+
     // Get current selection
     // ---------------
 
@@ -671,6 +683,8 @@
     key('shift+left, shift+right, shift+up, shift+down', selectionChanged);
     key('alt+left, alt+right, alt+up, alt+down', selectionChanged);
     key('⌘+left, ⌘+right, ⌘+up, ⌘+down', selectionChanged);
+    key('alt+shift+left, alt+shift+right, alt+shift+up, alt+shift+down', selectionChanged);
+    key('⌘+shift+left, ⌘+shift+right, ⌘+shift+up, ⌘+shift+down', selectionChanged);
 
     // Exposed API
     // -----------------
@@ -683,6 +697,7 @@
     this.insertCharacter = insertCharacter;
     this.insertText = insertText;
     this.insertAnnotation = insertAnnotation;
+    this.updateAnnotation = updateAnnotation;
     this.getAnnotations = getAnnotations;
     this.deleteAnnotation = deleteAnnotation;
     this.highlight = highlight;

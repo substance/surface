@@ -200,8 +200,16 @@
         if (!isLastNode) {
           range.setStartBefore(startNode);
         } else {
-          range.setStart(startNode, 1);
-          range.setEnd(startNode, 1);
+          // <br> nodes have a length of 0 we dont reindex
+          if (startNode.attributes.length > 0) {
+            range.setStart(startNode, 1);
+            range.setEnd(startNode, 1);
+          } else {
+            // var currentRange = sel.getRangeAt(0);
+            // startNode = currentRange.startContainer;
+            // range.setStart(currentRange, 1);
+            // range.setEnd(currentRange, 1);
+          }
         }
 
       } else {
@@ -235,32 +243,9 @@
       // if(startContainer.nodeType === 3) index = $el.find('span, br').index(range.startContainer.parentElement);
       var index = startContainer.nodeType === 3 ? indexOf.call(el.childNodes, parent) : 0;
       
-      
-      // look for "noninsert" carcater such as accents
-      var cLen = startContainer.length;
-      if (cLen > 1) {
-        var i, chars = [];
-        // loop trough the inserted nonprinable chars
-        // and store them
-        for (i = 1; i < cLen; i++) {
-          chars.push(startContainer.textContent[i]);
-        };
-
-        //just use first char for the current pos
-        startContainer.textContent = startContainer.textContent[0]; 
-        index += 1;// reindex
-
-        var chLen = chars.length;
-        for (i = 0; i < chLen; i++) {
-          insertCharacter(chars[i], index);// insert the character separatedly
-          index += 1;// reindex
-        };
-      }
-    
       // There's an edge case at the very beginning
       if (range.startOffset !== 0) index += 1;
       if (range.startOffset > 1) index = range.startOffset;
-
 
       return [index, length];
     }
@@ -528,15 +513,22 @@
     // Overriding clumsy default behavior of contenteditable
 
     function handleKey(e) {
-      if (e.ctrlKey || e.metaKey ) { return; }
 
-      if (e.keyCode !== 13){
-        var ch = String.fromCharCode(e.keyCode);
+      if (e.data !== '↵'){
+        var ch = e.data;
   
         // Is there an active selection?
         var range = selection();
+
         var index = range[0] < 0 ? 0 : range[0];
-  
+        
+        // look for ghost accents here
+        var startContainer = window.getSelection().getRangeAt(0).startContainer;
+        if (startContainer.length > 1) {
+          startContainer.textContent = startContainer.textContent[0]; // chop the ghost accent
+          delete range[1]; //avoid overriding insert char
+        }
+
         if (range[1]) {
           deleteRange(range);
         }
@@ -676,7 +668,7 @@
     el.addEventListener('paste', handlePaste);
 
     // Inserting new characters
-    el.addEventListener('keypress', handleKey);
+    el.addEventListener('textInput', handleKey);
 
     // Activate surface
     el.addEventListener('focus', activateSurface);

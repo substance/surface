@@ -216,7 +216,7 @@
       sel.removeAllRanges();
       sel.addRange(range);
 
-      that.trigger('selection:changed');
+      that.trigger('selection:changed', that.selection());
     }
 
     function insertAnnotation(a) {

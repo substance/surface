@@ -203,9 +203,8 @@
             range.setStart(startNode, 1);
             range.setEnd(startNode, 1);
           } else {
-            console.log('mononode');
-            range.setStartBefore(startNode);
-            range.setEndBefore(startNode);
+            console.log('br edgecase');
+            return;
           }
         }
 
@@ -450,10 +449,7 @@
       var successor = el.childNodes[index];
       var newEl = 'span';
 
-      // if (ch === "\n") newEl = 'hr';
-      // if (ch === "\n") newEl = 'br';
-      if (ch === "\n") ch = '&#8629;';
-      // if (ch === "\n") newEl = 'br';
+      if (ch === "\n") newEl = 'br';
 
       var newCh = document.createElement(newEl);
       if (ch !== "\n") newCh.innerHTML = ch;

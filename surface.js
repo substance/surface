@@ -199,8 +199,14 @@
           range.setStartBefore(startNode);
         } else {
           // <br> nodes have a length of 0 we dont reindex
-          range.setStart(startNode, 1);
-          range.setEnd(startNode, 1);
+          if (startNode.attributes.length > 0) {
+            range.setStart(startNode, 1);
+            range.setEnd(startNode, 1);
+          } else {
+            console.log('mononode');
+            range.setStartBefore(startNode);
+            range.setEndBefore(startNode);
+          }
         }
 
       } else {
@@ -446,13 +452,13 @@
 
       // if (ch === "\n") newEl = 'hr';
       // if (ch === "\n") newEl = 'br';
-      // if (ch === "\n") ch = '↵';
+      if (ch === "\n") ch = '↵';
+      // if (ch === "\n") newEl = 'br';
 
       var newCh = document.createElement(newEl);
       if (ch !== "\n") newCh.innerHTML = ch;
       if (ch !== "\n") newCh.className = classes;
 
-      if (ch === "\n") ch = '<br>';
 
       if (successor) {
         el.insertBefore(newCh, successor);

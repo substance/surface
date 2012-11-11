@@ -235,7 +235,7 @@
       _.extend(annotation, options);
       makeDirty(annotation);
 
-      renderAnnotations()
+      renderAnnotations();
     }
 
     // Get current selection
@@ -599,7 +599,6 @@
       e.stopPropagation();
     }
 
-
     function annotationUpdates() {
       var ops = [];
       var deletedAnnotations = [];
@@ -650,7 +649,7 @@
     function selectionChanged() {
       if (!active) return;
       _.delay(function() {
-        that.trigger('selection:changed', selection());  
+        that.trigger('selection:changed', selection());
       }, 5);
     }
 

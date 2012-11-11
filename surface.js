@@ -132,7 +132,6 @@
         prevContent = content,
         active = false,
         pasting = false,
-        data = [],
         that = this;
 
     var dirtyNodes = {};
@@ -406,14 +405,6 @@
     // State
     // ---------------
 
-    function getContent() {
-      var res = "";
-      _.each($el.find("span, br"), function(el) {
-        res += el.tagName === "BR" ? "\n" : $(el).text();
-      });
-      return res;
-    }
-
     function elements(range) {
       return $(slice.call(el.childNodes, range[0], range[0] + range[1]));
     }
@@ -429,6 +420,11 @@
       select(range[0]);
       deleteTransformer(range[0], range[1]);
       that.trigger('changed');
+    }
+
+    function contentDeleteRange(range) {
+      if (range[0] < 0) return;
+      content = content.substring(0, range[0]) + content.substring(range[0] + range[1]);
     }
 
     // Stateful
@@ -461,13 +457,14 @@
       } else {
         el.appendChild(newCh);
       }
-
+      
       select(index+1);
       that.trigger('changed');
     }
 
     // Used for pasting content
     function insertText(text, index) {
+
       var chars = _.map(text.split(''), function(ch, offset) {
         return '<span>'+ch+'</span>';
       }).join('');
@@ -483,6 +480,10 @@
       that.trigger('changed');
     }
 
+
+    function contentInsertCar(s, idx) {
+      content = content.substring(0, idx) + s + content.substring(idx);
+    }
 
     // Events
     // ------
@@ -512,9 +513,11 @@
 
         if (range[1]) {
           deleteRange(range);
+          contentDeleteRange(range);
         }
   
         insertCharacter(ch, index);
+        contentInsertCar(ch, index);
       }
 
       e.preventDefault();
@@ -525,6 +528,8 @@
       var sel = selection();
       if(sel[1] > 0){
         deleteRange(sel);
+        contentDeleteRange(sel);
+
       }
       pasting = true;
 
@@ -555,6 +560,7 @@
       if (active) {
         var sel = selection();
         sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0]-1, 1]);
+        sel[1]>0 ? contentDeleteRange(sel) : contentDeleteRange([sel[0]-1, 1]);
         
         e.preventDefault();
         e.stopPropagation();
@@ -565,6 +571,7 @@
       if (active) {
         var sel = selection();
         sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0], 1]);
+        sel[1]>0 ? contentDeleteRange(sel) : contentDeleteRange([sel[0], 1]);
         
         e.preventDefault();
         e.stopPropagation();
@@ -575,6 +582,7 @@
       if (!active) return;
 
       insertCharacter('\n', selection()[0]);
+      contentInsertCar('\n', selection()[0]);
       e.preventDefault();
       e.stopPropagation();
     }
@@ -614,7 +622,6 @@
     function deactivateSurface(e) {
       if (pasting) return;
       $(this).removeClass('active');
-      content = getContent();
 
       var ops = annotationUpdates();
 
@@ -671,7 +678,7 @@
     this.select = select;
     this.selection = selection;
     this.annotations = annotations;
-    this.getContent = getContent;
+    this.content = content;
     this.deleteRange = deleteRange;
     this.insertCharacter = insertCharacter;
     this.insertText = insertText;

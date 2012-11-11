@@ -453,12 +453,13 @@
       // if (ch === "\n") newEl = 'hr';
       // if (ch === "\n") newEl = 'br';
       // if (ch === "\n") ch = '↵';
-      if (ch === "\n") ch = '<br>';
 
       var newCh = document.createElement(newEl);
       if (ch !== "\n") newCh.innerHTML = ch;
       if (ch !== "\n") newCh.className = classes;
 
+      if (ch === "\n") ch = '<br>';
+      
       if (successor) {
         el.insertBefore(newCh, successor);
       } else {

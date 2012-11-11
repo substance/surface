@@ -432,6 +432,7 @@
       select(range[0]);
       deleteTransformer(range[0], range[1]);
       that.trigger('changed');
+      that.trigger('selection:changed', that.selection());
     }
 
     function contentDeleteRange(range) {

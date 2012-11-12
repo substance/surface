@@ -227,16 +227,16 @@
     }
 
     function updateAnnotation(options) {
-      var id = options.id;
-      delete options.id;
-      var annotation = annotationById(id);
+      var id = options.id;
+      delete options.id;
+      var annotation = annotationById(id);
 
-      // Update properties
-      _.extend(annotation, options);
-      makeDirty(annotation);
+      // Update properties
+      _.extend(annotation, options);
+      makeDirty(annotation);
 
-      renderAnnotations();
-    }
+      renderAnnotations();
+    }
 
     // Get current selection
     // ---------------

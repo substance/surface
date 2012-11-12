@@ -1,8 +1,7 @@
 // Setup
 
-var fName = 'initContent';
-var fDescription = 'This method loops trough all the characters passed in upon instantiation and renders the appropiate surface content.';
-
+var fName = 'initContentNative';
+var fDescription = 'This method loops trough all the characters passed in upon instantiation and renders the appropiate surface content. We will be using native for loops instead of underscore.each to go trough the characters';
 
 var content = "Substance provides a flexible architecture, involving an extensible document format and protocol, realtime synchronization, an extensible document composer as well as a reference implementation.";
 var $el = $('#content');
@@ -30,7 +29,7 @@ function replaceHtml(el, html) {
 var tests = [
         {
           'name': 'initJQDOM',
-          'deps': ['jquery', 'underscore'],
+          'deps': ['jquery'],
           'description': 'Injects jquery objects into the dom using $.append() .',
           'fn': function() {
                   $el.empty();
@@ -45,7 +44,7 @@ var tests = [
         },
         {
           'name': 'initDF',
-          'deps': ['jquery', 'underscore'],
+          'deps': ['jquery'],
           'description': 'Manipulates offline document fragment and then rplaces the innerHtml value.',
           'fn': function() {
                   var elFragment = document.createDocumentFragment();
@@ -67,7 +66,7 @@ var tests = [
         },
         {
           'name': 'initStr',
-          'deps': ['jquery', 'underscore'],
+          'deps': ['jquery'],
           'description': 'Replaces dom innerHtml win concatenated string.',
           'fn': function () {
                   var br = '<br/>';
@@ -89,7 +88,7 @@ var tests = [
         },
         {
           'name': 'initreplaceHtml',
-          'deps': ['jquery', 'underscore', 'replaceHtml'],
+          'deps': ['jquery', 'replaceHtml'],
           'description': 'Mixes pure DOM and string manipulation depending on the case with external replaceHtml function.',
           'fn': function () {
                   var br = '<br/>';
@@ -109,7 +108,7 @@ var tests = [
         },
         {
           'name': 'initDOM',
-          'deps': ['jquery', 'underscore'],
+          'deps': ['jquery'],
           'description': 'Injects dom objects using native createElement and addChild.',
           'fn': function () {
                   el.innerHTML = '';

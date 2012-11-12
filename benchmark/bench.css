@@ -1,9 +1,11 @@
 body{
 	margin: 70px auto;
 	width: 660px;
+	font-family: "Open Sans", Sans-Serif;
 }
 
-h2{
+h2,
+#intro{
 	margin-bottom: 30px;
 }
 
@@ -16,9 +18,9 @@ table
 	border-radius: 3px;
 	border-collapse: collapse;
 	text-align: left;
-	font: 12px "Open Sans", Sans-Serif;
 	margin-bottom: 20px;
 	background-color: rgba(255, 255, 255, 0.52);
+	font-size: 12px;
 }
 
 table th

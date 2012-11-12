@@ -12,6 +12,7 @@
 </head>
 <body>
     <h2>Benchmarking</h2>
+    <div id="intro"><p></p></div>
     <table>
       <thead>
         <tr>
@@ -33,14 +34,16 @@
     <button id="toggle">Toggle Surface</button>
 
     <div class="content" id="content">Surface, waiting for the tests to run...</div>
-
-  <script type="text/javascript" src="initContent.js"></script>
+  
+  <!-- <script type="text/javascript" src="initContent.js"></script> -->
+  <script type="text/javascript" src="initContentNative.js"></script>
   <script type="text/javascript" src="benchmark.js"></script>
   <script type="text/javascript">
     $(function() {
       var suite = new Benchmark.Suite;
 
       $('h2').append(' &middot; ' + fName);
+      $('#intro p').html(fDescription);
 
       tests.forEach(function(test){
         $('#tbody').append($('<tr>\

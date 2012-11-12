@@ -7,6 +7,8 @@ var content = "Substance provides a flexible architecture, involving an extensib
 var $el = $('#content');
 var el = document.getElementById('content');
 var ct = content.split('');
+var len = ct.length;
+var i;
 
 function replaceHtml(el, html) {
   // from here http://blog.stevenlevithan.com/archives/faster-than-innerhtml
@@ -29,29 +31,31 @@ function replaceHtml(el, html) {
 var tests = [
         {
           'name': 'initJQDOM',
-          'deps': ['jquery'],
+          'deps': ['jquery', 'underscore'],
           'description': 'Injects jquery objects into the dom using $.append() .',
           'fn': function() {
                   $el.empty();
-                  _.each(ct, function(ch) {
+                  for(i = 0;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       $el.append('<br/>');
                     } else {
                       $el.append($('<span>' + ch + '</span>'));
                     }
-                  });
+                  };
           }
         },
         {
           'name': 'initDF',
-          'deps': ['jquery'],
+          'deps': ['jquery', 'underscore'],
           'description': 'Manipulates offline document fragment and then rplaces the innerHtml value.',
           'fn': function() {
                   var elFragment = document.createDocumentFragment();
                   var br = document.createElement('br');
                   var span;
 
-                  _.each(ct, function(ch) {
+                  for(i = 0;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       elFragment.appendChild(br);
                     } else {
@@ -59,63 +63,63 @@ var tests = [
                       span.innerHTML = ch;
                       elFragment.appendChild(span);
                     }
-                  });
+                  };
                   el.innerHTML = '';
                   el.appendChild(elFragment);
           }
         },
         {
           'name': 'initStr',
-          'deps': ['jquery'],
+          'deps': ['jquery', 'underscore'],
           'description': 'Replaces dom innerHtml win concatenated string.',
           'fn': function () {
                   var br = '<br/>';
                   var innerHTML = '';
-                  var i = 0;
-                  var len = ct.length;
-                  var ch;
 
-                  _.each(ct, function(ch) {
+                 for(i = 0;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       innerHTML += br;
                     } else {
                       var span = '<span>' + ch + '</span>';
                       innerHTML += span;
                     }
-                  });
+                  };
                   el.innerHTML = innerHTML;
             }
         },
         {
           'name': 'initreplaceHtml',
-          'deps': ['jquery', 'replaceHtml'],
+          'deps': ['jquery', 'underscore', 'replaceHtml'],
           'description': 'Mixes pure DOM and string manipulation depending on the case with external replaceHtml function.',
           'fn': function () {
                   var br = '<br/>';
                   var innerHTML = '';
                   var span;
 
-                  _.each(ct, function(ch) {
+                  for(i = 0;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       innerHTML += br;
                     } else {
                       var span = '<span>' + ch + '</span>';
                       innerHTML += span;
                     }
-                  });
+                  };
                   el = replaceHtml(el, innerHTML);
             }
         },
         {
           'name': 'initDOM',
-          'deps': ['jquery'],
+          'deps': ['jquery', 'underscore'],
           'description': 'Injects dom objects using native createElement and addChild.',
           'fn': function () {
                   el.innerHTML = '';
                   var br = document.createElement('br');
                   var span;
 
-                  _.each(ct, function(ch) {
+                  for(i = 0;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       el.appendChild(br);
                     } else {
@@ -123,7 +127,7 @@ var tests = [
                       span.innerHTML = ch;
                       el.appendChild(span);
                     }
-                  });
+                  };
             }
         }
 ];

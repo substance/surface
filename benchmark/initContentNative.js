@@ -1,7 +1,7 @@
 // Setup
 
 var fName = 'initContentNative';
-var fDescription = 'This method loops trough all the characters passed in upon instantiation and renders the appropiate surface content. We will be using native for loops instead of underscore.each to go trough the characters';
+var tDescription = 'Testing speed for the initContent method, this time using native for loop instead of underscore.';
 
 var content = "Substance provides a flexible architecture, involving an extensible document format and protocol, realtime synchronization, an extensible document composer as well as a reference implementation.";
 var $el = $('#content');

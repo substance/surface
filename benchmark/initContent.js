@@ -1,13 +1,14 @@
 // Setup
 
 var fName = 'initContent';
-var fDescription = 'This method loops trough all the characters passed in upon instantiation and renders the appropiate surface content.';
-
+var tDescription = 'Testing speed for the initContent method.';
 
 var content = "Substance provides a flexible architecture, involving an extensible document format and protocol, realtime synchronization, an extensible document composer as well as a reference implementation.";
 var $el = $('#content');
 var el = document.getElementById('content');
 var ct = content.split('');
+var len = ct.length;
+var i = 0;
 
 function replaceHtml(el, html) {
   // from here http://blog.stevenlevithan.com/archives/faster-than-innerhtml
@@ -34,13 +35,14 @@ var tests = [
           'description': 'Injects jquery objects into the dom using $.append() .',
           'fn': function() {
                   $el.empty();
-                  _.each(ct, function(ch) {
+                  for(;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       $el.append('<br/>');
                     } else {
                       $el.append($('<span>' + ch + '</span>'));
                     }
-                  });
+                  };
           }
         },
         {
@@ -52,7 +54,8 @@ var tests = [
                   var br = document.createElement('br');
                   var span;
 
-                  _.each(ct, function(ch) {
+                  for(;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       elFragment.appendChild(br);
                     } else {
@@ -60,7 +63,7 @@ var tests = [
                       span.innerHTML = ch;
                       elFragment.appendChild(span);
                     }
-                  });
+                  };
                   el.innerHTML = '';
                   el.appendChild(elFragment);
           }
@@ -72,18 +75,16 @@ var tests = [
           'fn': function () {
                   var br = '<br/>';
                   var innerHTML = '';
-                  var i = 0;
-                  var len = ct.length;
-                  var ch;
 
-                  _.each(ct, function(ch) {
+                 for(;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       innerHTML += br;
                     } else {
                       var span = '<span>' + ch + '</span>';
                       innerHTML += span;
                     }
-                  });
+                  };
                   el.innerHTML = innerHTML;
             }
         },
@@ -96,14 +97,15 @@ var tests = [
                   var innerHTML = '';
                   var span;
 
-                  _.each(ct, function(ch) {
+                  for(;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       innerHTML += br;
                     } else {
                       var span = '<span>' + ch + '</span>';
                       innerHTML += span;
                     }
-                  });
+                  };
                   el = replaceHtml(el, innerHTML);
             }
         },
@@ -116,7 +118,8 @@ var tests = [
                   var br = document.createElement('br');
                   var span;
 
-                  _.each(ct, function(ch) {
+                  for(;i<len;i++){
+                    var ch = ct[i];
                     if (ch === "\n") {
                       el.appendChild(br);
                     } else {
@@ -124,7 +127,7 @@ var tests = [
                       span.innerHTML = ch;
                       el.appendChild(span);
                     }
-                  });
+                  };
             }
         }
 ];

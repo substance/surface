@@ -141,7 +141,7 @@
       removeClasses(el.childNodes);
       for (i in annotations) {
         var a = annotations[i];
-        addClasses(_elements(a.pos), a.type);
+        addClasses(elements(a.pos), a.type);
       };
     }
     // this.renderAnnotationsImpr = renderAnnotationsImpr;
@@ -242,10 +242,7 @@
 
       // Mark the matching chars as highlited
       var a = annotationById(id);
-      if (a) {
-        var elems = elements(a.pos);
-        addClasses(elems, 'highlight');
-      }
+      if (a) addClasses(elements(a.pos), 'highlight');
     }
 
     // Determines if a certain annotation is inclusive or not
@@ -493,9 +490,6 @@
     // ---------------
 
     function elements(range) {
-      return $(slice.call(el.childNodes, range[0], range[0] + range[1]));
-    }
-    function _elements(range) {
       return slice.call(el.childNodes, range[0], range[0] + range[1]);
     }
 

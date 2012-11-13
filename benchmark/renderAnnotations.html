@@ -8,6 +8,8 @@
 
   <script type="text/javascript" src="../lib/underscore.js"></script>
   <script type="text/javascript" src="../lib/jquery-min.js"></script>
+  <script type="text/javascript" src="../lib/keymaster.js"></script>
+  <script type="text/javascript" src="../surface.js"></script>
 
 </head>
 <body>
@@ -34,14 +36,15 @@
         <button id="run">Run Benchmarks</button>
         <button id="toggle">Toggle Surface</button>
     
-        <div class="content" id="content">Surface, waiting for the tests to run...</div>
+        <div class="content" id="content" contenteditable="true">Surface, waiting for the tests to run...</div>
       </div>
   
-  <script type="text/javascript" src="initContent.js"></script>
+  <script type="text/javascript" src="renderAnnotations.js"></script>
   <script type="text/javascript" src="benchmark.js"></script>
   <script type="text/javascript">
     $(function() {
-
+      
+      // Benchmarkings
       var suite = new Benchmark.Suite;
 
       $('h2').append(' &middot; ' + fName);

@@ -318,7 +318,7 @@
       var sel = window.getSelection();
       if (sel.type === "None") return null;
       var range = sel.getRangeAt(0);
-
+      
       var length = range.cloneContents().childNodes.length;
       var startContainer = range.startContainer;
       var parent = startContainer.parentElement;
@@ -503,7 +503,7 @@
     function deleteRange(range) {
       if (range[0] < 0) return;
 
-      elements(range).remove();
+      $(elements(range)).remove();
 
       select(range[0]);
       deleteTransformer(range[0], range[1]);

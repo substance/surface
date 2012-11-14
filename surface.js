@@ -608,7 +608,7 @@
         insertCharacter(ch, index);
         contentInsertCar(ch, index);
       }
-
+      if(ch === " ") return false; // spacebar seems to need extra canceling?
       e.preventDefault();
       e.stopPropagation(); // needed?
     }
@@ -732,6 +732,10 @@
 
     // Bind Events
     // ------
+
+     // key('space', function(e){
+     //  console.log('e', e);
+     // });
 
     // Backspace key
     key('backspace', handleBackspace);

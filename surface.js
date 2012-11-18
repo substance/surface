@@ -552,7 +552,6 @@
         el.appendChild(newCh);
       }
       
-      console.log('pureCh', pureCh);
       updateContent(pureCh, index);
       select(index+1);
       that.trigger('changed');

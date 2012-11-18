@@ -80,13 +80,11 @@ section.text{
   padding: 5px;
 }
 
+/*this hack makes br selectable by the browser in order to put our cursor after it*/
 #content br
 {   
-  content: "A" !important;
+  content: "\n" !important;
   display: block !important;
-  padding-top: 1em !important;
-  background-color: #ff0e0e!important;
-  width: 10px;
 }
 
 #content span:not(.comment){

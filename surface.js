@@ -594,8 +594,6 @@
     function handleKey(e) {
       if (e.data !== '\n'){
         var ch = e.data;
-        console.log('e', e);
-        console.log('ch = "' + ch + '"');
   
         // Is there an active selection?
         var range = selection();

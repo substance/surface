@@ -74,14 +74,14 @@ section.text{
   padding: 1.5em;
 }
 
-#content span{
+.content span{
   margin-right: 1px;
   line-height:34px;
   padding: 5px;
 }
 
 /*this hack makes br selectable by the browser in order to put our cursor after it*/
-#content br
+.content br
 {   
   content: "\n" !important;
   display: block !important;

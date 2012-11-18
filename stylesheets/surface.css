@@ -66,20 +66,27 @@ section.text{
 .content {
 	background: #fff;
 	border: 1px solid #ccc;
-	padding: 10px;
-	font-family: 'Merriweather';
   outline: none;
-  font-size: 18px;
   border: 1px dashed #ccc;
 
   border-radius: 3px;
-  padding: 10px;
+  font: 18px 'Merriweather';
+  padding: 1.5em;
 }
 
 #content span{
   margin-right: 1px;
   line-height:34px;
   padding: 5px;
+}
+
+#content br
+{   
+  content: "A" !important;
+  display: block !important;
+  padding-top: 1em !important;
+  background-color: #ff0e0e!important;
+  width: 10px;
 }
 
 #content span:not(.comment){

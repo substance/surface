@@ -147,17 +147,6 @@
       };
     }
 
-    // this.renderAnnotationsImpr = renderAnnotationsImpr;
-
-    // function renderAnnotations() {
-    //   // Cleanup
-    //   $(el.childNodes).removeClass();
-    //   _.each(annotations, function(a) {
-    //     elements(a.pos).addClass(a.type);
-    //   });
-    // }
-    // this.renderAnnotations = renderAnnotations;
-
     // Initialize Surface
     // ---------------
 
@@ -212,6 +201,14 @@
 
     }  
 
+    // quick cleanup for orphan spaces in classes
+    function cleanClasses(classList) {
+      // TODO: regex to clear out only white or double white spaces in the classes string
+      classList = classList.replace('\s{2,0}', '\s');
+      if(classList.length === 1) classList = '';
+      return classList;
+    }
+
     // add classes to a list of nodes
     function addClasses(elems, className) {
       var ln = elems.length,
@@ -229,7 +226,7 @@
               if ( setClass.indexOf( " " + className + " " ) < 0 ) {
                 setClass += className + " ";
               }
-              elem.className = setClass;
+              elem.className = cleanClasses(setClass);
             }
           }
           inc += 1;
@@ -528,12 +525,16 @@
       });
 
       var successor = el.childNodes[index];
+      var prev = el.childNodes[index-1];
       var newEl = 'span';
+      prev.className = cleanClasses(prev.className.replace(/\sbr|br\s|\bbr\b/, ''));//remove previous br classes if any
 
-      if (ch === "\n") newEl = 'br';
-
+      if (ch === "\n") {
+        newEl = 'br';
+        if (!successor) classes += ' br ';
+      }
       var newCh = document.createElement(newEl);
-      if (ch !== "\n") newCh.className = classes;
+      if(classes.length > 1) newCh.className = cleanClasses(classes); // we still add class for the last br to display properly
       newCh.innerHTML = ch; // we still set innerHTML even if its a linebreak so its possible to select put the cursor after it 
 
       if (successor) {

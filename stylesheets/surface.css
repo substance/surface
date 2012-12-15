@@ -159,3 +159,9 @@ section.text{
 .comment.marker{
   background-color: #d9e724;
 }
+
+.content br.br
+{   
+  content: "\n" !important;
+  display: block !important;
+}

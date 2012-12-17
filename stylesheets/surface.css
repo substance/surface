@@ -9,7 +9,6 @@ body{
 
 }
 
-
 .clear{
 	clear: both;
 }
@@ -164,4 +163,14 @@ section.text{
 {   
   content: "\n" !important;
   display: block !important;
+}
+
+.clipboard{
+  position: 'fixed';
+  top: 20px;
+  left: 20px;
+  opacity: 0;
+  z-index: 10000;
+  width: 1px;
+  height: 1px;
 }

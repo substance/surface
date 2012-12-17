@@ -123,8 +123,7 @@
 
   Substance.Surface = function(options) {
 
-    var $el = $(options.el),
-        el = this.el = options.el,
+    var el = options.el,
         selectionIsValid = false,
         annotations = options.annotations,
         types = options.types || {},
@@ -184,22 +183,39 @@
       renderAnnotations();
     }
 
+    // Helpers
+    function hasClass(ele,cls) {
+      return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
+    }
+
+    function addClass(ele,cls) {
+      if (!hasClass(ele,cls)) ele.className += " "+cls;
+      ele.className = cleanClasses(ele.className);
+    }
+
+    function removeClass(ele,cls) {
+      if (hasClass(ele,cls)) {
+        var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
+        ele.className = cleanClasses(ele.className.replace(reg,' '));
+        ele.className = cleanClasses(ele.className);
+      }
+    }
+    
     // remove classes from list of nodes
     function removeClasses(elems, className) {
-      var removes, elem, i, l;
-      for ( i = 0, l = elems.length; i < l; i++ ) {
-        elem = elems[ i ];
+      var elem, i, l = elems.length;
+      for ( i = 0; i < l; i++ ) {
+        elem = elems[i];
         if ( elem.nodeType === 1 && elem.className ) { // speeds up quite much!
           if (className) {
-            newClass = elem.className.replace( " " + className + " " , " " );
-            elem.className = newClass;
+            removeClass(elem,className);
           } else {
             elem.className = null;
           }
         }
       }
 
-    }  
+    }
 
     // quick cleanup for orphan spaces in classes
     function cleanClasses(classList) {
@@ -216,18 +232,8 @@
 
         while(ln--) {
           var elem = elems[inc];
-          if ( elem.nodeType === 1)
-          {
-            if (!elem.className) {
-              elem.className = className;
-            } else {
-              var setClass = " " + elem.className + " ";
-
-              if ( setClass.indexOf( " " + className + " " ) < 0 ) {
-                setClass += className + " ";
-              }
-              elem.className = cleanClasses(setClass);
-            }
+          if (elem.nodeType === 1) {
+            addClass(elem, className);
           }
           inc += 1;
         };
@@ -315,7 +321,6 @@
       var parent = startContainer.parentElement;
       var indexOf = Array.prototype.indexOf;
 
-      // if(startContainer.nodeType === 3) index = $el.find('span, br').index(range.startContainer.parentElement);
       var index = startContainer.nodeType === 3 ? indexOf.call(el.childNodes, parent) : 0;
       
       // There's an edge case at the very beginning
@@ -493,8 +498,10 @@
 
     function deleteRange(range) {
       if (range[0] < 0) return;
-
-      $(elements(range)).remove();
+      var els = elements(range);
+      for (var i = els.length - 1; i >= 0; i--) {
+        el.removeChild(els[i]);
+      };
 
       select(range[0]);
       deleteTransformer(range[0], range[1]);
@@ -527,14 +534,14 @@
       var successor = el.childNodes[index];
       var prev = el.childNodes[index-1];
       var newEl = 'span';
-      prev.className = cleanClasses(prev.className.replace(/\sbr|br\s|\bbr\b/, ''));//remove previous br classes if any
+      removeClass(prev, 'br');
 
       if (ch === "\n") {
         newEl = 'br';
-        if (!successor) classes += ' br ';
+        if (!successor) classes += ' br';
       }
       var newCh = document.createElement(newEl);
-      if(classes.length > 1) newCh.className = cleanClasses(classes); // we still add class for the last br to display properly
+      if(classes.length > 1) addClass(newCh, classes); // we still add class for the last br to display properly
       newCh.innerHTML = ch; // we still set innerHTML even if its a linebreak so its possible to select put the cursor after it 
 
       if (successor) {
@@ -616,6 +623,13 @@
       }
     }
 
+    // TODO: we need to handle cut in order to update transformers
+    // probably we have to emulate by deleting ourselves and keeping
+    // the previous content stored somehow
+    function handleCut(e) {
+      console.log('cuting');
+    }
+
     function handlePaste(e) {
       var sel = selection();
       if(sel[1] > 0) deleteRange(sel);
@@ -623,22 +637,18 @@
       pasting = true;
 
       function getPastedContent (callback) {
-        var tmpEl = $('<div contenteditable="true" />')
-          .css({
-            position: 'fixed', top: '20px', left: '20px',
-            opacity: '0', 'z-index': '10000',
-            width: '1px', height: '1px'
-          })
-          .appendTo(document.body)
-          .focus();
+        var tmpEl = el.cloneNode(false);
+        tmpEl.className = 'clipboard';
+        document.body.appendChild(tmpEl);
+        tmpEl.focus();
         setTimeout(function () {
-          tmpEl.remove();
+          document.body.removeChild(tmpEl);
           callback(tmpEl);
         }, 10);
       }
 
       getPastedContent(function (node) {
-        var txt = $(node).text().trim().replace(/\n/g, "");
+        var txt = node.textContent.trim();
         insertText(txt, sel[0]);
         select(sel[0]+txt.length);
         pasting = false;
@@ -698,14 +708,14 @@
     function activateSurface(e) {
       if (pasting) return;
       active = true;
-      $(this).addClass('active');
+      addClass(this, 'active');
       renderAnnotations();
       that.trigger('surface:active', that.content, that.prevContent);
     }
 
     function deactivateSurface(e) {
       if (pasting) return;
-      $(this).removeClass('active');
+      removeClass(this, 'active');
       highlight(null);
       commit(); // Commit changes
     }
@@ -728,6 +738,7 @@
       }
       active = false;
     }
+    
 
     // Bind Events
     // ------
@@ -738,6 +749,9 @@
 
     // Enter key for new lines
     key('shift+enter', handleNewline);
+ 
+    // Cutting
+    el.addEventListener('cut', handleCut);
 
     // Paste
     el.addEventListener('paste', handlePaste);

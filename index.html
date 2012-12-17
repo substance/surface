@@ -6,19 +6,22 @@
   <link rel="stylesheet" href="stylesheets/surface.css">
 
   <script type="text/javascript" src="lib/underscore.js"></script>
-  <script type="text/javascript" src="lib/jquery-min.js"></script>
   <script type="text/javascript" src="lib/keymaster.js"></script>
   <script type="text/javascript" src="surface.js"></script>
 
-  <script type="text/plain" name="content">Substance provides a flexible architecture, involving an extensible document format and protocol, realtime synchronization, an extensible document composer as well as a reference implementation.</script>
+  <script type="text/plain" id="content">Substance provides a flexible architecture, involving an extensible document format and protocol, realtime synchronization, an extensible document composer as well as a reference implementation.</script>
   <style type="text/css">
   </style>
   <script>
-    $(function() {
+    // $(function) replacement
+    document.addEventListener( "DOMContentLoaded", onReady);
+
+    function onReady() {
+      document.removeEventListener( "DOMContentLoaded", onReady, false );
 
       window.surface = new Substance.Surface({
-        el: $('.content')[0],
-        content: $('script[name=content]').text(),
+        el: document.getElementsByClassName('content')[0],
+        content: document.getElementById('content').textContent,
         annotations: {
           "annotation-1" : { id: "annotation-1", type: "str", pos: [0,9] },
           "annotation-2" : { id: "annotation-2", type: "em", pos: [57,10] },
@@ -59,31 +62,31 @@
         return 'annotation-' + (parseInt(size) +1);
       }
 
-      function log(message) {
-        $('.debug-console').append($('<div class="log-entry">'+message+'</div>'))
-      }
+      // function log(message) {
+      //   $('.debug-console').append($('<div class="log-entry">'+message+'</div>'))
+      // }
 
-      $('a.show-selection').click(function(sel) {
-        log("SELECTION: "+ surface.selection());
-      });
+      // $('a.show-selection').click(function(sel) {
+      //   log("SELECTION: "+ surface.selection());
+      // });
 
-      $('a.get-content').click(function(sel) {
-        log("CONTENT: <br/><pre>"+ surface.content+"</pre>");
-      });
+      // $('a.get-content').click(function(sel) {
+      //   log("CONTENT: <br/><pre>"+ surface.content+"</pre>");
+      // });
 
-      $('a.set-selection').click(function(sel) {
-        surface.select(17);
-        // surface.deleteRange([0, 3]);
-      });
+      // $('a.set-selection').click(function(sel) {
+      //   surface.select(17);
+      //   // surface.deleteRange([0, 3]);
+      // });
 
-      $('a.delete-selection').click(function(sel) {
-        surface.deleteRange([0, 3]);
-      });
+      // $('a.delete-selection').click(function(sel) {
+      //   surface.deleteRange([0, 3]);
+      // });
 
-      $('a.insert-annotation').click(function(sel) {
-        surface.insertAnnotation({ id: "annotation-4", type: "comment", pos: [65,10] });
-        surface.insertAnnotation({ id: "annotation-5", type: "marker", pos: [74,3] });
-      });
+      // $('a.insert-annotation').click(function(sel) {
+      //   surface.insertAnnotation({ id: "annotation-4", type: "comment", pos: [65,10] });
+      //   surface.insertAnnotation({ id: "annotation-5", type: "marker", pos: [74,3] });
+      // });
 
       key('ctrl+m', function() {
         surface.insertAnnotation({ id: "annotation-5", type: "marker", pos: surface.selection() });
@@ -115,7 +118,7 @@
         return false;
       });
 
-    });
+    };
   </script>
 
 </head>

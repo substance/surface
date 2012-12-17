@@ -114,24 +114,19 @@
     // ---------------
 
     function init() {
-      var br = '<br/>';
-      var innerHTML = '';
-      var span;
-
-      var i = that.content.length;
-      var inc = 0;
+      var br = '<br/>', innerHTML = '',
+          span, i, len = that.content.length;
       
-      while(i--) {
-        var ch = that.content[inc];
+      for (i = 0; i < len; i++) {
+        var ch = that.content[i];
         if (ch === "\n") {
           innerHTML += br;
         } else {
           var span = '<span>' + ch + '</span>';
           innerHTML += span;
         }
-        inc += 1;
       };
-      
+
       var newEl = el.cloneNode(false);
       newEl.innerHTML = innerHTML;
       el.parentNode.replaceChild(newEl, el);
@@ -161,6 +156,7 @@
     // remove classes from list of nodes
     function removeClasses(elems, className) {
       var elem, i, l = elems.length;
+
       for ( i = 0; i < l; i++ ) {
         elem = elems[i];
         if ( elem.nodeType === 1 && elem.className ) { // speeds up quite much!
@@ -170,7 +166,7 @@
             elem.className = null;
           }
         }
-      }
+      };
 
     }
 
@@ -184,16 +180,12 @@
 
     // add classes to a list of nodes
     function addClasses(elems, className) {
-      var ln = elems.length,
-          inc = 0;
+      var ln = elems.length, i;
 
-        while(ln--) {
-          var elem = elems[inc];
-          if (elem.nodeType === 1) {
-            addClass(elem, className);
-          }
-          inc += 1;
-        };
+      for (i = 0; i < ln; i++) {
+        var elem = elems[i];
+        if (elem.nodeType === 1) addClass(elem, className);
+      };
     }
 
     // Highlight a particular annotation
@@ -219,13 +211,13 @@
     function select(start, end) {
       if (!active) return;
 
-      var sel = window.getSelection();
-      var range = document.createRange();
-      var children = el.childNodes;
-      var numChild = children.length-1;
-      var isLastNode = start > numChild;
-      var startNode = isLastNode ? children[numChild] : children[start];
-      var endNode = end ? children[end] : startNode;
+      var sel = window.getSelection(),
+          range = document.createRange(),
+          children = el.childNodes,
+          numChild = children.length-1,
+          isLastNode = start > numChild,
+          startNode = isLastNode ? children[numChild] : children[start],
+          endNode = end ? children[end] : startNode;
 
       if (children.length > 0) {
        // there is text in the container
@@ -253,9 +245,9 @@
     }
 
     function updateAnnotation(options) {
-      var id = options.id;
+      var id = options.id,
+          annotation = annotationById(id);
       delete options.id;
-      var annotation = annotationById(id);
 
       // Update properties
       _.extend(annotation, options);
@@ -271,14 +263,13 @@
     function selection() {
       var sel = window.getSelection();
       if (sel.type === "None") return null;
-      var range = sel.getRangeAt(0);
-      
-      var length = range.cloneContents().childNodes.length;
-      var startContainer = range.startContainer;
-      var parent = startContainer.parentElement;
-      var indexOf = Array.prototype.indexOf;
 
-      var index = startContainer.nodeType === 3 ? indexOf.call(el.childNodes, parent) : 0;
+      var range = sel.getRangeAt(0),
+          length = range.cloneContents().childNodes.length,
+          startContainer = range.startContainer,
+          parent = startContainer.parentElement,
+          indexOf = Array.prototype.indexOf,
+          index = startContainer.nodeType === 3 ? indexOf.call(el.childNodes, parent) : 0;
       
       // There's an edge case at the very beginning
       if (range.startOffset !== 0) index += 1;
@@ -293,7 +284,7 @@
     function getAnnotations(sel, aTypes) {
       if (sel) {
         var sStart = sel[0],
-        sEnd   = sel[0] + sel[1];
+            sEnd   = sel[0] + sel[1];
 
         return _.filter(annotations, function(a) {
           var aStart = a.pos[0], aEnd = aStart + a.pos[1];
@@ -474,11 +465,19 @@
 
     // Stateful
     function insertCharacter(ch, index) {
-      var pureCh = ch; // we store the char for the content string;
-      if (ch === " ") ch = "&nbsp;";
+      var pureCh = ch, // we store the char for the content string;
+          matched = getAnnotations([index,0]),
+          classes = '',
+          successor = el.childNodes[index],
+          prev = el.childNodes[index-1],
+          newEl = 'span',
+          newCh;
       
-      var matched = getAnnotations([index,0]),
-          classes = '';
+      if (ch === " ") ch = "&nbsp;";
+      if (ch === "\n") {
+        newEl = 'br';
+        if (!successor) classes += ' br';
+      }
 
       // we perform the transformation before to see if the inclusive/noninclusive
       // affects in order to apply the class or not
@@ -488,16 +487,9 @@
         if (a.isAffected) classes += ' ' + a.type;
       });
 
-      var successor = el.childNodes[index];
-      var prev = el.childNodes[index-1];
-      var newEl = 'span';
       removeClass(prev, 'br');
 
-      if (ch === "\n") {
-        newEl = 'br';
-        if (!successor) classes += ' br';
-      }
-      var newCh = document.createElement(newEl);
+      newCh = document.createElement(newEl);
       if(classes.length > 1) addClass(newCh, classes); // we still add class for the last br to display properly
       newCh.innerHTML = ch; // we still set innerHTML even if its a linebreak so its possible to select put the cursor after it 
 
@@ -513,15 +505,15 @@
     }
 
     // Used for pasting content
-    // TODO: optimize with documentFragments
     function insertText(text, index) {
 
-      var successor = el.childNodes[index];
+      var successor = el.childNodes[index],
+          els = text.split(''),
+          span = document.createElement("span"),
+          frag;
 
-      var els = text.split('');
-      var span = document.createElement("span");
       for ( var e = 0; e < els.length; e++ ) {
-        var frag = span.cloneNode(false);
+        frag = span.cloneNode(false);
         frag.innerHTML = els[e];
         (successor) ? el.insertBefore( frag , successor) : el.appendChild( frag );
       }
@@ -547,15 +539,11 @@
 
     function handleKey(e) {
       if (e.data !== '\n'){
-        var ch = e.data;
-  
-        // Is there an active selection?
-        var range = selection();
-
-        var index = range[0] < 0 ? 0 : range[0];
+        var ch = e.data,
+            range = selection(),// Is there an active selection?
+            index = range[0] < 0 ? 0 : range[0],
+            startContainer = window.getSelection().getRangeAt(0).startContainer;// look for ghost accents here
         
-        // look for ghost accents here
-        var startContainer = window.getSelection().getRangeAt(0).startContainer;
         if (startContainer.length > 1) {
           startContainer.textContent = startContainer.textContent[0]; // chop the ghost accent
           delete range[1]; //to avoid overriding inserting into next char
@@ -583,14 +571,15 @@
     // bypasses the default cut behaviour and passes it to
     // be pasted as plain text
     function handleCut(e) {
-      var sel = window.getSelection();
-      var range = sel.getRangeAt(0);
-      var elements = range.cloneContents().childNodes;
-      var len = elements.length;
+      var se = window.getSelection(),
+          range = se.getRangeAt(0),
+          elements = range.cloneContents().childNodes,
+          len = elements.length,
+          sel = selection();
+
       for (var i = 0; i < len; i++) {
         clipboard += elements[i].textContent;
       };
-      var sel = selection();
       sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0], 1]);
       e.preventDefault();
     }

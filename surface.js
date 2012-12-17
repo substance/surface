@@ -92,6 +92,7 @@
         types = options.types || {},
         active = false,
         pasting = false,
+        clipboard = [],
         that = this;
 
     // Directly expose content, because it's a value not a reference
@@ -579,11 +580,19 @@
       }
     }
 
-    // TODO: we need to handle cut in order to update transformers
-    // probably we have to emulate by deleting ourselves and keeping
-    // the previous content stored somehow
+    // bypasses the default cut behaviour and passes it to
+    // be pasted as plain text
     function handleCut(e) {
-      console.log('cuting');
+      var sel = window.getSelection();
+      var range = sel.getRangeAt(0);
+      var elements = range.cloneContents().childNodes;
+      var len = elements.length;
+      for (var i = 0; i < len; i++) {
+        clipboard += elements[i].textContent;
+      };
+      var sel = selection();
+      sel[1]>0 ? deleteRange(sel) : deleteRange([sel[0], 1]);
+      e.preventDefault();
     }
 
     function handlePaste(e) {
@@ -596,6 +605,10 @@
         var tmpEl = el.cloneNode(false);
         tmpEl.className = 'clipboard';
         document.body.appendChild(tmpEl);
+        if(clipboard.length > 1) {
+          tmpEl.textContent = clipboard;
+          clipboard = '';
+        }
         tmpEl.focus();
         setTimeout(function () {
           document.body.removeChild(tmpEl);

@@ -136,7 +136,7 @@
 
     // checks if the specified node contains a certain class
     function hasClass(ele, cls) {
-      return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
+      if(ele) return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
     }
 
     // adds specified css class to a specified node

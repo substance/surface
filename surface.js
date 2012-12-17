@@ -9,33 +9,14 @@
   // Backbone.Events
   // -----------------
 
-  // Regular expression used to split event strings
   var eventSplitter = /\s+/;
-
   var slice = Array.prototype.slice;
-  // A module that can be mixed in to *any object* in order to provide it with
-  // custom events. You may bind with `on` or remove with `off` callback functions
-  // to an event; trigger`-ing an event fires all callbacks in succession.
-  //
-  //     var object = {};
-  //     _.extend(object, Backbone.Events);
-  //     object.on('expand', function(){ alert('expanded'); });
-  //     object.trigger('expand');
-  //
     _.Events = w.Backbone ? Backbone.Events : {
-
-    // Bind one or more space separated events, `events`, to a `callback`
-    // function. Passing `"all"` will bind the callback to all events fired.
     on: function (events, callback, context) {
-
       var calls, event, node, tail, list;
       if (!callback) return this;
       events = events.split(eventSplitter);
       calls = this._callbacks || (this._callbacks = {});
-
-      // Create an immutable callback list, allowing traversal during
-      // modification.  The tail is an empty object that will always be used
-      // as the next node.
       while (event = events.shift()) {
         list = calls[event];
         node = list ? list.tail : {};
@@ -46,22 +27,13 @@
       }
       return this;
     },
-
-    // Remove one or many callbacks. If `context` is null, removes all callbacks
-    // with that function. If `callback` is null, removes all callbacks for the
-    // event. If `events` is null, removes all bound callbacks for all events.
     off: function(events, callback, context) {
       var event, calls, node, tail, cb, ctx;
-
-      // No events, or removing *all* events.
       if (!(calls = this._callbacks)) return;
       if (!(events || callback || context)) {
         delete this._callbacks;
         return this;
       }
-
-      // Loop through the listed events and contexts, splicing them out of the
-      // linked list of callbacks if appropriate.
       events = events ? events.split(eventSplitter) : _.keys(calls);
       while (event = events.shift()) {
         node = calls[event];
@@ -79,20 +51,12 @@
       }
       return this;
     },
-
-    // Trigger one or many events, firing all bound callbacks. Callbacks are
-    // passed the same arguments as `trigger` is, apart from the event name
-    // (unless you're listening on `"all"`, which will cause your callback to
-    // receive the true name of the event as the first argument).
     trigger: function(events) {
       var event, node, calls, tail, args, all, rest;
       if (!(calls = this._callbacks)) return this;
       all = calls.all;
       events = events.split(eventSplitter);
       rest = slice.call(arguments, 1);
-
-      // For each event, walk through the linked list of callbacks twice,
-      // first to trigger the event, then to trigger any `"all"` callbacks.
       while (event = events.shift()) {
         if (node = calls[event]) {
           tail = node.tail;
@@ -108,7 +72,6 @@
           }
         }
       }
-
       return this;
     }
   };
@@ -149,8 +112,7 @@
     // Initialize Surface
     // ---------------
 
-    // new optimized version
-    function initContent() {
+    function init() {
       var br = '<br/>';
       var innerHTML = '';
       var span;
@@ -173,31 +135,25 @@
       newEl.innerHTML = innerHTML;
       el.parentNode.replaceChild(newEl, el);
       el = newEl;
-    }
-
-    // Regular init
-    // TODO: obsolete?
-
-    function init() {
-      initContent();
       renderAnnotations();
     }
 
-    // Helpers
-    function hasClass(ele,cls) {
+    // checks if the specified node contains a certain class
+    function hasClass(ele, cls) {
       return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
     }
 
-    function addClass(ele,cls) {
+    // adds specified css class to a specified node
+    function addClass(ele, cls) {
       if (!hasClass(ele,cls)) ele.className += " "+cls;
       ele.className = cleanClasses(ele.className);
     }
 
-    function removeClass(ele,cls) {
+    // removes a single class from a node
+    function removeClass(ele, cls) {
       if (hasClass(ele,cls)) {
         var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
         ele.className = cleanClasses(ele.className.replace(reg,' '));
-        ele.className = cleanClasses(ele.className);
       }
     }
     
@@ -217,11 +173,11 @@
 
     }
 
-    // quick cleanup for orphan spaces in classes
+    // cleans double spaces in classList
     function cleanClasses(classList) {
-      // TODO: regex to clear out only white or double white spaces in the classes string
-      classList = classList.replace('\s{2,0}', '\s');
-      if(classList.length === 1) classList = '';
+      classList = classList.replace(/\s{2,}/g, ' ').trim();
+      //remove single white space; hoping no css classes of 1 char exists
+      if(classList.length === 1) classList = null;
       return classList;
     }
 

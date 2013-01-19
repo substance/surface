@@ -21,7 +21,7 @@
 
       window.surface = new Substance.Surface({
         el: document.getElementsByClassName('content')[0],
-        // content: document.getElementById('content').textContent,
+        content: document.getElementById('content').textContent,
         annotations: {
           "annotation-1" : { id: "annotation-1", type: "str", pos: [0,9] },
           "annotation-2" : { id: "annotation-2", type: "em", pos: [57,10] },
@@ -123,7 +123,7 @@
 
 </head>
 <body>
-  <div id="content" class="content" spellcheck="false" contenteditable="true">What happens when theres content <em>there<em>?</div>
+  <div id="content" class="content" spellcheck="false" contenteditable="true"></div>
 
 <!--  <div class="debug">
     <h1>Actions</h1>

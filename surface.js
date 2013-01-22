@@ -96,7 +96,7 @@
         that = this;
 
     // Directly expose content, because it's a value not a reference
-    this.content = options.content || '';
+    this.content = options.content || el.textContent || '';
     this.prevContent = this.content;
 
     var dirtyNodes = {};

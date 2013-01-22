@@ -96,7 +96,7 @@
         that = this;
 
     // Directly expose content, because it's a value not a reference
-    this.content = options.content || el.textContent || '';
+    this.content = options.content || '';
     this.prevContent = this.content;
 
     var dirtyNodes = {};
@@ -506,6 +506,10 @@
 
     // Used for pasting content
     function insertText(text, index) {
+      // For some reason, when copy&pasting from the
+      // Surface we receive a non-breaking whitespace char
+      // This fix just converts them to regular spaces
+      text = text.replace(/\u00A0/g, " ");
 
       var successor = el.childNodes[index],
           els = text.split(''),

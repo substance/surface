@@ -1,4 +1,4 @@
-//     (c) 2012 Victor Saiz, Michael Aufreiter
+//     (c) 2012-2013 Victor Saiz, Michael Aufreiter
 
 //     Surface is freely distributable under the MIT license.
 //     For all details and documentation:

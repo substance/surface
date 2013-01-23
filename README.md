@@ -20,7 +20,7 @@ Once the script is loaded, you can create a substance instance by simply calling
 
   var surface = new Substance.Surface({el: document.getElementById('content')});
 
-The Surface will take over the passed in element. Had the passed in div have already some content, the surface will strip the text and start filled with that text.
+Surface will take over the passed in element. Had the passed in div have already some content, Surface will strip the text and start filled with that text.
 
 ## Passing content *(optional)*
 

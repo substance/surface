@@ -18,7 +18,7 @@ In the demo above you can type, edit, copy, paste, delete and annotate some text
 
 Once the script is loaded, you can create a substance instance by simply calling its constructor and passing an object with an existing div as `el`.
 
-  var surface = new Substance.Surface({el: document.getElementById('content')});
+`var surface = new Substance.Surface({el: document.getElementById('content')});`
 
 Surface will take over the passed in element. Had the passed in div have already some content, Surface will strip the text and start filled with that text.
 

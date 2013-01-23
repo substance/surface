@@ -27,11 +27,11 @@ Surface will take over the passed in element. Had the passed in div have already
 Alternatively you can pass some content upon instantiation inside a `content` key.
 
 ```
-  var surface = new Substance.Surface({
-        ...
-        content: "Surface is an extensible low-level interface for semantic rich text editing",
-        ...
-      });
+var surface = new Substance.Surface({
+  ...
+  content: "Surface is an extensible low-level interface for semantic rich text editing",
+  ...
+});
 ```
 
 ## Passing annotations *(optional)*
@@ -41,15 +41,15 @@ You can also pass an object with existing annotations. Such object should contai
 Here you can see how such object whould look like:
 
 ```
-  var surface = new Substance.Surface({
-    ...
-    annotations: {
-      "annotation-1" : { id: "annotation-1", type: "str", pos: [0,9] },
-      "annotation-2" : { id: "annotation-2", type: "em", pos: [57,10] },
-      "annotation-3" : { id: "annotation-3", type: "comment", pos: [30,12] }
-    }
-    ...
-  });
+var surface = new Substance.Surface({
+  ...
+  annotations: {
+    "annotation-1" : { id: "annotation-1", type: "str", pos: [0,9] },
+    "annotation-2" : { id: "annotation-2", type: "em", pos: [57,10] },
+    "annotation-3" : { id: "annotation-3", type: "comment", pos: [30,12] }
+  }
+  ...
+});
 ```
 
 ## Passing annotation types *(optional)*
@@ -63,17 +63,17 @@ Since annotations can either be inclusive or exclusive, alternatively a `types` 
 To handel both types pass in objetcs with the key `inclusive` set as either `true` or `false`.
 
 ```
-  var surface = new Substance.Surface({
-          ...
-          types: {
-            "em": { "inclusive": true },
-            "str": { "inclusive": true },
-            "idea": { "inclusive": false },
-            "question": { "inclusive": false },
-            "error": { "inclusive": false }
-          }
-          ...
-  });
+var surface = new Substance.Surface({
+  ...
+  types: {
+    "em": { "inclusive": true },
+    "str": { "inclusive": true },
+    "idea": { "inclusive": false },
+    "question": { "inclusive": false },
+    "error": { "inclusive": false }
+  }
+  ...
+});
 ```
 
 # API
@@ -119,10 +119,10 @@ With `getAnnotations` you can look for all the annotations contained within a se
 The resulting annotations object looks like this:
 
 ```
-  {
-          "annotation-1" : { id: "annotation-1", type: "idea", pos: [0,9] },
-          "annotation-1" : { id: "annotation-2", type: "em", pos: [57,10] }
-  }
+{
+  "annotation-1" : { id: "annotation-1", type: "idea", pos: [0,9] },
+  "annotation-1" : { id: "annotation-2", type: "em", pos: [57,10] }
+}
 ```
 
 ### surface.insertAnnotation({annotation})
@@ -131,11 +131,11 @@ The resulting annotations object looks like this:
 Registering a new annotation is easy, you only have to pass in an annotation object containing an `id`, a `type` and a `pos` array holding a start position and offset (e.g. `[4, 5]` where the selection starts at character 4 and includes 5 characters).
 
 ```
-  surface.insertAnnotation({
-          id: "annotation-25",
-          type: "idea",
-          pos: [3, 5]
-      });
+surface.insertAnnotation({
+  id: "annotation-25",
+  type: "idea",
+  pos: [3, 5]
+});
 ```
 
 ### surface.deleteAnnotation(id)
@@ -160,26 +160,27 @@ These are the available events:
 Gets triggered when the selection changes, and passes the selection to a callback function.
 
 ```
-    surface.on('selection:changed', function(sel) {
-      console.log('selected range:', sel);
-    });
+surface.on('selection:changed', function(sel) {
+  console.log('selected range:', sel);
+});
 ```
 
 ### content:changed
 Gets triggered when the content is updated, and passes the actual content, along with the old content previous to that change to a callback function.
 
 ```
-    surface.on('content:changed', function(content, prevContent) {
-      console.log('updated text from', prevContent, 'to: ', content);
-    });
+surface.on('content:changed', function(content, prevContent) {
+  console.log('updated text from', prevContent, 'to: ', content);
+});
 ```
+
 ### annotations:changed
 Gets triggered when annotations are updated
 
 ```
-    surface.on('annotations:changed', function() {
-      console.log(surface.getAnnotations());
-    });
+surface.on('annotations:changed', function() {
+  console.log(surface.getAnnotations());
+});
 ```
 
 # Development Notes

@@ -167,13 +167,12 @@
           }
         }
       };
-
     }
 
     // cleans double spaces in classList
     function cleanClasses(classList) {
       classList = classList.replace(/\s{2,}/g, ' ').trim();
-      //remove single white space; hoping no css classes of 1 char exists
+      //remove single white space; hoping no css class names of 1 char exists
       if(classList.length === 1) classList = null;
       return classList;
     }
@@ -190,7 +189,6 @@
 
     // Highlight a particular annotation
     function highlight(id) {
-
       // Find and remove all higlighted chars
       var elems = el.getElementsByTagName('span');
       removeClasses(elems, 'highlight');
@@ -208,7 +206,7 @@
     // Set selection
     // ---------------
 
-    function select(start, offset) {
+    function select(start, length) {
       if (!active) return;
 
       var sel = window.getSelection(),
@@ -217,7 +215,7 @@
           numChild = children.length-1,
           isLastNode = start > numChild,
           startNode = isLastNode ? children[numChild] : children[start],
-          endNode = offset ? children[(start + offset)] : startNode;
+          endNode = length ? children[(start + length)] : startNode;
 
       if (children.length > 0) {
        // there is text in the container

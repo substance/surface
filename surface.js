@@ -122,7 +122,7 @@
         if (ch === "\n") {
           innerHTML += br;
         } else {
-          var span = '<span>' + ch + '</span>';
+          var span = '<span>' + (ch === " " ? "&nbsp;" : ch) + '</span>';
           innerHTML += span;
         }
       };
@@ -641,8 +641,10 @@
       if (!active) return;
 
       insertCharacter('\n', selection()[0]);
-      e.preventDefault();
-      e.stopPropagation();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();        
+      }
     }
 
     function annotationUpdates() {
@@ -651,13 +653,12 @@
 
       _.each(dirtyNodes, function(method, key) {
         if (method === "delete") return deletedAnnotations.push(key);
-        // var a = annotations[key];
         var a = annotationById(key);
 
         if (method === "insert") {
-          ops.push(["insert", {id: a.id, type: a.type, pos: a.pos}]);
+          ops.push(["insert", {id: a.id, type: a.type, pos: a.pos, url: a.url}]);
         } else if (method === "update") {
-          ops.push(["update", {id: a.id, pos: a.pos}]);
+          ops.push(["update", {id: a.id, pos: a.pos, url: a.url}]);
         }
       });
 
@@ -755,6 +756,7 @@
     this.updateAnnotation = updateAnnotation;
     this.getAnnotations = getAnnotations;
     this.deleteAnnotation = deleteAnnotation;
+    this.addNewline = handleNewline;
     this.highlight = highlight;
   };
 

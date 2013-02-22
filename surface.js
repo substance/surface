@@ -203,6 +203,13 @@
       return (types[a.type]) ? types[a.type].inclusive : true;
     }
 
+    // transforms invisible characters to htmlentities
+    function htmlize(ch) {
+      if (ch === /\n/ || ch === /\r/) ch = '<br>';
+      if (ch === /\s/ || ch === ' ') ch = '&nbsp;';
+      return ch;
+    }
+
     // Set selection
     // ---------------
 
@@ -513,10 +520,10 @@
           els = text.split(''),
           span = document.createElement("span"),
           frag;
-
       for ( var e = 0; e < els.length; e++ ) {
         frag = span.cloneNode(false);
-        frag.innerHTML = els[e];
+        els[e] = htmlize(els[e]);
+        frag.innerHTML = els[e] === '\n' ? '<br>' : els[e];
         (successor) ? el.insertBefore( frag , successor) : el.appendChild( frag );
       }
 

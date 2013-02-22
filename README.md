@@ -2,15 +2,9 @@ Surface is an extensible low-level interface for semantic rich text editing. It 
 
 Substance Surface has been build out of the need for a reliable browser-based text manipulation. It's designed to stricly separate content (plain-text) from annotations (data that refers to text ranges). Instead of relying on native browser interfaces (which as today are sadly clumsy and cumbersome) we're taking full control of state (text and annotations), HTML rendering and interactions.
 
-# Simple demo
+# Basic demo
 
-In the demo above you can type, edit, copy, paste, delete and annotate some text. For annotations you can try some of the following key commands:
-
-* `⌘+b` for `strong`/`bold`
-* `⌘+m` for a simple `marker`
-* `⌘+i` for `emphasizing`/`italic`
-
-<iframe width="100%" height="400" frameborder="0" scrolling="no" src="http://interior.substance.io/surface/"></iframe>
+You can find a working demo in the homepage at [interior.substance.io](http://interior.substance.io/modules/surface.html)
 
 # Documentation
 

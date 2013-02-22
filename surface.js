@@ -203,11 +203,10 @@
       return (types[a.type]) ? types[a.type].inclusive : true;
     }
 
-    // transforms invisible characters to htmlentities
+    // transforms invisible characters to html
     function htmlize(ch) {
-      if (ch === /\n/ || ch === /\r/) ch = '<br>';
-      if (ch === /\s/ || ch === ' ') ch = '&nbsp;';
-      if (ch === /\t/ || ch === '   ')  ch = '&nbsp;';
+      if (/\r\n|\r|\n/.test(ch)) ch = '<br>';
+      if (/\s|\t/.test(ch)) ch = '&nbsp;';
       return ch;
     }
 

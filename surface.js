@@ -122,7 +122,7 @@
         if (ch === "\n") {
           innerHTML += br;
         } else {
-          var span = '<span>' + htmlize(ch) + '</span>';
+          var span = '<span>' + toHtml(ch) + '</span>';
           innerHTML += span;
         }
       };
@@ -204,7 +204,7 @@
     }
 
     // transforms invisible characters to html
-    function htmlize(ch) {
+    function toHtml(ch) {
       if (/\r\n|\r|\n/.test(ch)) ch = '<br>';
       if (/\s|\t/.test(ch)) ch = '&nbsp;';
       return ch;
@@ -522,7 +522,7 @@
           frag;
       for ( var e = 0; e < els.length; e++ ) {
         frag = span.cloneNode(false);
-        els[e] = htmlize(els[e]);
+        els[e] = toHtml(els[e]);
         frag.innerHTML = els[e] === '\n' ? '<br>' : els[e];
         (successor) ? el.insertBefore( frag , successor) : el.appendChild( frag );
       }

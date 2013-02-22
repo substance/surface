@@ -122,7 +122,7 @@
         if (ch === "\n") {
           innerHTML += br;
         } else {
-          var span = '<span>' + (ch === " " ? "&nbsp;" : ch) + '</span>';
+          var span = '<span>' + htmlize(ch) + '</span>';
           innerHTML += span;
         }
       };
@@ -207,6 +207,7 @@
     function htmlize(ch) {
       if (ch === /\n/ || ch === /\r/) ch = '<br>';
       if (ch === /\s/ || ch === ' ') ch = '&nbsp;';
+      if (ch === /\t/ || ch === '   ')  ch = '&nbsp;';
       return ch;
     }
 

@@ -468,6 +468,15 @@
       that.content = that.content.substring(0, range[0]) + that.content.substring(range[0] + range[1]);
     }
 
+    // inserts or appends node to an element whether there is a successor or not
+    function insertAppend(successor, el, ch) {
+      if (successor) {
+        el.insertBefore(ch, successor);
+      } else {
+        el.appendChild(ch);
+      }
+    }
+
     // Stateful
     function insertCharacter(ch, index) {
       var pureCh = ch, // we store the char for the content string;
@@ -498,11 +507,7 @@
       if(classes.length > 1) addClass(newCh, classes); // we still add class for the last br to display properly
       newCh.innerHTML = ch; // we still set innerHTML even if its a linebreak so its possible to select put the cursor after it 
 
-      if (successor) {
-        el.insertBefore(newCh, successor);
-      } else {
-        el.appendChild(newCh);
-      }
+      insertAppend(successor, el, newCh);
       
       updateContent(pureCh, index);
       select(index+1);
@@ -511,10 +516,6 @@
 
     // Used for pasting content
     function insertText(text, index) {
-      // For some reason, when copy&pasting from the
-      // Surface we receive a non-breaking whitespace char
-      // This fix just converts them to regular spaces
-      text = text.replace(/\u00A0/g, " ");
 
       var successor = el.childNodes[index],
           els = text.split(''),
@@ -524,7 +525,7 @@
         frag = span.cloneNode(false);
         els[e] = toHtml(els[e]);
         frag.innerHTML = els[e] === '\n' ? '<br>' : els[e];
-        (successor) ? el.insertBefore( frag , successor) : el.appendChild( frag );
+        insertAppend(successor, el, frag);
       }
 
       updateContent(text, index);
@@ -602,11 +603,11 @@
       pasting = true;
 
       function getPastedContent (callback) {
-        var tmpEl = el.cloneNode(false);
+        var tmpEl = document.createElement("textarea");
         tmpEl.className = 'clipboard';
         document.body.appendChild(tmpEl);
         if(clipboard.length > 1) {
-          tmpEl.textContent = clipboard;
+          tmpEl.value = clipboard;
           clipboard = '';
         }
         tmpEl.focus();
@@ -617,7 +618,7 @@
       }
 
       getPastedContent(function (node) {
-        var txt = node.textContent.trim();
+        var txt = node.value.trim();
         insertText(txt, sel[0]);
         select(sel[0]+txt.length);
         pasting = false;

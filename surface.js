@@ -244,6 +244,7 @@
 
     function insertAnnotation(a) {
       annotations[a.id] = a;
+
       dirtyNodes[a.id] = "insert";
       renderAnnotations();
       that.trigger('annotations:changed');
@@ -664,11 +665,17 @@
         var a = annotationById(key);
 
         if (method === "insert") {
-          ops.push(["insert", {id: a.id, type: a.type, pos: a.pos, url: a.url}]);
+          var options = {id: a.id, type: a.type, data: {pos: a.pos}};
+          if (a.url) options["url"] = a.url;
+
+          ops.push(["insert", options]);
         } else if (method === "update") {
-          ops.push(["update", {id: a.id, pos: a.pos, url: a.url}]);
+          var options = {id: a.id, data: {pos: a.pos}};
+          if (a.url) options["url"] = a.url;
+          ops.push(["update", options]);
         }
       });
+
 
       if (deletedAnnotations.length > 0) {
         ops.push(["delete", {"nodes": deletedAnnotations}]);
@@ -688,6 +695,7 @@
       if (pasting) return;
       removeClass(this, 'active');
       highlight(null);
+
       commit(); // Commit changes
     }
 
@@ -700,10 +708,12 @@
 
     // Programmatically commit changes
     function commit() {
+
       var ops = annotationUpdates();
 
       if (that.prevContent !== that.content || ops.length > 0) {
         dirtyNodes = {};
+
         that.trigger('content:changed', that.content, that.prevContent, ops);
         that.prevContent = that.content;
       }

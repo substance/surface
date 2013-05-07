@@ -163,6 +163,7 @@ section.text{
 {   
   content: "\n" !important;
   display: block !important;
+  width: 100% !important;
 }
 
 .clipboard{

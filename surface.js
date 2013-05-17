@@ -88,7 +88,7 @@
 
     var el = options.el,
         selectionIsValid = false,
-        annotations = options.annotations,
+        annotations = options.annotations || {},
         types = options.types || {},
         active = false,
         pasting = false,
@@ -226,10 +226,30 @@
 
       if (children.length > 0) {
        // there is text in the container
-        range.selectNode(startNode);
-        // if its last node we set cursor after the char by collapsing end
-        // else we set it before by collapsing to start
-        range.collapse(!isLastNode); 
+          
+        if (length) {
+          // when a length is specified we select the following nodes inside the surface
+          range.setStart(startNode, 0);
+
+          // offset the end of the selection by the specified length
+          for (var i = 0; i < length-1; i++) {
+            if(startNode.nextSibling){ //only as long as there are existing nodes!
+              var currNode = startNode.nextSibling;
+              startNode = currNode;
+            }
+          };
+
+          range.setEnd(startNode, 1);
+        } else {
+
+          range.selectNode(startNode);
+          // Only collapse when the selection is not a range but one single char/position
+        
+          // if its last node we set cursor after the char by collapsing end
+          // else we set it before by collapsing to start
+          range.collapse(!isLastNode); 
+        }
+
       } else {
         // No characters left in the container
         range.setStart(el, 0);
@@ -491,6 +511,7 @@
       if (ch === " ") ch = "&nbsp;";
       if (ch === "\n") {
         newEl = 'br';
+        ch = '';
         if (!successor) classes += ' br';
       }
 

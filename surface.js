@@ -6,75 +6,7 @@
 
 (function (w) {
 
-  // Backbone.Events
-  // -----------------
-
-  var eventSplitter = /\s+/;
-  var slice = Array.prototype.slice;
-    _.Events = w.Backbone ? Backbone.Events : {
-    on: function (events, callback, context) {
-      var calls, event, node, tail, list;
-      if (!callback) return this;
-      events = events.split(eventSplitter);
-      calls = this._callbacks || (this._callbacks = {});
-      while (event = events.shift()) {
-        list = calls[event];
-        node = list ? list.tail : {};
-        node.next = tail = {};
-        node.context = context;
-        node.callback = callback;
-        calls[event] = {tail: tail, next: list ? list.next : node};
-      }
-      return this;
-    },
-    off: function(events, callback, context) {
-      var event, calls, node, tail, cb, ctx;
-      if (!(calls = this._callbacks)) return;
-      if (!(events || callback || context)) {
-        delete this._callbacks;
-        return this;
-      }
-      events = events ? events.split(eventSplitter) : _.keys(calls);
-      while (event = events.shift()) {
-        node = calls[event];
-        delete calls[event];
-        if (!node || !(callback || context)) continue;
-        // Create a new list, omitting the indicated callbacks.
-        tail = node.tail;
-        while ((node = node.next) !== tail) {
-          cb = node.callback;
-          ctx = node.context;
-          if ((callback && cb !== callback) || (context && ctx !== context)) {
-            this.on(event, cb, ctx);
-          }
-        }
-      }
-      return this;
-    },
-    trigger: function(events) {
-      var event, node, calls, tail, args, all, rest;
-      if (!(calls = this._callbacks)) return this;
-      all = calls.all;
-      events = events.split(eventSplitter);
-      rest = slice.call(arguments, 1);
-      while (event = events.shift()) {
-        if (node = calls[event]) {
-          tail = node.tail;
-          while ((node = node.next) !== tail) {
-            node.callback.apply(node.context || this, rest);
-          }
-        }
-        if (node = all) {
-          tail = node.tail;
-          args = [event].concat(rest);
-          while ((node = node.next) !== tail) {
-            node.callback.apply(node.context || this, args);
-          }
-        }
-      }
-      return this;
-    }
-  };
+  var ot = Substance.Chronicle.ot;
 
   // Substance
   // ---------
@@ -88,7 +20,8 @@
 
     var el = options.el,
         selectionIsValid = false,
-        annotations = options.annotations || {},
+        // annotations = options.annotations || new Substance.Surface.Annotations(),
+        model = options.model,
         types = options.types || {},
         active = false,
         pasting = false,
@@ -96,29 +29,31 @@
         that = this;
 
     // Directly expose content, because it's a value not a reference
-    this.content = options.content || el.textContent || '';
-    this.prevContent = this.content;
+    // model.setContent(options.content || el.textContent || '');
+    this.prevContent = model.getContent();
 
-    var dirtyNodes = {};
-
+    // var dirtyNodes = {};
 
     function renderAnnotations() {
       removeClasses(el.childNodes);
-      for (i in annotations) {
-        var a = annotations[i];
-        addClasses(elements(a.pos), a.type);
-      };
+
+      model.each(function(a) {
+        console.log(a);
+        addClasses(elements([a.range.start, a.range.length]), a.type);
+      });
     }
 
     // Initialize Surface
     // ---------------
 
     function init() {
+      var content = model.getContent();
+      console.log('CONTENT', content);
       var br = '<br/>', innerHTML = '',
-          span, i, len = that.content.length;
+          span, i, len = content.length;
       
       for (i = 0; i < len; i++) {
-        var ch = that.content[i];
+        var ch = content[i];
         if (ch === "\n") {
           innerHTML += br;
         } else {
@@ -194,8 +129,8 @@
       removeClasses(elems, 'highlight');
 
       // Mark the matching chars as highlited
-      var a = annotationById(id);
-      if (a) addClasses(elements(a.pos), 'highlight');
+      var a = model.getAnnotation(id);
+      if (a) addClasses(elements([a.range.start, a.range.length]), 'highlight');
     }
 
     // Determines if a certain annotation is inclusive or not
@@ -263,21 +198,19 @@
     }
 
     function insertAnnotation(a) {
-      annotations[a.id] = a;
+      model.setAnnotation(a);
 
-      dirtyNodes[a.id] = "insert";
+      // dirtyNodes[a.id] = "insert";
       renderAnnotations();
       that.trigger('annotations:changed');
     }
 
-    function updateAnnotation(options) {
-      var id = options.id,
-          annotation = annotationById(id);
-      delete options.id;
+    function updateAnnotation(delta) {
+      var id = delta.id,
+          annotation = model.getAnnotation(id);
 
       // Update properties
-      _.extend(annotation, options);
-      makeDirty(annotation);
+      model.setAnnotation(_.extend(annotation, options));
 
       renderAnnotations();
       that.trigger('annotations:changed');
@@ -308,185 +241,88 @@
     // ---------------
 
     function getAnnotations(sel, aTypes) {
-      if (sel) {
-        var sStart = sel[0],
-            sEnd   = sel[0] + sel[1];
+      var sStart = sel[0],
+          sEnd   = sel[0] + sel[1];
 
-        return _.filter(annotations, function(a) {
-          var aStart = a.pos[0], aEnd = aStart + a.pos[1];
-          
-          if(types[a.type] && types[a.type].inclusive === false){
-            // its a non inclusive annotation
-            // so intersects doesnt include the prev and last chars
-            var intersects = (aStart + 1) <= sEnd && (aEnd - 1) >= sStart;
-          } else {
-            var intersects = aStart <= sEnd && aEnd >= sStart;
-          }
-          // Intersects and satisfies type filter
-          return intersects && (aTypes ? _.include(aTypes, a.type) : true);
-        });
-      } else {
-        return annotations; // return all annotations
-      }
+      var res = [];
+      model.each(function(a) {
+        if (!sel) return res.push(a);
+
+        var aStart = a.range.start, aEnd = aStart + a.range.length;
+        
+        if(types[a.type] && types[a.type].inclusive === false) {
+          // its a non inclusive annotation
+          // so intersects doesnt include the prev and last chars
+          var intersects = (aStart + 1) <= sEnd && (aEnd - 1) >= sStart;
+        } else {
+          var intersects = aStart <= sEnd && aEnd >= sStart;
+        }
+
+        // Intersects and satisfies type filter
+        if (intersects && (aTypes ? _.include(aTypes, a.type) : true)) {
+          res.push(a);
+        }
+      });
+      return res;
     }
-
-    function annotationById(id){
-      return _.find(annotations, function(ann){ return ann.id == id; });
-    }
-
     // Deletes passed in annotation
     // ---------------------------
 
     function deleteAnnotation(ann) {
-      delete annotations[ann];
-      // Flag as deleted so update events are sent appropriately
-      dirtyNodes[ann] = "delete";
+      model.deleteAnnotation(ann); //[ann];
       that.trigger('annotations:changed');
       renderAnnotations();
-    }
-
-    function makeDirty(a) {
-      if (dirtyNodes[a.id] === "insert") return; // new node -> leave untouched
-      dirtyNodes[a.id] = "update";
     }
 
     // Transformers
     // ---------------
 
-    function insertTransformer(index, offset) {
-      // TODO: optimize
-      _.each(annotations, function(a) {
-        var aStart = a.pos[0],
-            aEnd   = aStart + a.pos[1];
+    function insertTransformer(index, text) {
+      var op = ot.TextOperation.Insert(index, text);
 
-        if (aStart === index) {
-        // Case1: insertion matching beginning
-        // console.log('Case1: insertion matching beginning');
-
-          if (isInclusive(a)) {
-          // CaseA: inclusive
-            makeDirty(a); // Mark annotation dirty
-            a.isAffected = true;
-            a.pos[1] += offset; // offseting tail 
-            // console.log('inclusive, annotation is affected');
-          } else {
-            // if not including we have to push the begining
-            // console.log('not including, we push the begining');
-            a.pos[0] += offset;
-            a.isAffected = false;
-          }
-
-        } else if (aStart < index && aEnd > index) {
-        // Case2: insertion within annotation boundries
-        // console.log('Case2: insertion within annotation boundries');
-        // both inclusive and noninclusive react alike
-        
-        // marking dirty and offseting tail
-        makeDirty(a);
-        a.isAffected = true;
-        a.pos[1] += offset;
-
-      } else if (aEnd == index) {
-        // Case3: insertion matching ending
-        // console.log('Case3: insertion matching ending');
-
-        if (isInclusive(a)) {
-          // CaseA: inclusive
-          // Only inclusive affects the annotation
-          // console.log('CaseA: inclusive');
-          makeDirty(a);
-          a.isAffected = true;
-          a.pos[1] += offset;
-        } else {
-          a.isAffected = false;
-        }
-
-      } else if (aStart > index) {
-        // Case2: subsequent annotations -> Startpos needs to be pushed
-        a.pos[0] += offset;
-        makeDirty(a); // Mark annotation as dirty
-        a.isAffected = true;
-      }
-
+      model.each(function(a) {
+        model.transformAnnotation(a, op, isInclusive(a));
       });
     }
 
-    function deleteTransformer(index, offset) {
-      // TODO: optimize
-      _.each(annotations, function(a) {
-        var aStart = a.pos[0],
-            aEnd   = aStart + a.pos[1],
-            sStart = index,
-            sEnd   = index + offset;
+    function deleteTransformer(index, text) {
+      var op = ot.TextOperation.Delete(index, text);
 
-        // Case1: Full overlap or wrap around overlap -> delete annotation
-        if (sStart <= aStart && sEnd >= aEnd) {
-          dirtyNodes[a.id] = "delete";
-
-          // console.log('Case1:Full overlap', a.type + ' will be deleted');
-          deleteAnnotation(a.id);
-        }
-        // Case2: inner overlap -> decrease offset length by the lenth of the selection
-        else if (aStart < sStart && aEnd > sEnd) {
-          // console.log(a);
-          a.pos[1] = a.pos[1] - offset;
-          makeDirty(a); // Mark annotation dirty
-          // console.log('Case2:inner overlap', a.type + ' decrease offset length by ' + offset);
-        }
-        // Case3: before no overlap -> reposition all the following annotation indexes by the lenth of the selection
-        else if (aStart > sStart && sEnd < aStart) {
-          a.pos[0] -= offset;
-          makeDirty(a); // Mark annotation dirty
-          // console.log('Case3:before no overlap', a.type + ' index repositioned');
-        }
-        // Case4: partial rightside overlap -> decrease offset length by the lenth of the overlap
-        else if (sStart <= aEnd && sEnd >= aEnd) {
-          var delta = aEnd - sStart;
-          a.pos[1] -= delta;
-          makeDirty(a); // Mark annotation dirty
-          // console.log('Case4:partial rightside overlap', a.type + ' decrease offset length by ' + delta);
-        }
-        // Case5: partial leftSide -> reposition index of the afected annotation to the begining of the selection
-        // ...... and decrease the offset according to the length of the overlap
-        else if (sStart <= aStart && sEnd >= aStart ) {
-          var delta = sEnd - aStart;
-          a.pos[0] = sStart;
-          a.pos[1] -= delta;
-          makeDirty(a); // Mark annotation dirty
-          // console.log('Case5:partial leftSide',  a.type + 'reposition index and decrease the offset by ' + delta);
-        }
+      model.each(function(a) {
+        model.transformAnnotation(a, op, isInclusive(a));
       });
-      renderAnnotations();
     }
-
 
     // State
     // ---------------
 
-    function elements(range) {
-      return slice.call(el.childNodes, range[0], range[0] + range[1]);
+    function elements(sel) {
+      return Array.prototype.slice.call(el.childNodes, sel[0], sel[0] + sel[1]);
     }
 
     // Operations
     // ---------------
 
-    function deleteRange(range) {
-      if (range[0] < 0) return;
-      var els = elements(range);
+    function deleteRange(sel) {
+      if (sel[0] < 0) return;
+      var els = elements(sel);
       for (var i = els.length - 1; i >= 0; i--) {
         el.removeChild(els[i]);
       };
 
-      select(range[0]);
-      deleteTransformer(range[0], range[1]);
+      select(sel[0]);
+
+      var deletedContent = model.getContent().slice(sel[0], sel[0]+sel[1]);
+
+      deleteTransformer(sel[0], deletedContent);
       that.trigger('changed');
       that.trigger('selection:changed', that.selection());
-      contentDeleteRange(range);
+      contentDeleteRange(sel);
     }
 
-    function contentDeleteRange(range) {
-      if (range[0] < 0) return;
-      that.content = that.content.substring(0, range[0]) + that.content.substring(range[0] + range[1]);
+    function contentDeleteRange(sel) {
+      if (sel[0] < 0) return;
+      model.setContent(model.getContent().substring(0, sel[0]) + model.getContent().substring(sel[0] + sel[1]));
     }
 
     // inserts or appends node to an element whether there is a successor or not
@@ -501,7 +337,7 @@
     // Stateful
     function insertCharacter(ch, index) {
       var pureCh = ch, // we store the char for the content string;
-          matched = getAnnotations([index,0]),
+          // matched = getAnnotations([index,0]),
           classes = '',
           successor = el.childNodes[index],
           prev = el.childNodes[index-1],
@@ -517,22 +353,27 @@
 
       // we perform the transformation before to see if the inclusive/noninclusive
       // affects in order to apply the class or not
-      insertTransformer(index, 1);
+      insertTransformer(index, pureCh);
 
-      _.each(matched, function(a) {
-        if (a.isAffected) classes += ' ' + a.type;
-      });
+      // _.each(matched, function(a) {
+      //   // if (a.isAffected) classes += ' ' + a.type;
+      //   classes += ' ' + a.type;
+      // });
 
       removeClass(prev, 'br');
 
       newCh = document.createElement(newEl);
-      if(classes.length > 1) addClass(newCh, classes); // we still add class for the last br to display properly
+      // if(classes.length > 1) addClass(newCh, classes); // we still add class for the last br to display properly
       newCh.innerHTML = ch; // we still set innerHTML even if its a linebreak so its possible to select put the cursor after it 
 
       insertAppend(successor, el, newCh);
-      
+    
       updateContent(pureCh, index);
       select(index+1);
+
+      // Mach schlauer
+      renderAnnotations();
+
       that.trigger('changed');
     }
 
@@ -551,12 +392,15 @@
       }
 
       updateContent(text, index);
-      insertTransformer(index, text.length);
+      insertTransformer(index, text);
+
+      // Mach schlauer
+      renderAnnotations();
       that.trigger('changed');
     }
 
     function updateContent(text, idx) {
-      that.content = [that.content.slice(0, idx), text, that.content.slice(idx)].join('');
+      model.setContent([model.getContent().slice(0, idx), text, model.getContent().slice(idx)].join(''));
     }
 
     // Events
@@ -574,16 +418,16 @@
       // TODO: e.data guard check - image upload for some reason triggers textInput event -> investigate
       if (e.data && e.data !== '\n'){
         var ch = e.data,
-            range = selection(),// Is there an active selection?
-            index = range[0] < 0 ? 0 : range[0],
+            sel = selection(),// Is there an active selection?
+            index = sel[0] < 0 ? 0 : sel[0],
             startContainer = window.getSelection().getRangeAt(0).startContainer;// look for ghost accents here
         
         if (startContainer.length > 1) {
           startContainer.textContent = startContainer.textContent[0]; // chop the ghost accent
-          delete range[1]; //to avoid overriding inserting into next char
+          delete sel[1]; //to avoid overriding inserting into next char
         }
 
-        if (range[1]) deleteRange(range);
+        if (sel[1]) deleteRange(sel);
         insertCharacter(ch, index);
       }
       e.preventDefault();
@@ -677,39 +521,39 @@
       }
     }
 
-    function annotationUpdates() {
-      var ops = [];
-      var deletedAnnotations = [];
+    // function annotationUpdates() {
+    //   var ops = [];
+    //   var deletedAnnotations = [];
 
-      _.each(dirtyNodes, function(method, key) {
-        if (method === "delete") return deletedAnnotations.push(key);
-        var a = annotationById(key);
+    //   _.each(dirtyNodes, function(method, key) {
+    //     if (method === "delete") return deletedAnnotations.push(key);
+    //     var a = annotations[key] // annotationById(key);
 
-        if (method === "insert") {
-          var options = {id: a.id, type: a.type, data: {pos: a.pos}};
-          if (a.url) options["url"] = a.url;
+    //     if (method === "insert") {
+    //       var options = {id: a.id, type: a.type, data: {pos: a.pos}};
+    //       if (a.url) options["url"] = a.url;
 
-          ops.push(["insert", options]);
-        } else if (method === "update") {
-          var options = {id: a.id, data: {pos: a.pos}};
-          if (a.url) options["url"] = a.url;
-          ops.push(["update", options]);
-        }
-      });
+    //       ops.push(["insert", options]);
+    //     } else if (method === "update") {
+    //       var options = {id: a.id, data: {pos: a.pos}};
+    //       if (a.url) options["url"] = a.url;
+    //       ops.push(["update", options]);
+    //     }
+    //   });
 
 
-      if (deletedAnnotations.length > 0) {
-        ops.push(["delete", {"nodes": deletedAnnotations}]);
-      }
-      return ops;
-    }
+    //   if (deletedAnnotations.length > 0) {
+    //     ops.push(["delete", {"nodes": deletedAnnotations}]);
+    //   }
+    //   return ops;
+    // }
 
     function activateSurface(e) {
       if (pasting) return;
       active = true;
       addClass(this, 'active');
       renderAnnotations();
-      that.trigger('surface:active', that.content, that.prevContent);
+      that.trigger('surface:active', model.getContent(), that.prevContent);
     }
 
     function deactivateSurface(e) {
@@ -730,13 +574,14 @@
     // Programmatically commit changes
     function commit() {
 
-      var ops = annotationUpdates();
+      // var ops = annotationUpdates();
+      var ops = [];
 
-      if (that.prevContent !== that.content || ops.length > 0) {
+      if (that.prevContent !== model.getContent() || ops.length > 0) {
         dirtyNodes = {};
 
-        that.trigger('content:changed', that.content, that.prevContent, ops);
-        that.prevContent = that.content;
+        that.trigger('content:changed', model.getContent(), that.prevContent, ops);
+        that.prevContent = model.getContent();
       }
       active = false;
     }
@@ -787,7 +632,7 @@
     this.select = select;
     this.selection = selection;
     this.commit = commit;
-    this.annotations = annotations;
+    // this.annotations = annotations;
     this.deleteRange = deleteRange;
     this.insertCharacter = insertCharacter;
     this.insertText = insertText;
@@ -799,6 +644,43 @@
     this.highlight = highlight;
   };
 
-  _.extend(Substance.Surface.prototype, _.Events);
+  _.extend(Substance.Surface.prototype, Substance.util.Events);
+
+  Substance.Surface.Model = function(content, annotations) {
+    this.annotations = annotations || {};
+    this.content = content || '';
+  };
+
+  Substance.Surface.Model.prototype.setAnnotation = function(annotation) {
+    this.annotations[annotation.id] = annotation;
+  };
+
+  Substance.Surface.Model.prototype.getAnnotation = function(id) {
+    return this.annotations[id];
+  };
+
+  Substance.Surface.Model.prototype.deleteAnnotation = function(id) {
+    delete this.annotations[id];
+  };
+
+  Substance.Surface.Model.prototype.setContent = function(content) {
+    this.content = content;
+  };
+
+  Substance.Surface.Model.prototype.getContent = function() {
+    return this.content;
+  };
+
+  Substance.Surface.Model.prototype.transformAnnotation = function(annotation, op, expand) {
+    ot.TextOperation.Range.transform(annotation.range, op, expand);
+  };
+
+  Substance.Surface.Model.prototype.each = function(fn) {
+    _.each(this.annotations, fn);
+  };
+
+  Substance.Surface.Model.prototype.commit = function(fn) {
+    console.log('confirms the shit');
+  };
 
 })(window);

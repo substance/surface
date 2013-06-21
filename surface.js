@@ -1,26 +1,82 @@
-//     (c) 2012-2013 Victor Saiz, Michael Aufreiter
+// Substance.Surface
+// ========
+// 
+// (c) 2012-2013 Victor Saiz, Oliver Buchtala, Michael Aufreiter
+// 
+// Surface is freely distributable under the MIT license.
+// For all details and documentation:
+// http://github.com/substance/surface
 
-//     Surface is freely distributable under the MIT license.
-//     For all details and documentation:
-//     http://github.com/surface/surface
+(function(root) { "use_strict";
 
-(function (w) {
+var util = root.Substance.util,
+    errors = root.Substance.errors,
+    ot = root.Substance.Chronicle.ot,
+    _ = root._;
 
-  var ot = Substance.Chronicle.ot;
 
-  // Substance
-  // ---------
+  // Dom Helpers
+  // --------
 
-  if (!w.Substance || !Substance) { w.Substance = Substance = {}; }
+  var html = {
 
-  // Surface
-  // ---------
+    // checks if the specified node contains a certain class
+    hasClass: function(ele, cls) {
+      if(ele) return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
+    },
 
-  Substance.Surface = function(options) {
+    // adds specified css class to a specified node
+    addClass: function(ele, cls) {
+      if (!html.hasClass(ele,cls)) ele.className += " "+cls;
+      ele.className = html.cleanClasses(ele.className);
+    },
 
+    // removes a single class from a node
+    removeClass: function (ele, cls) {
+      if (html.hasClass(ele,cls)) {
+        var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
+        ele.className = html.cleanClasses(ele.className.replace(reg,' '));
+      }
+    },
+    
+    // remove classes from list of nodes
+    removeClasses: function(elems, className) {
+      var elem, i, l = elems.length;
+
+      for ( i = 0; i < l; i++ ) {
+        elem = elems[i];
+        if ( elem.nodeType === 1 && elem.className ) { // speeds up quite much!
+          if (className) {
+            html.removeClass(elem,className);
+          } else {
+            elem.className = null;
+          }
+        }
+      };
+    },
+
+    // cleans double spaces in classList
+    cleanClasses: function(classList) {
+      classList = classList.replace(/\s{2,}/g, ' ').trim();
+      //remove single white space; hoping no css class names of 1 char exists
+      if(classList.length === 1) classList = null;
+      return classList;
+    },
+
+    // add classes to a list of nodes
+    addClasses: function(elems, className) {
+      var ln = elems.length, i;
+
+      for (i = 0; i < ln; i++) {
+        var elem = elems[i];
+        if (elem.nodeType === 1) html.addClass(elem, className);
+      };
+    }
+  };
+
+  var Surface = function(options) {
     var el = options.el,
         selectionIsValid = false,
-        // annotations = options.annotations || new Substance.Surface.Annotations(),
         model = options.model,
         types = options.types || {},
         active = false,
@@ -28,19 +84,21 @@
         clipboard = [],
         that = this;
 
-    // Directly expose content, because it's a value not a reference
-    // model.setContent(options.content || el.textContent || '');
     this.prevContent = model.getContent();
 
-    // var dirtyNodes = {};
-
     function renderAnnotations() {
-      removeClasses(el.childNodes);
+      html.removeClasses(el.childNodes);
 
       model.each(function(a) {
-        console.log(a);
-        addClasses(elements([a.range.start, a.range.length]), a.type);
+        html.addClasses(elements([a.range.start, a.range.length]), a.type);
       });
+    }
+
+    // TODO: This needs optimization
+    // and work with state changes
+    // so we don't have to re-assign all the annotation classes
+    function updateAnnotations() {
+      renderAnnotations();
     }
 
     // Initialize Surface
@@ -48,7 +106,6 @@
 
     function init() {
       var content = model.getContent();
-      console.log('CONTENT', content);
       var br = '<br/>', innerHTML = '',
           span, i, len = content.length;
       
@@ -69,68 +126,17 @@
       renderAnnotations();
     }
 
-    // checks if the specified node contains a certain class
-    function hasClass(ele, cls) {
-      if(ele) return ele.className.match(new RegExp('(\\s|^)'+cls+'(\\s|$)'));
-    }
 
-    // adds specified css class to a specified node
-    function addClass(ele, cls) {
-      if (!hasClass(ele,cls)) ele.className += " "+cls;
-      ele.className = cleanClasses(ele.className);
-    }
-
-    // removes a single class from a node
-    function removeClass(ele, cls) {
-      if (hasClass(ele,cls)) {
-        var reg = new RegExp('(\\s|^)'+cls+'(\\s|$)');
-        ele.className = cleanClasses(ele.className.replace(reg,' '));
-      }
-    }
-    
-    // remove classes from list of nodes
-    function removeClasses(elems, className) {
-      var elem, i, l = elems.length;
-
-      for ( i = 0; i < l; i++ ) {
-        elem = elems[i];
-        if ( elem.nodeType === 1 && elem.className ) { // speeds up quite much!
-          if (className) {
-            removeClass(elem,className);
-          } else {
-            elem.className = null;
-          }
-        }
-      };
-    }
-
-    // cleans double spaces in classList
-    function cleanClasses(classList) {
-      classList = classList.replace(/\s{2,}/g, ' ').trim();
-      //remove single white space; hoping no css class names of 1 char exists
-      if(classList.length === 1) classList = null;
-      return classList;
-    }
-
-    // add classes to a list of nodes
-    function addClasses(elems, className) {
-      var ln = elems.length, i;
-
-      for (i = 0; i < ln; i++) {
-        var elem = elems[i];
-        if (elem.nodeType === 1) addClass(elem, className);
-      };
-    }
 
     // Highlight a particular annotation
     function highlight(id) {
       // Find and remove all higlighted chars
       var elems = el.getElementsByTagName('span');
-      removeClasses(elems, 'highlight');
+      html.removeClasses(elems, 'highlight');
 
       // Mark the matching chars as highlited
       var a = model.getAnnotation(id);
-      if (a) addClasses(elements([a.range.start, a.range.length]), 'highlight');
+      if (a) html.addClasses(elements([a.range.start, a.range.length]), 'highlight');
     }
 
     // Determines if a certain annotation is inclusive or not
@@ -200,8 +206,8 @@
     function insertAnnotation(a) {
       model.setAnnotation(a);
 
-      // dirtyNodes[a.id] = "insert";
       renderAnnotations();
+
       that.trigger('annotations:changed');
     }
 
@@ -278,16 +284,17 @@
     // ---------------
 
     function insertTransformer(index, text) {
+      // TODO: incrementally update annotation classes
+      // Instead 
       var op = ot.TextOperation.Insert(index, text);
-
       model.each(function(a) {
         model.transformAnnotation(a, op, isInclusive(a));
       });
+
     }
 
     function deleteTransformer(index, text) {
       var op = ot.TextOperation.Delete(index, text);
-
       model.each(function(a) {
         model.transformAnnotation(a, op, isInclusive(a));
       });
@@ -337,7 +344,6 @@
     // Stateful
     function insertCharacter(ch, index) {
       var pureCh = ch, // we store the char for the content string;
-          // matched = getAnnotations([index,0]),
           classes = '',
           successor = el.childNodes[index],
           prev = el.childNodes[index-1],
@@ -355,15 +361,9 @@
       // affects in order to apply the class or not
       insertTransformer(index, pureCh);
 
-      // _.each(matched, function(a) {
-      //   // if (a.isAffected) classes += ' ' + a.type;
-      //   classes += ' ' + a.type;
-      // });
-
-      removeClass(prev, 'br');
+      html.removeClass(prev, 'br');
 
       newCh = document.createElement(newEl);
-      // if(classes.length > 1) addClass(newCh, classes); // we still add class for the last br to display properly
       newCh.innerHTML = ch; // we still set innerHTML even if its a linebreak so its possible to select put the cursor after it 
 
       insertAppend(successor, el, newCh);
@@ -371,8 +371,7 @@
       updateContent(pureCh, index);
       select(index+1);
 
-      // Mach schlauer
-      renderAnnotations();
+      updateAnnotations();
 
       that.trigger('changed');
     }
@@ -394,8 +393,7 @@
       updateContent(text, index);
       insertTransformer(index, text);
 
-      // Mach schlauer
-      renderAnnotations();
+      updateAnnotations();
       that.trigger('changed');
     }
 
@@ -412,7 +410,6 @@
     // -----------------
     // 
     // Overriding clumsy default behavior of contenteditable
-
 
     function handleKey(e) {
       // TODO: e.data guard check - image upload for some reason triggers textInput event -> investigate
@@ -440,8 +437,8 @@
         e.preventDefault();
         // create our custom textEvent to trigger surface handelkey
         // REF: object.initTextEvent (eventName, bubbles, cancelable, view, data, inputMethod, locale);
-        var evt = document.createEvent("TextEvent")
-        evt.initTextEvent ("textInput", false, true, w, ' ');
+        var evt = document.createEvent("TextEvent");
+        evt.initTextEvent("textInput", false, true, root, ' ');
         el.dispatchEvent(evt);
       }
     }
@@ -521,47 +518,25 @@
       }
     }
 
-    // function annotationUpdates() {
-    //   var ops = [];
-    //   var deletedAnnotations = [];
-
-    //   _.each(dirtyNodes, function(method, key) {
-    //     if (method === "delete") return deletedAnnotations.push(key);
-    //     var a = annotations[key] // annotationById(key);
-
-    //     if (method === "insert") {
-    //       var options = {id: a.id, type: a.type, data: {pos: a.pos}};
-    //       if (a.url) options["url"] = a.url;
-
-    //       ops.push(["insert", options]);
-    //     } else if (method === "update") {
-    //       var options = {id: a.id, data: {pos: a.pos}};
-    //       if (a.url) options["url"] = a.url;
-    //       ops.push(["update", options]);
-    //     }
-    //   });
-
-
-    //   if (deletedAnnotations.length > 0) {
-    //     ops.push(["delete", {"nodes": deletedAnnotations}]);
-    //   }
-    //   return ops;
-    // }
-
     function activateSurface(e) {
       if (pasting) return;
       active = true;
-      addClass(this, 'active');
+      html.addClass(this, 'active');
       renderAnnotations();
       that.trigger('surface:active', model.getContent(), that.prevContent);
     }
 
     function deactivateSurface(e) {
       if (pasting) return;
-      removeClass(this, 'active');
+      html.removeClass(this, 'active');
       highlight(null);
 
-      commit(); // Commit changes
+      // Notify listener
+      if (that.prevContent !== model.getContent()) {
+        that.trigger('content:changed', model.getContent(), that.prevContent);
+        that.prevContent = model.getContent();
+      }
+      active = false;
     }
 
     function selectionChanged() {
@@ -570,22 +545,6 @@
         that.trigger('selection:changed', selection());
       }, 5);
     }
-
-    // Programmatically commit changes
-    function commit() {
-
-      // var ops = annotationUpdates();
-      var ops = [];
-
-      if (that.prevContent !== model.getContent() || ops.length > 0) {
-        dirtyNodes = {};
-
-        that.trigger('content:changed', model.getContent(), that.prevContent, ops);
-        that.prevContent = model.getContent();
-      }
-      active = false;
-    }
-    
 
     // Bind Events
     // ------
@@ -625,14 +584,11 @@
     key('alt+shift+left, alt+shift+right, alt+shift+up, alt+shift+down', selectionChanged);
     key('⌘+shift+left, ⌘+shift+right, ⌘+shift+up, ⌘+shift+down', selectionChanged);
 
-
     // Exposed API
     // -----------------
 
     this.select = select;
     this.selection = selection;
-    this.commit = commit;
-    // this.annotations = annotations;
     this.deleteRange = deleteRange;
     this.insertCharacter = insertCharacter;
     this.insertText = insertText;
@@ -644,43 +600,46 @@
     this.highlight = highlight;
   };
 
-  _.extend(Substance.Surface.prototype, Substance.util.Events);
+  _.extend(Surface.prototype, util.Events);
 
-  Substance.Surface.Model = function(content, annotations) {
+  AnnotatedText = function(content, annotations) {
     this.annotations = annotations || {};
     this.content = content || '';
   };
 
-  Substance.Surface.Model.prototype.setAnnotation = function(annotation) {
+  AnnotatedText.prototype.setAnnotation = function(annotation) {
     this.annotations[annotation.id] = annotation;
   };
 
-  Substance.Surface.Model.prototype.getAnnotation = function(id) {
+  AnnotatedText.prototype.getAnnotation = function(id) {
     return this.annotations[id];
   };
 
-  Substance.Surface.Model.prototype.deleteAnnotation = function(id) {
+  AnnotatedText.prototype.deleteAnnotation = function(id) {
     delete this.annotations[id];
   };
 
-  Substance.Surface.Model.prototype.setContent = function(content) {
+  AnnotatedText.prototype.setContent = function(content) {
     this.content = content;
   };
 
-  Substance.Surface.Model.prototype.getContent = function() {
+  AnnotatedText.prototype.getContent = function() {
     return this.content;
   };
 
-  Substance.Surface.Model.prototype.transformAnnotation = function(annotation, op, expand) {
+  AnnotatedText.prototype.transformAnnotation = function(annotation, op, expand) {
     ot.TextOperation.Range.transform(annotation.range, op, expand);
   };
 
-  Substance.Surface.Model.prototype.each = function(fn) {
+  AnnotatedText.prototype.each = function(fn) {
     _.each(this.annotations, fn);
   };
 
-  Substance.Surface.Model.prototype.commit = function(fn) {
-    console.log('confirms the shit');
-  };
 
-})(window);
+  // Export
+  root.Substance.Surface = Surface;
+  root.Substance.AnnotatedText = AnnotatedText;
+
+
+
+})(this);

@@ -597,6 +597,7 @@ var util = root.Substance.util,
     this.getAnnotations = getAnnotations;
     this.deleteAnnotation = deleteAnnotation;
     this.addNewline = handleNewline;
+    this.model = model;
     this.highlight = highlight;
   };
 

@@ -22,6 +22,11 @@
       this.$el.html(_.tpl('text', this.node));
       return this;
     };
+
+    this.dispose = function() {
+      console.log('disposing text view');
+      this.disposeHandlers();
+    }
   };
 
   Text.Prototype.prototype = Substance.View.prototype;

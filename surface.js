@@ -48,6 +48,14 @@
       }, this);
       return this;
     };
+
+    this.dispose = function() {
+      console.log('disposing surface');
+      this.disposeHandlers();
+      _.each(this.nodes, function(n) {
+        n.dispose();
+      }, this);
+    };
   };
 
   Surface.Prototype.prototype = Substance.View.prototype;

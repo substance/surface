@@ -3,7 +3,7 @@
   var _ = root._;
   var Substance = root.Substance;
   var util = Substance.util;
-  var ot = Substance.Chronicle.ot;
+  var Operator = Substance.Operator;
 
   // Substance.Surface
   // ==========================================================================
@@ -198,7 +198,7 @@
     };
   };
 
-  ViewAdapter.__prototype__.prototype = ot.ArrayOperation.ArrayAdapter.prototype;
+  ViewAdapter.__prototype__.prototype = Operator.ArrayOperation.ArrayAdapter.prototype;
   ViewAdapter.prototype = new ViewAdapter.__prototype__();
 
   // TextNode Content Adapter
@@ -228,7 +228,7 @@
     };
   };
 
-  TextNodeAdapter.__prototype__.prototype = ot.TextOperation.StringAdapter.prototype;
+  TextNodeAdapter.__prototype__.prototype = Operator.TextOperation.StringAdapter.prototype;
   TextNodeAdapter.prototype = new TextNodeAdapter.__prototype__();
 
 

@@ -20,12 +20,32 @@
 
     this.render = function(id) {
       this.$el.html(_.tpl('text', this.node));
+
+      this.renderContent();
       return this;
     };
 
     this.dispose = function() {
       console.log('disposing text view');
       this.disposeHandlers();
+    },
+
+    this.renderContent = function() {
+      // <% _.each(content.split(''), function(ch) { %>
+      //   <span><%= ch %></span>
+      // <% }); %>
+      var chars = this.node.content.split('');
+
+      var $content = this.$('.content').empty();
+
+      // $content.append($('<div>MUH</div>'))
+      _.each(chars, function(ch) {
+        var pureCh = ch;
+
+        if (ch === " ") ch = " ";
+        // console.log(this.$('.content'));
+        $content.append($('<span>'+ch+'</span>'));
+      }, this);
     }
   };
 

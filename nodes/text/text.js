@@ -4,27 +4,28 @@
   var Substance = root.Substance;
   var util = Substance.util;
 
-  // Composer Constructor
+  // Substance.Text
   // ==========================================================================
 
   var Text = function(options) {
-    Substance.View.call(this, options);
+    Substance.View.call(this);
+    this.node = options.node;
   };
 
-  // Does the same as
-  // new View.prototype;
-  Text.prototype = Object.create(Substance.View.prototype);
-  Text.prototype.constructor = Text;
+  Text.Prototype = function() {
 
+    // Rendering
+    // =============================
+    // 
 
-  // Rendering
-  // ==========================================================================
-  // 
-
-  Text.prototype.render = function(id) {
-    this.$el.html(_.tpl('text', this.model));
-    return this;
+    this.render = function(id) {
+      this.$el.html(_.tpl('text', this.node));
+      return this;
+    };
   };
+
+  Text.Prototype.prototype = Substance.View.prototype;
+  Text.prototype = new Text.Prototype();
 
   Substance.Text = Text;
 

@@ -10,6 +10,9 @@
   var Text = function(options) {
     Substance.View.call(this);
     this.node = options.node;
+
+    this.$el.addClass('content-node text');
+    this.$el.attr('id', this.node.id);
   };
 
   Text.Prototype = function() {
@@ -31,17 +34,12 @@
     },
 
     this.renderContent = function() {
-      // <% _.each(content.split(''), function(ch) { %>
-      //   <span><%= ch %></span>
-      // <% }); %>
       var chars = this.node.content.split('');
 
       var $content = this.$('.content').empty();
 
-      // $content.append($('<div>MUH</div>'))
       _.each(chars, function(ch) {
         var pureCh = ch;
-
         if (ch === " ") ch = " ";
         // console.log(this.$('.content'));
         $content.append($('<span>'+ch+'</span>'));

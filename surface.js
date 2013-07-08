@@ -18,8 +18,6 @@
     // For outgoing events
     this.session = options.session;
 
-  
-
     // Bind handlers to establish co-transformations on html elements
     // according to model properties
     this.viewAdapter = new Surface.ViewAdapter(this, this.el);
@@ -30,17 +28,22 @@
     this.document.propertyChanges().bind(this.viewAdapter, {path: ["content", "nodes"]});
     this.document.propertyChanges().bind(this.nodeAdapter, {path: ["*", "content"]});
 
+    // this.document.on('selection:changed', function() {
+
+    // });
 
     // Start building the initial stuff
     this.build();
+
+    this.$el.addClass('surface');
 
     this.$el.mouseup(function(e) {
       that.getSelection(e);
     });
   };
 
-
   Surface.Prototype = function() {
+
 
     this.getSelection = function(e, type) {
       var el = $(e.currentTarget);
@@ -87,10 +90,15 @@
       }
       
       this.document.select(res);
-      console.log('SELECTION', res);
-      console.log('selected text', this.document.selection.getText());
+
+      // console.log('SELECTION', res);
+      // console.log('selected text', this.document.selection.getText());
 
       return res;
+    };
+
+    this.setSelection = function(sel) {
+      console.log('set selection');
     };
 
 
@@ -113,10 +121,19 @@
     // 
 
     this.render = function(id) {
+      var that = this;
       this.$el.empty();
       _.each(this.document.get('content').nodes, function(n) {
         $(this.nodes[n].render().el).appendTo(this.$el);
       }, this);
+
+      _.delay(function() {
+        that.setSelection({
+          start: [0, 5],
+          end: [1, 2]
+        });
+      }, 200);
+
       return this;
     };
 

@@ -28,9 +28,9 @@
     this.document.propertyChanges().bind(this.viewAdapter, {path: ["content", "nodes"]});
     this.document.propertyChanges().bind(this.nodeAdapter, {path: ["*", "content"]});
 
-    // this.document.on('selection:changed', function() {
-
-    // });
+    this.document.on('selection:changed', function(sel) {
+      that.updateSelection();
+    });
 
     // Start building the initial stuff
     this.build();
@@ -43,7 +43,6 @@
   };
 
   Surface.Prototype = function() {
-
 
     this.getSelection = function(e, type) {
       var el = $(e.currentTarget);
@@ -91,15 +90,97 @@
       
       this.document.select(res);
 
-      // console.log('SELECTION', res);
-      // console.log('selected text', this.document.selection.getText());
-
       return res;
     };
 
-    this.setSelection = function(sel) {
+
+
+
+    // function select(start, length) {
+    //   if (!active) return;
+
+    //   var sel = window.getSelection(),
+    //       range = document.createRange(),
+    //       children = el.childNodes,
+    //       numChild = children.length-1,
+    //       isLastNode = start > numChild,
+    //       startNode = isLastNode ? children[numChild] : children[start],
+    //       endNode = length ? children[(start + length)] : startNode;
+
+    //   if (children.length > 0) {
+    //    // there is text in the container
+          
+    //     if (length) {
+    //       // when a length is specified we select the following nodes inside the surface
+    //       range.setStart(startNode, 0);
+
+    //       // offset the end of the selection by the specified length
+    //       for (var i = 0; i < length-1; i++) {
+    //         if(startNode.nextSibling){ //only as long as there are existing nodes!
+    //           var currNode = startNode.nextSibling;
+    //           startNode = currNode;
+    //         }
+    //       };
+
+    //       range.setEnd(startNode, 1);
+    //     } else {
+
+    //       range.selectNode(startNode);
+    //       // Only collapse when the selection is not a range but one single char/position
+        
+    //       // if its last node we set cursor after the char by collapsing end
+    //       // else we set it before by collapsing to start
+    //       range.collapse(!isLastNode); 
+    //     }
+
+    //   } else {
+    //     // No characters left in the container
+    //     range.setStart(el, 0);
+    //     range.setEnd(el, 0);
+    //   }
+
+    //   sel.removeAllRanges();
+    //   sel.addRange(range);
+
+    //   that.trigger('selection:changed', that.selection());
+    // }
+
+    // Renders the current selection
+    this.updateSelection = function() {
+      var sel = this.document.selection;
+      if (!sel || sel.isNull()) return;
+      var domSel = window.getSelection(),
+          range = document.createRange();
+
+      var startNode = this.$('.content-node')[sel.start[0]];
+      var startChar = $(startNode).find('.content')[0].children[sel.start[1]];
+      var endNode = this.$('.content-node')[sel.end[0]];
+      var endChar = $(endNode).find('.content')[0].children[sel.end[1]];
+
+      console.log('startNode', startNode);
+      console.log('startChar', startChar);
+      console.log('endNode', endNode);
+      console.log('endChar', endChar);
+
+      range.setStart(startChar, 0);
+      range.setEnd(endChar, 0);
+
       console.log('set selection');
+
+      if (sel.isCollapsed()) {
+        range.setStart(startChar, 1);
+        range.setEnd(endChar, 1);
+        // range.collapse(true);
+      } else {
+        range.setStart(startChar, 0);
+        range.setEnd(endChar, 0);
+      }
+
+      domSel.removeAllRanges();
+      domSel.addRange(range);
+
     };
+
 
 
     // Setup
@@ -121,18 +202,26 @@
     // 
 
     this.render = function(id) {
+
+      console.log('RENDERING');
       var that = this;
       this.$el.empty();
       _.each(this.document.get('content').nodes, function(n) {
         $(this.nodes[n].render().el).appendTo(this.$el);
       }, this);
 
-      _.delay(function() {
-        that.setSelection({
-          start: [0, 5],
-          end: [1, 2]
-        });
-      }, 200);
+      // _.delay(function() {
+      //   // that.setSelection({
+      //   //   start: [1, 10],
+      //   //   end: [3, 1]
+      //   // });
+      //   // that.setSelection({
+      //   //   start: [1, 4],
+      //   //   end: [1, 4]
+      //   // });
+      //   console.log('CORRECT SELECTION AFTER RENDER', that.document.selection);
+      //   // that.setSelection(that.document.selection);
+      // }, 200);
 
       return this;
     };
@@ -150,7 +239,6 @@
 
     };
   };
-
 
 
   // Content View Adapter
@@ -225,8 +313,9 @@
   // are transferred to changes on the according html elements.
   //
 
-  var TextNodeAdapter = function(node) {
+  var TextNodeAdapter = function(node, surface) {
     this.node = node;
+    this.surface = surface;
   };
 
   TextNodeAdapter.__prototype__ = function() {
@@ -236,8 +325,9 @@
     };
 
     this.delete = function(pos, length) {
-      // TODO: delegate to the surface
+      // TODO: delegate to the content node
       this.node.render();
+      
     };
 
     this.get = function() {
@@ -256,7 +346,7 @@
       surface.nodes[op.path[0]].render();
     } else if (op.type === "update") {
       // Note: op.diff should be a text operation
-      var adapter = new TextNodeAdapter(surface.nodes[op.path[0]]);
+      var adapter = new TextNodeAdapter(surface.nodes[op.path[0]], surface);
       op.diff.apply(adapter);
     }
   };

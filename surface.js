@@ -27,6 +27,9 @@
     this.document.onViewChange(this.viewAdapter);
     this.document.onTextNodeChange(this.nodeAdapter);
 
+
+    this.cursor = $('<div class="cursor"></div>')[0];
+
     // Start building the initial stuff
     this.build();
 
@@ -38,6 +41,17 @@
   };
 
   Surface.Prototype = function() {
+
+    // Private helpers
+    // ---------------
+
+    function childRange(el, start, end) {
+      return Array.prototype.slice.call(el.childNodes, start, end);
+    }
+
+
+    // Read out current DOM selection and mapit to the corresponding Document.Range
+    // ---------------
 
     this.getSelection = function() {
 
@@ -88,58 +102,10 @@
     };
 
 
-
-
-    // function select(start, length) {
-    //   if (!active) return;
-
-    //   var sel = window.getSelection(),
-    //       range = document.createRange(),
-    //       children = el.childNodes,
-    //       numChild = children.length-1,
-    //       isLastNode = start > numChild,
-    //       startNode = isLastNode ? children[numChild] : children[start],
-    //       endNode = length ? children[(start + length)] : startNode;
-
-    //   if (children.length > 0) {
-    //    // there is text in the container
-
-    //     if (length) {
-    //       // when a length is specified we select the following nodes inside the surface
-    //       range.setStart(startNode, 0);
-
-    //       // offset the end of the selection by the specified length
-    //       for (var i = 0; i < length-1; i++) {
-    //         if(startNode.nextSibling){ //only as long as there are existing nodes!
-    //           var currNode = startNode.nextSibling;
-    //           startNode = currNode;
-    //         }
-    //       };
-
-    //       range.setEnd(startNode, 1);
-    //     } else {
-
-    //       range.selectNode(startNode);
-    //       // Only collapse when the selection is not a range but one single char/position
-
-    //       // if its last node we set cursor after the char by collapsing end
-    //       // else we set it before by collapsing to start
-    //       range.collapse(!isLastNode);
-    //     }
-
-    //   } else {
-    //     // No characters left in the container
-    //     range.setStart(el, 0);
-    //     range.setEnd(el, 0);
-    //   }
-
-    //   sel.removeAllRanges();
-    //   sel.addRange(range);
-
-    //   that.trigger('selection:changed', that.selection());
-    // }
-
     // Renders the current selection
+    // --------
+    // 
+
     this.updateSelection = function() {
       var sel = this.document.selection;
       if (!sel || sel.isNull()) return;
@@ -153,10 +119,10 @@
       var endNode = this.$('.content-node')[sel.end[0]];
       var endChar = $(endNode).find('.content')[0].children[sel.end[1]];
 
-      console.log('startNode', startNode);
-      console.log('startChar', startChar);
-      console.log('endNode', endNode);
-      console.log('endChar', endChar);
+      // console.log('startNode', startNode);
+      // console.log('startChar', startChar);
+      // console.log('endNode', endNode);
+      // console.log('endChar', endChar);
 
       range.setStart(startChar, 0);
       range.setEnd(endChar, 0);
@@ -166,17 +132,74 @@
       if (sel.isCollapsed()) {
         range.setStart(startChar, 1);
         range.setEnd(endChar, 1);
+
+        // Update cursor
         // range.collapse(true);
       } else {
         range.setStart(startChar, 0);
         range.setEnd(endChar, 0);
       }
 
+      this.positionCursor();
+      this.renderSelection();
+
+      this.positionCursor();
+
       domSel.removeAllRanges();
       domSel.addRange(range);
 
     };
 
+    this.renderSelection = function() {
+      var sel = this.document.selection;
+
+      // Do nothing if selection is collapsed
+      if (sel.isCollapsed()) return;
+
+      function selectChars(chars) {
+        $(chars).addClass('selected');
+      };
+
+      this.$('span.selected').removeClass('selected');
+
+      var nodes = sel.getNodes();
+      if (nodes.length > 1) {
+        _.each(nodes, function(node, index) {
+          var content = $('#'+node.id+' .content')[0];
+          var chars;
+          if (index === 0) {
+            chars = childRange(content, sel.start[1]);
+            selectChars(chars);
+          } else if (index===nodes.length-1) {
+            chars = childRange(content, 0, sel.end[1]);
+            selectChars(chars);
+          } else {
+            chars = childRange(content, 0);
+            selectChars(chars);
+          }
+        });
+      } else { // range within one node
+        var node = nodes[0];
+        var content = $('#'+node.id+' .content')[0];
+        var chars = childRange(content, sel.start[1], sel.end[1]);
+        selectChars(chars);
+      }
+    }
+
+    // Position cursor and selection
+    // --------
+    // 
+
+    this.positionCursor = function() {
+      var sel = this.document.selection;
+
+      $(this.cursor).remove();
+      if (sel.isCollapsed()) {
+        var node = this.$('.content-node')[sel.end[0]];
+        var ch = $(node).find('.content')[0].children[sel.end[1]];
+        $(ch).append(this.cursor);
+      }
+    };
 
 
     // Setup
@@ -198,30 +221,17 @@
     //
 
     this.render = function(id) {
-
-      console.log('RENDERING');
-      var that = this;
-
       this.$el.empty();
       _.each(this.document.getNodes(), function(n) {
         $(this.nodes[n.id].render().el).appendTo(this.$el);
       }, this);
 
-      // _.delay(function() {
-      //   // that.setSelection({
-      //   //   start: [1, 10],
-      //   //   end: [3, 1]
-      //   // });
-      //   // that.setSelection({
-      //   //   start: [1, 4],
-      //   //   end: [1, 4]
-      //   // });
-      //   console.log('CORRECT SELECTION AFTER RENDER', that.document.selection);
-      //   // that.setSelection(that.document.selection);
-      // }, 200);
-
       return this;
     };
+
+    // Cleanup view before removing it
+    // --------
+    // 
 
     this.dispose = function() {
       console.log('disposing surface');

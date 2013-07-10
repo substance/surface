@@ -21,16 +21,11 @@
     // Bind handlers to establish co-transformations on html elements
     // according to model properties
     this.viewAdapter = new Surface.ViewAdapter(this, this.el);
+    this.nodeAdapter = this.onNodeContentUpdate.bind(this);
 
-    this.nodeAdapter = function(op) {
-      Surface.onNodeContentUpdate(that, op);
-    };
-    this.document.propertyChanges().bind(this.viewAdapter, {path: ["content", "nodes"]});
-    this.document.propertyChanges().bind(this.nodeAdapter, {path: ["*", "content"]});
-
-    this.document.on('selection:changed', function(sel) {
-      that.updateSelection();
-    });
+    this.document.on('selection:changed', this.updateSelection, this);
+    this.document.onViewChange(this.viewAdapter);
+    this.document.onTextNodeChange(this.nodeAdapter);
 
     // Start building the initial stuff
     this.build();
@@ -44,8 +39,7 @@
 
   Surface.Prototype = function() {
 
-    this.getSelection = function(e, type) {
-      var el = $(e.currentTarget);
+    this.getSelection = function() {
 
       var indexOf = Array.prototype.indexOf;
       var sel = window.getSelection();
@@ -58,7 +52,7 @@
       var $startContainer = $(startContainer).parent().parent();
       var $endContainer = $(endContainer).parent().parent();
 
-      var view = this.document.get('content').nodes;
+      var view = this.document.getNodes("ids-only");
 
       var startNode = view.indexOf($startContainer.parent().attr('id'));
       var startChar = startContainer.parentElement;
@@ -77,7 +71,7 @@
         var endChar = endContainer.parentElement;
         var endOffset = indexOf.call($endContainer[0].childNodes, endChar) + 1;
         // startContainer.nodeType === 3 ? indexOf.call($startContainer.childNodes, parent) : 0;
-        
+
         // There's an edge case at the very beginning
         if (range.startOffset !== 0) startOffset += 1;
         if (range.startOffset > 1) startOffset = range.startOffset;
@@ -87,7 +81,7 @@
           end: [endNode, endOffset],
         };
       }
-      
+
       this.document.select(res);
 
       return res;
@@ -109,7 +103,7 @@
 
     //   if (children.length > 0) {
     //    // there is text in the container
-          
+
     //     if (length) {
     //       // when a length is specified we select the following nodes inside the surface
     //       range.setStart(startNode, 0);
@@ -127,10 +121,10 @@
 
     //       range.selectNode(startNode);
     //       // Only collapse when the selection is not a range but one single char/position
-        
+
     //       // if its last node we set cursor after the char by collapsing end
     //       // else we set it before by collapsing to start
-    //       range.collapse(!isLastNode); 
+    //       range.collapse(!isLastNode);
     //     }
 
     //   } else {
@@ -150,10 +144,12 @@
       var sel = this.document.selection;
       if (!sel || sel.isNull()) return;
       var domSel = window.getSelection(),
-          range = document.createRange();
+          range = window.document.createRange();
 
       var startNode = this.$('.content-node')[sel.start[0]];
       var startChar = $(startNode).find('.content')[0].children[sel.start[1]];
+
+      // FIXME: this crashes when selecting whole paragraph via triple-click
       var endNode = this.$('.content-node')[sel.end[0]];
       var endChar = $(endNode).find('.content')[0].children[sel.end[1]];
 
@@ -185,29 +181,30 @@
 
     // Setup
     // =============================
-    // 
+    //
 
     this.build = function() {
       this.nodes = {};
 
-      var content = this.document.get('content');
-      _.each(content.nodes, function(n) {
-        var node = this.document.get(n);
-        this.nodes[n] = new Substance.Text({node: node});
+      //TODO: rethink. Is this dependency to document intentional
+      var nodes = this.document.getNodes();
+      _.each(nodes, function(node) {
+        this.nodes[node.id] = new Substance.Text({node: node});
       }, this);
     };
 
     // Rendering
     // =============================
-    // 
+    //
 
     this.render = function(id) {
 
       console.log('RENDERING');
       var that = this;
+
       this.$el.empty();
-      _.each(this.document.get('content').nodes, function(n) {
-        $(this.nodes[n].render().el).appendTo(this.$el);
+      _.each(this.document.getNodes(), function(n) {
+        $(this.nodes[n.id].render().el).appendTo(this.$el);
       }, this);
 
       // _.delay(function() {
@@ -234,12 +231,25 @@
       }, this);
 
       // unbind document property change listeners
-      this.document.propertyChanges().unbind(this.viewAdapter);
-      this.document.propertyChanges().unbind(this.nodeAdapter);
+      this.document.unbind("selection:changed", this.updateSelection);
+      this.document.unbind(this.viewAdapter);
+      this.document.unbind(this.nodeAdapter);
 
     };
-  };
 
+    // This listener function is used to handle "set" and "update" operations
+    this.onNodeContentUpdate = function(op) {
+      if (op.type === "set") {
+        // TODO: delegate to surface
+        this.nodes[op.path[0]].render();
+      } else if (op.type === "update") {
+        // Note: op.diff should be a text operation
+        var adapter = new Surface.TextNodeAdapter(this.nodes[op.path[0]], this);
+        op.diff.apply(adapter);
+      }
+    };
+
+  };
 
   // Content View Adapter
   // --------
@@ -308,7 +318,7 @@
 
   // TextNode Content Adapter
   // --------
-  // 
+  //
   // Model operations on properties that are represented as text nodes
   // are transferred to changes on the according html elements.
   //
@@ -320,14 +330,11 @@
 
   TextNodeAdapter.__prototype__ = function() {
     this.insert = function(pos, str) {
-      // TODO: delegate to the surface
-      this.node.render();
+      this.node.insert(pos, str);
     };
 
     this.delete = function(pos, length) {
-      // TODO: delegate to the content node
-      this.node.render();
-      
+      this.node.delete(pos, length);
     };
 
     this.get = function() {
@@ -338,20 +345,7 @@
   TextNodeAdapter.__prototype__.prototype = Operator.TextOperation.StringAdapter.prototype;
   TextNodeAdapter.prototype = new TextNodeAdapter.__prototype__();
 
-
-  // This listener function is used to handle "set" and "update" operations
-  Surface.onNodeContentUpdate = function(surface, op) {
-    if (op.type === "set") {
-      // TODO: delegate to surface
-      surface.nodes[op.path[0]].render();
-    } else if (op.type === "update") {
-      // Note: op.diff should be a text operation
-      var adapter = new TextNodeAdapter(surface.nodes[op.path[0]], surface);
-      op.diff.apply(adapter);
-    }
-  };
-
-
+  Surface.TextNodeAdapter = TextNodeAdapter;
   Surface.ViewAdapter = ViewAdapter;
 
   Surface.Prototype.prototype = Substance.View.prototype;

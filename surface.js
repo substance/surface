@@ -64,17 +64,13 @@
     // ---------------
 
     this.updateSelection = function() {
-
       var indexOf = Array.prototype.indexOf;
       var sel = window.getSelection();
 
       if (sel.type === "None") return null;
 
       var range = sel.getRangeAt(0);
-
       var result = {};
-
-      var contentView = this.document.getNodes("ids-only");
 
       // CHECK START CONTAINER/OFFSET STUFF
       // ----------------
@@ -119,7 +115,7 @@
 
       // CHECK END CONTAINER/OFFSET STUFF
       // ----------------
-      
+
       if (range.isCollapsed) {
         result["end"] = result["start"];
 
@@ -129,7 +125,6 @@
         // 
         var content = $(range.endContainer).parent().parent()[0];
         var nodeId = $(content).parent().attr('id');
-        
         var nodeIndex = this.document.getPosition(nodeId);
         
         // starting character of selection (span or br node)
@@ -164,58 +159,45 @@
     // 
 
     this.renderSelection = function() {
-
       var sel = this.document.selection;
-      console.log('updateSelection called', sel);
-      // return;
-
       if (!sel || sel.isNull()) return;
+
       var domSel = window.getSelection(),
           range = window.document.createRange();
 
       var startNode = this.$('.content-node')[sel.start[0]];
-      var startChar = $(startNode).find('.content')[0].children[sel.start[1]];
 
-      // FIXME: this crashes when selecting whole paragraph via triple-click
-      var endNode = this.$('.content-node')[sel.end[0]];
-      var endChar = $(endNode).find('.content')[0].children[sel.end[1]];
-
-      console.log('SEL', sel);
-      // console.log('startNode', startNode);
-      console.log('startChar', startChar);
-      // console.log('endNode', endNode);
-      console.log('endChar', endChar);
-
-      range.setStart(startChar, 0);
-      range.setEnd(endChar, 0);
-
-      console.log('set selection');
+      // Special case (position cursor after )
+      var startChars = $(startNode).find('.content')[0].children;
+      
+      var startChar;
+      if (sel.start[1] >= startChars.length) {
+        startChar = _.last(startChars);
+      } else {
+        startChar = startChars[sel.start[1]];
+      }
 
       if (sel.isCollapsed()) {
         range.setStart(startChar, 1);
         range.setEnd(startChar, 1);
-
-        // Update cursor
-        // range.collapse(true);
+        this.positionCursor();
       } else {
+        // FIXME: this crashes when selecting whole paragraph via triple-click
+        var endNode = this.$('.content-node')[sel.end[0]];
+        var endChar = $(endNode).find('.content')[0].children[sel.end[1]];
+
         range.setStart(startChar, 0);
         range.setEnd(endChar, 0);
       }
-
-      this.positionCursor();
+      
       this.renderSelectionRange();
-
-      this.positionCursor();
 
       domSel.removeAllRanges();
       domSel.addRange(range);
-
     };
 
     this.renderSelectionRange = function() {
       var sel = this.document.selection;
-
-      console.log('rendering selection', sel);
 
       // Do nothing if selection is collapsed
       if (sel.isCollapsed()) return;
@@ -257,10 +239,20 @@
     this.positionCursor = function() {
       var sel = this.document.selection;
 
-      $(this.cursor).remove();
+      $(this.cursor).removeClass('after').remove();
       if (sel.isCollapsed()) {
         var node = this.$('.content-node')[sel.end[0]];
-        var ch = $(node).find('.content')[0].children[sel.end[1]];
+        var chars = $(node).find('.content')[0].children;
+        var ch;
+
+        if (sel.start[1] >= chars.length) {
+          // Special case: Cursor is after last element
+          // -> draw cursor after the last element
+          ch = _.last(chars);
+          $(this.cursor).addClass('after');
+        } else {
+          ch = chars[sel.end[1]];  
+        }
         $(ch).append(this.cursor);
       }
     };
@@ -298,7 +290,6 @@
     // 
 
     this.dispose = function() {
-      console.log('disposing surface');
       this.disposeHandlers();
       _.each(this.nodes, function(n) {
         n.dispose();
@@ -359,7 +350,6 @@
     this.insert = function(pos, val) {
       var doc = this.surface.document;
       var nodes = this.surface.nodes;
-      // var container = this.el;
       var id = val;
 
       var nodeView = this.createNodeView(doc.get(id));
@@ -371,7 +361,6 @@
 
     this.delete = function(pos, nodeId) {
       var nodes = this.documentView.nodes;
-      // var container = this.container;
       var childs = this.container.childNodes;
 
       this.container.removeChild(childs[pos]);
@@ -381,7 +370,6 @@
     };
 
     this.move = function(val, oldPos, newPos) {
-      // var container = $(this.containerSel)[0];
       var childs = this.container.childNodes;
 
       var el = childs[oldPos];

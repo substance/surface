@@ -180,7 +180,7 @@
       if (sel.isCollapsed()) {
         range.setStart(startChar, 1);
         range.setEnd(startChar, 1);
-        this.positionCursor();
+        
       } else {
         // FIXME: this crashes when selecting whole paragraph via triple-click
         var endNode = this.$('.content-node')[sel.end[0]];
@@ -189,6 +189,8 @@
         range.setStart(startChar, 0);
         range.setEnd(endChar, 0);
       }
+
+      this.positionCursor();
       
       this.renderSelectionRange();
 

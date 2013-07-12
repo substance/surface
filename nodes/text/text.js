@@ -3,13 +3,14 @@
   var _ = root._;
   var Substance = root.Substance;
   var util = Substance.util;
+  var Surface = Substance.Surface;
 
   // Substance.Text
   // ==========================================================================
 
-  var Text = function(options) {
+  var Text = function(node) {
     Substance.View.call(this);
-    this.node = options.node;
+    this.node = node;
 
     this.$el.addClass('content-node text');
     this.$el.attr('id', this.node.id);
@@ -75,4 +76,6 @@
 
   Substance.Text = Text;
 
+  // Register
+  Surface.registerContentType("text", Text);
 })(this);

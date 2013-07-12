@@ -8,25 +8,25 @@
   // Substance.Surface
   // ==========================================================================
 
-  var Surface = function(options) {
+  var Surface = function(doc) {
     Substance.View.call(this);
 
     var that = this;
+
     // Incoming
-    this.document = options.document;
+    this.document = doc;
 
     // For outgoing events
-    this.session = options.session;
+    // this.session = options.session;
 
     // Bind handlers to establish co-transformations on html elements
     // according to model properties
     this.viewAdapter = new Surface.ViewAdapter(this, this.el);
     this.nodeAdapter = this.onNodeContentUpdate.bind(this);
 
-    this.document.on('selection:changed', this.updateSelection, this);
+    this.document.on('selection:changed', this.renderSelection, this);
     this.document.onViewChange(this.viewAdapter);
     this.document.onTextNodeChange(this.nodeAdapter);
-
 
     this.cursor = $('<div class="cursor"></div>')[0];
 
@@ -36,8 +36,19 @@
     this.$el.addClass('surface');
 
     this.$el.mouseup(function(e) {
-      that.getSelection(e);
+      that.updateSelection(e);
     });
+  };
+
+  // Registered Content types
+  Surface.nodeTypes = {};
+
+  // Must be called by node types for registratoin
+  // ---------------
+
+  Surface.registerContentType = function(key, clazz) {
+    if (Surface.nodeTypes[key]) throw new Error('"'+key+'" node has already been registered');
+    Surface.nodeTypes[key] = clazz;
   };
 
   Surface.Prototype = function() {
@@ -49,56 +60,102 @@
       return Array.prototype.slice.call(el.childNodes, start, end);
     }
 
-
-    // Read out current DOM selection and mapit to the corresponding Document.Range
+    // Read out current DOM selection and update selection in the model
     // ---------------
 
-    this.getSelection = function() {
+    this.updateSelection = function() {
 
       var indexOf = Array.prototype.indexOf;
       var sel = window.getSelection();
+
       if (sel.type === "None") return null;
 
       var range = sel.getRangeAt(0);
-      var startContainer = range.startContainer;
-      var endContainer = range.endContainer;
 
-      var $startContainer = $(startContainer).parent().parent();
-      var $endContainer = $(endContainer).parent().parent();
+      var result = {};
 
-      var view = this.document.getNodes("ids-only");
+      var contentView = this.document.getNodes("ids-only");
 
-      var startNode = view.indexOf($startContainer.parent().attr('id'));
-      var startChar = startContainer.parentElement;
-      var startOffset = startContainer.nodeType === 3 ? indexOf.call($startContainer[0].childNodes, startChar) : 0;
-      var res;
+      // CHECK START CONTAINER/OFFSET STUFF
+      // ----------------
 
-      // Trivial case: the range is singular
-      if (sel.isCollapsed) {
-        res = {
-          start: [startNode, startOffset],
-          end: [startNode, startOffset],
-        };
+      // div.content-node.text#text_25
+      //   div.content
+      //     span|br    
+      //       TEXT_NODE  <-- trigger
+      // 
+      // desired data
+      // start: [nodeindex, characterOffset]
+
+      if (range.startContainer.nodeType === Node.TEXT_NODE) {
+        // Extract content-node
+        // 
+        var content = $(range.startContainer).parent().parent()[0];
+        var nodeId = $(content).parent().attr('id');
+        
+        var nodeIndex = this.document.getPosition(nodeId);
+        
+        // starting character of selection (span or br node)
+        var startChar = range.startContainer.parentElement;
+
+        var charOffset = indexOf.call(content.childNodes, startChar);
+        charOffset += range.startOffset; // if you clicked on the right-hand area of the span
+
+        result["start"] = [nodeIndex, charOffset];
       } else {
-        var endNode = view.indexOf($endContainer.parent().attr('id'));
-        // console.log('ENDNODE', $endContainer.parent().attr('id'));
-        var endChar = endContainer.parentElement;
-        var endOffset = indexOf.call($endContainer[0].childNodes, endChar) + 1;
-        // startContainer.nodeType === 3 ? indexOf.call($startContainer.childNodes, parent) : 0;
 
-        // There's an edge case at the very beginning
-        if (range.startOffset !== 0) startOffset += 1;
-        if (range.startOffset > 1) startOffset = range.startOffset;
+        // empty container
+        // 
+        // div.content-node.text#text_25
+        //   div.content     <--- trigger
 
-        res = {
-          start: [startNode, startOffset],
-          end: [endNode, endOffset],
-        };
+        var content = range.startContainer;
+        var nodeId = $(content).parent().attr('id');
+        var nodeIndex = this.document.getPosition(nodeId);
+        
+        result["start"] = [nodeIndex, 0];
       }
 
-      this.document.select(res);
 
-      return res;
+      // CHECK END CONTAINER/OFFSET STUFF
+      // ----------------
+      
+      if (range.isCollapsed) {
+        result["end"] = result["start"];
+
+      } else if (range.endContainer.nodeType === Node.TEXT_NODE) {
+                
+        // Extract content-node
+        // 
+        var content = $(range.endContainer).parent().parent()[0];
+        var nodeId = $(content).parent().attr('id');
+        
+        var nodeIndex = this.document.getPosition(nodeId);
+        
+        // starting character of selection (span or br node)
+        var ch = range.endContainer.parentElement;
+
+        var chOffset = indexOf.call(content.childNodes, ch);
+        chOffset += range.endOffset; // if you clicked on the right-hand area of the span
+
+        result["end"] = [nodeIndex, chOffset];
+      } else {
+
+        // empty container
+        // 
+        // div.content-node.text#text_25
+        //   div.content     <--- trigger
+
+        var content = range.endContainer;
+        var nodeId = $(content).parent().attr('id');
+        var nodeIndex = this.document.getPosition(nodeId);
+        
+        result["end"] = [nodeIndex, 0];
+      }
+
+      this.document.select(result);
+
+      return result;
     };
 
 
@@ -106,8 +163,12 @@
     // --------
     // 
 
-    this.updateSelection = function() {
+    this.renderSelection = function() {
+
       var sel = this.document.selection;
+      console.log('updateSelection called', sel);
+      // return;
+
       if (!sel || sel.isNull()) return;
       var domSel = window.getSelection(),
           range = window.document.createRange();
@@ -119,10 +180,11 @@
       var endNode = this.$('.content-node')[sel.end[0]];
       var endChar = $(endNode).find('.content')[0].children[sel.end[1]];
 
+      console.log('SEL', sel);
       // console.log('startNode', startNode);
-      // console.log('startChar', startChar);
+      console.log('startChar', startChar);
       // console.log('endNode', endNode);
-      // console.log('endChar', endChar);
+      console.log('endChar', endChar);
 
       range.setStart(startChar, 0);
       range.setEnd(endChar, 0);
@@ -131,7 +193,7 @@
 
       if (sel.isCollapsed()) {
         range.setStart(startChar, 1);
-        range.setEnd(endChar, 1);
+        range.setEnd(startChar, 1);
 
         // Update cursor
         // range.collapse(true);
@@ -141,7 +203,7 @@
       }
 
       this.positionCursor();
-      this.renderSelection();
+      this.renderSelectionRange();
 
       this.positionCursor();
 
@@ -150,8 +212,10 @@
 
     };
 
-    this.renderSelection = function() {
+    this.renderSelectionRange = function() {
       var sel = this.document.selection;
+
+      console.log('rendering selection', sel);
 
       // Do nothing if selection is collapsed
       if (sel.isCollapsed()) return;
@@ -241,7 +305,7 @@
       }, this);
 
       // unbind document property change listeners
-      this.document.unbind("selection:changed", this.updateSelection);
+      this.document.unbind("selection:changed", this.renderSelection);
       this.document.unbind(this.viewAdapter);
       this.document.unbind(this.nodeAdapter);
 
@@ -258,8 +322,8 @@
         op.diff.apply(adapter);
       }
     };
-
   };
+
 
   // Content View Adapter
   // --------
@@ -282,11 +346,14 @@
       }
     }
 
+    // Creates a new node view
+    // --------
+    // 
+
     this.createNodeView = function(node) {
-      return Substance.Composer.views.Node.create({
-        document: this.surface.document,
-        model: node
-      });
+      var Node = Surface.nodeTypes[node.type];
+      if (!Node) throw new Error('Node type "'+node.type+'" not supported');
+      return new Node(node);
     };
 
     this.insert = function(pos, val) {

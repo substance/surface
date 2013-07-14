@@ -184,10 +184,24 @@
       } else {
         // FIXME: this crashes when selecting whole paragraph via triple-click
         var endNode = this.$('.content-node')[sel.end[0]];
-        var endChar = $(endNode).find('.content')[0].children[sel.end[1]];
+        var endOffset = 0;
+        var chars = $(endNode).find('.content')[0].children;
+
+        // Edge case last char is selected
+        // Use startChar as endChar but with offset 1
+        // <span>a</span>
+        // <span>a</span>
+        // <span>a</span> <-- 
+
+        if (sel.end[1] >= chars.length) {
+          endChar = _.last(chars);
+          endOffset = 1;
+        } else {
+          endChar = chars[sel.end[1]];
+        }
 
         range.setStart(startChar, 0);
-        range.setEnd(endChar, 0);
+        range.setEnd(endChar, endOffset);
       }
 
       this.positionCursor();
@@ -202,13 +216,12 @@
       var sel = this.document.selection;
 
       // Do nothing if selection is collapsed
+      this.$('span.selected').removeClass('selected');
       if (sel.isCollapsed()) return;
 
       function selectChars(chars) {
         $(chars).addClass('selected');
       };
-
-      this.$('span.selected').removeClass('selected');
 
       var nodes = sel.getNodes();
       if (nodes.length > 1) {

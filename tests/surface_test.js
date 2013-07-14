@@ -65,8 +65,11 @@ var SurfaceTest = function() {
   // 
 
   this.verify = function() {
-    
     console.log('verifying..');
+  };
+
+  this.verifySelection = function() {
+    console.log('verifying selection..');
   };
 
   // Load fixture

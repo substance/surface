@@ -7,7 +7,6 @@
   var registerTest = root.Substance.Test.registerTest;
 
 
-
   // Some example paragraphs
   // --------
   // 
@@ -69,6 +68,52 @@
 
       "Delete selection", function() {
         this.document.delete();
+      },
+
+      "Delete previous character for collapsed (single cursor) selection", function() {
+        this.document.select({
+          start: [0, 4],
+          end: [0, 4]
+        });
+
+        this.document.delete();
+      },
+
+      "Select last three chars of a textnode", function() {
+        this.document.select({
+          start: [0, 1],
+          end: [0, 4]
+        });
+        assert.isEqual(3, $('.content-node span.selected').length);        
+      },
+
+      "Select last char in text node", function() {
+        this.document.select({
+          start: [0, 3],
+          end: [0, 4]
+        });
+
+        assert.isEqual(1, $('.content-node span.selected').length);
+      },
+
+      "Position cursor after last char and hit backspace", function() {
+        this.document.select({
+          start: [0, 4],
+          end: [0, 4]
+        });
+
+        // Make sure there's no selection, but a
+        // TODO: move check to a shared verifySelection
+        // that compares the selection in the modle with 
+        // the DOM equivalent
+        assert.isEqual(0, $('.content-node span.selected').length);
+        assert.isEqual(1, $('.content-node span .cursor').length);
+
+        this.document.delete();
+
+        assert.isEqual(1, $('.content-node span .cursor').length);
+        // After delection there must be three remaining chars in the first paragraph
+        assert.isEqual(3, $('.content-node:first .content')[0].children.length);
       },
 
       "Move cursor down", function() {

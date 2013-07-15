@@ -281,7 +281,7 @@
       //TODO: rethink. Is this dependency to document intentional
       var nodes = this.document.getNodes();
       _.each(nodes, function(node) {
-        this.nodes[node.id] = new Substance.Text({node: node});
+        this.nodes[node.id] = new Substance.Text(node);
       }, this);
     };
 

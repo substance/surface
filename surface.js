@@ -340,6 +340,7 @@
     this.surface = surface;
     this.container = el;
   };
+  
   ViewAdapter.__prototype__ = function() {
 
     function insertOrAppend(container, pos, el) {
@@ -375,7 +376,7 @@
     };
 
     this.delete = function(pos, nodeId) {
-      var nodes = this.documentView.nodes;
+      var nodes = this.surface.nodes;
       var childs = this.container.childNodes;
 
       this.container.removeChild(childs[pos]);

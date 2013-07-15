@@ -26,7 +26,6 @@
     // this.setDelay(25);
 
     this.actions = [
-
       "Insert some text", function() {
         console.log('inserting some text');
         this.insertContent(P1);
@@ -116,9 +115,87 @@
         assert.isEqual(3, $('.content-node:first .content')[0].children.length);
       },
 
-      "Move cursor down", function() {
-        // document.elementFromPoint(x, y);
-      }
+      "Move cursor to next char", function() {
+        this.document.select({
+          start: [1, 29],
+          end: [1, 29]
+        });
+
+        this.document.next();
+        var sel = this.document.selection;
+        assert.isDeepEqual([1,30], sel.start);
+        assert.isDeepEqual([1,30], sel.end);
+      },
+
+      "Move cursor to next paragraph", function() {
+        this.document.next();
+        var sel = this.document.selection;
+        assert.isDeepEqual([2,0], sel.start);
+        assert.isDeepEqual([2,0], sel.end);
+      },
+
+      "Move cursor back to prev paragraph", function() {
+        this.document.previous();
+        var sel = this.document.selection;
+        assert.isDeepEqual([1,30], sel.start);
+        assert.isDeepEqual([1,30], sel.end);
+      },
+
+      "Collapse cursor after multi-char selection", function() {
+        this.document.select({
+          start: [1, 18],
+          end: [1, 24]
+        });
+        this.document.next();
+        var sel = this.document.selection;
+        assert.isDeepEqual([1,24], sel.start);
+        assert.isDeepEqual([1,24], sel.end);
+      },
+
+      "Collapse cursor before multi-char selection", function() {
+        this.document.select({
+          start: [1, 18],
+          end: [1, 24]
+        });
+        this.document.previous();
+        var sel = this.document.selection;
+        assert.isDeepEqual([1,18], sel.start);
+        assert.isDeepEqual([1,18], sel.end);
+      },
+
+      "Merge with previous text node", function() {
+        this.document.select({
+          start: [1, 0],
+          end: [1, 0]
+        });
+
+        // This causes an error:
+        // TypeError: undefined is not a function 
+        this.document.delete();
+
+        var sel = this.document.selection;
+        console.log('SELECTION', sel);
+        // assert.isDeepEqual([1,18], sel.start);
+        // assert.isDeepEqual([1,18], sel.end);
+      },
+
+      // Think pressing enter
+      "Split text node at current cursor position", function() {
+        // console.log('mehehe');
+        // this.insertNode('text');
+      },
+
+      // "Move cursor to previous char", function() {
+      //   this.document.select({
+      //     start: [2, 1],
+      //     end: [2, 1]
+      //   });
+        
+      //   var sel = this.document.selection;
+      //   this.document.previous();
+      //   assert.isDeepEqual(sel.start, [2,0]);
+      //   assert.isDeepEqual(sel.end, [2,0]);
+      // }
     ];
   };
 

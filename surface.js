@@ -120,7 +120,6 @@
         result["end"] = result["start"];
 
       } else if (range.endContainer.nodeType === Node.TEXT_NODE) {
-                
         // Extract content-node
         // 
         var content = $(range.endContainer).parent().parent()[0];
@@ -149,7 +148,6 @@
       }
 
       this.document.select(result);
-
       return result;
     };
 
@@ -314,7 +312,6 @@
       this.document.unbind("selection:changed", this.renderSelection);
       this.document.unbind(this.viewAdapter);
       this.document.unbind(this.nodeAdapter);
-
     };
 
     // This listener function is used to handle "set" and "update" operations
@@ -396,6 +393,7 @@
 
   ViewAdapter.__prototype__.prototype = Operator.ArrayOperation.ArrayAdapter.prototype;
   ViewAdapter.prototype = new ViewAdapter.__prototype__();
+
 
   // TextNode Content Adapter
   // --------

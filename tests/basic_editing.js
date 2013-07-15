@@ -115,12 +115,19 @@
         assert.isEqual(3, $('.content-node:first .content')[0].children.length);
       },
 
-      "Move cursor to next char", function() {
-        this.document.select({
-          start: [1, 29],
-          end: [1, 29]
-        });
 
+      "Move cursor to previous char", function() {
+        this.document.select({
+          start: [1, 30],
+          end: [1, 30]
+        });
+        this.document.previous();
+        var sel = this.document.selection;
+        assert.isDeepEqual([1,29], sel.start);
+        assert.isDeepEqual([1,29], sel.end);
+      },
+
+      "Move cursor to next char", function() {
         this.document.next();
         var sel = this.document.selection;
         assert.isDeepEqual([1,30], sel.start);
@@ -169,39 +176,45 @@
           end: [1, 0]
         });
 
-        // This causes an error:
-        // TypeError: undefined is not a function 
         this.document.delete();
-
         var sel = this.document.selection;
-        console.log('SELECTION', sel);
-        // assert.isDeepEqual([1,18], sel.start);
-        // assert.isDeepEqual([1,18], sel.end);
+        assert.isDeepEqual([0,3], sel.start);
+        assert.isDeepEqual([0,3], sel.end);
       },
 
       // Think pressing enter
-      "Split text node at current cursor position", function() {
-        // console.log('mehehe');
-        // this.insertNode('text');
+      "Split text node at current cursor position (inverse of merge)", function() {
+        this.document.insertNode('text');
       },
 
-      // "Move cursor to previous char", function() {
-      //   this.document.select({
-      //     start: [2, 1],
-      //     end: [2, 1]
-      //   });
-        
-      //   var sel = this.document.selection;
-      //   this.document.previous();
-      //   assert.isDeepEqual(sel.start, [2,0]);
-      //   assert.isDeepEqual(sel.end, [2,0]);
-      // }
+      "Merge back (revert the text split)", function() {
+        this.document.delete();
+      },
+
+      // Think pressing enter in the middle of a sentence
+      "Split text node at current cursor position (in-between)", function() {
+        this.document.select({
+          start: [1, 2],
+          end: [1, 2]
+        });        
+        this.document.insertNode('text');
+      },
+
+      // Think pressing enter in the middle of a sentence
+      "Split text node at (cusor before first char)", function() {
+        // Undo previous split
+        this.document.delete();
+
+        this.document.select({
+          start: [1, 0],
+          end: [1, 0]
+        });
+        this.document.insertNode('text');
+      }
     ];
   };
 
-
   BasicEditing.prototype = SurfaceTest.prototype;
-
 
   registerTest(['Surface', 'Basic Editing'], new BasicEditing());
 

@@ -159,7 +159,7 @@
 
     this.renderSelection = function() {
       var sel = this.editor.selection;
-      if (!sel || sel.isNull()) return;
+      if (!sel || sel.isNull()) return;
 
       var domSel = window.getSelection(),
           range = window.document.createRange();
@@ -253,32 +253,37 @@
     this.positionCursor = function() {
       var sel = this.editor.selection;
       // Remove cursor
-      $(this.cursor).removeClass('after').remove();
+      $(this.cursor).remove();
 
       if (sel.isCollapsed()) {
         var node = this.$('.content-node')[sel.end[0]];
         var chars = $(node).find('.content')[0].children;
         var ch;
+        var pos;
 
         if (sel.start[1] >= chars.length) {
           // Special case: Cursor is after last element
           // -> draw cursor after the last element
           ch = _.last(chars);
-          $(this.cursor).addClass('after');
+
+          pos = $(ch).position();
+          pos.left += $(ch).width();
+
+          // $(this.cursor).addClass('after');
         } else {
-          ch = chars[sel.end[1]];  
+          ch = chars[sel.end[1]];
+          pos = $(ch).position();  
         }
 
         // this.$('.content-node').append();
-
         // console.log('POS', $(ch).position());
-        var pos = $(ch).position();
-
+        
         $(ch).append(this.cursor);
+
         $(this.cursor).css({
           top: pos.top,
           left: pos.left,
-          height: "20px"
+          height: $(ch).height()
         })
       }
     };

@@ -19,11 +19,8 @@
   var BasicEditing = function() {
     SurfaceTest.call(this);
 
-    // deactivate the default fixture
-    // for testing basic behavior
+    // Deactivate the default fixture for testing basic behavior
     this.fixture = function() {};
-    
-    // this.setDelay(25);
 
     this.actions = [
       "Insert some text", function() {
@@ -105,7 +102,7 @@
 
         // Make sure there's no selection, but a
         // TODO: move check to a shared verifySelection
-        // that compares the selection in the modle with 
+        // that compares the selection in the model with 
         // the DOM equivalent
         assert.isEqual(0, $('.content-node span.selected').length);
         assert.isEqual(1, $('.content-node span .cursor').length);
@@ -118,127 +115,125 @@
       },
 
 
-      // "Move cursor to previous char", function() {
-      //   this.document.select({
-      //     start: [1, 30],
-      //     end: [1, 30]
-      //   });
-      //   this.document.previous();
-      //   var sel = this.document.selection;
-      //   assert.isDeepEqual([1,29], sel.start);
-      //   assert.isDeepEqual([1,29], sel.end);
-      // },
+      "Move cursor to previous char", function() {
+        this.editor.selection.set({
+          start: [1, 30],
+          end: [1, 30]
+        });
 
-      // "Move cursor to next char", function() {
-      //   this.document.next();
-      //   var sel = this.document.selection;
-      //   assert.isDeepEqual([1,30], sel.start);
-      //   assert.isDeepEqual([1,30], sel.end);
-      // },
+        this.editor.selection.move('left');
+        var sel = this.editor.selection;
+        assert.isDeepEqual([1,29], sel.start);
+        assert.isDeepEqual([1,29], sel.end);
+      },
 
-      // "Move cursor to next paragraph", function() {
-      //   this.document.next();
-      //   var sel = this.document.selection;
-      //   assert.isDeepEqual([2,0], sel.start);
-      //   assert.isDeepEqual([2,0], sel.end);
-      // },
+      "Move cursor to next char", function() {
+        this.editor.selection.move('right');
 
-      // "Move cursor back to prev paragraph", function() {
-      //   this.document.previous();
-      //   var sel = this.document.selection;
-      //   assert.isDeepEqual([1,30], sel.start);
-      //   assert.isDeepEqual([1,30], sel.end);
-      // },
+        var sel = this.editor.selection;
+        assert.isDeepEqual([1,30], sel.start);
+        assert.isDeepEqual([1,30], sel.end);
+      },
 
-      // "Collapse cursor after multi-char selection", function() {
-      //   this.document.select({
-      //     start: [1, 18],
-      //     end: [1, 24]
-      //   });
-      //   this.document.next();
-      //   var sel = this.document.selection;
-      //   assert.isDeepEqual([1,24], sel.start);
-      //   assert.isDeepEqual([1,24], sel.end);
-      // },
+      "Move cursor to next paragraph", function() {
+        this.editor.selection.move('right');
+        var sel = this.editor.selection;
+        assert.isDeepEqual([2,0], sel.start);
+        assert.isDeepEqual([2,0], sel.end);
+      },
 
-      // "Collapse cursor before multi-char selection", function() {
-      //   this.document.select({
-      //     start: [1, 18],
-      //     end: [1, 24]
-      //   });
-      //   this.document.previous();
-      //   var sel = this.document.selection;
-      //   assert.isDeepEqual([1,18], sel.start);
-      //   assert.isDeepEqual([1,18], sel.end);
-      // },
+      "Move cursor back to prev paragraph", function() {
+        this.editor.selection.move('left');
+        var sel = this.editor.selection;
+        assert.isDeepEqual([1,30], sel.start);
+        assert.isDeepEqual([1,30], sel.end);
+      },
 
-      // "Merge with previous text node", function() {
-      //   this.document.select({
-      //     start: [1, 0],
-      //     end: [1, 0]
-      //   });
+      "Collapse cursor after multi-char selection", function() {
+        this.editor.selection.set({
+          start: [1, 18],
+          end: [1, 24]
+        });
+        this.editor.selection.move('right');
 
-      //   this.document.delete();
-      //   var sel = this.document.selection;
-      //   assert.isDeepEqual([0,3], sel.start);
-      //   assert.isDeepEqual([0,3], sel.end);
-      // },
+        var sel = this.editor.selection;
+        assert.isDeepEqual([1,24], sel.start);
+        assert.isDeepEqual([1,24], sel.end);
+      },
 
-      // // Think pressing enter
-      // "Split text node at current cursor position (inverse of merge)", function() {
-      //   this.document.insertNode('text');
-      // },
+      "Collapse cursor before multi-char selection", function() {
+        var sel = this.editor.selection;
+        sel.set({
+          start: [1, 18],
+          end: [1, 24]
+        });
+        sel.move('left');
+        assert.isDeepEqual([1,18], sel.start);
+        assert.isDeepEqual([1,18], sel.end);
+      },
 
-      // "Merge back (revert the text split)", function() {
-      //   this.document.delete();
-      // },
+      "Merge with previous text node", function() {
+        var sel = this.editor.selection;
+        sel.set({
+          start: [1, 0],
+          end: [1, 0]
+        });
 
-      // // Think pressing enter in the middle of a sentence
-      // "Split text node at current cursor position (in-between)", function() {
-      //   this.document.select({
-      //     start: [1, 2],
-      //     end: [1, 2]
-      //   });        
-      //   this.document.insertNode('text');
-      // },
+        this.editor.delete();
 
-      // // Think pressing enter in the middle of a sentence
-      // "Split text node at (cusor before first char)", function() {
-      //   // Undo previous split
-      //   this.document.delete();
+        assert.isDeepEqual([0,3], sel.start);
+        assert.isDeepEqual([0,3], sel.end);
+      },
 
-      //   this.document.select({
-      //     start: [1, 0],
-      //     end: [1, 0]
-      //   });
-      //   this.document.insertNode('text');
-      // },
+      // Think pressing enter
+      "Split text node at current cursor position (inverse of prev merge)", function() {
+        this.editor.insertNode('text');
+      },
+
+      "Merge back (revert the text split)", function() {
+        this.editor.delete();
+      },
 
       // Think pressing enter in the middle of a sentence
-      // "Expand selection (to the right)", function() {
-      //   // Undo previous split
-      //   this.document.select({
-      //     start: [2, 4],
-      //     end: [2, 4]
-      //   });
+      "Split text node at current cursor position (in-between)", function() {
+        this.editor.selection.set({
+          start: [1, 2],
+          end: [1, 2]
+        });        
+        this.editor.insertNode('text');
+      },
 
-      //   this.document.selection.set({
-      //     start: [0,2],
-      //     end: [0,4],
-      //     // direction: -1
-      //   });
+      // Think pressing enter in the middle of a sentence
+      "Split text node at (cusor before first char)", function() {
+        // Undo previous split
+        this.editor.delete();
+        this.editor.selection.set({
+          start: [1, 0],
+          end: [1, 0]
+        });
+        this.editor.insertNode('text');
+      },
 
-      //   this.document.selection.extend('left');
-      //   this.document.selection.extend('right');
-      //   this.document.selection.move('left');
-      //   this.document.selection.move('right');
+      "Expand selection (to the right)", function() {
+        var sel = this.editor.selection;
 
-      //   // if direction = 1 -> expand right bound
-      //   // if direction = 0 -> expand right bound, set dir=1
-      //   // if direction <- 0 -> expand left bound by one
+        // Undo previous split
+        sel.set({
+          start: [2, 4],
+          end: [2, 4]
+        });
 
-      //   this.document.selection.expandRight();
-      // }
+        sel.expand('right', 'char');
+        sel.expand('right', 'char');
+        assert.isEqual(sel.direction, 'right');
+        sel.expand('left', 'char');
+        assert.isEqual(sel.direction, 'right');
+        sel.expand('left', 'char');
+        assert.isEqual(sel.direction, null);
+        sel.expand('left', 'char');
+        assert.isEqual(sel.direction, 'left');
+        sel.expand('left', 'char');
+      }
     ];
   };
 

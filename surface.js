@@ -149,7 +149,6 @@
       }
 
       this.document.select(result);
-
       return result;
     };
 
@@ -283,7 +282,7 @@
       //TODO: rethink. Is this dependency to document intentional
       var nodes = this.document.getNodes();
       _.each(nodes, function(node) {
-        this.nodes[node.id] = new Substance.Text({node: node});
+        this.nodes[node.id] = new Substance.Text(node);
       }, this);
     };
 
@@ -314,7 +313,6 @@
       this.document.unbind("selection:changed", this.renderSelection);
       this.document.unbind(this.viewAdapter);
       this.document.unbind(this.nodeAdapter);
-
     };
 
     // This listener function is used to handle "set" and "update" operations
@@ -396,6 +394,7 @@
 
   ViewAdapter.__prototype__.prototype = Operator.ArrayOperation.ArrayAdapter.prototype;
   ViewAdapter.prototype = new ViewAdapter.__prototype__();
+
 
   // TextNode Content Adapter
   // --------

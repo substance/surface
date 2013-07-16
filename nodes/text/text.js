@@ -24,7 +24,6 @@
 
     this.render = function(id) {
       this.$el.html(_.tpl('text', this.node));
-
       this.renderContent();
       return this;
     };
@@ -46,8 +45,8 @@
       var chars = str.split('');
       var charEls = _.map(chars, function(ch) {
         if (ch === " ") ch = " ";
-        return $('<span>'+ch+'</span>')[0];
-      })
+        return $('<span style="white-space: pre-wrap;">'+ch+'</span>')[0];
+      });
 
       var spans = content.childNodes;
       if (pos >= spans.length) {

@@ -1,4 +1,4 @@
-(function(root) { "use_strict";
+(function(root) { "use strict";
 
   var _ = root._;
   var Substance = root.Substance;
@@ -77,20 +77,20 @@
 
       // div.content-node.text#text_25
       //   div.content
-      //     span|br    
+      //     span|br
       //       TEXT_NODE  <-- trigger
-      // 
+      //
       // desired data
       // start: [nodeindex, characterOffset]
 
       if (range.startContainer.nodeType === Node.TEXT_NODE) {
         // Extract content-node
-        // 
+        //
         var content = $(range.startContainer).parent().parent()[0];
         var nodeId = $(content).parent().attr('id');
-        
+
         var nodeIndex = this.document.getPosition(nodeId);
-        
+
         // starting character of selection (span or br node)
         var startChar = range.startContainer.parentElement;
 
@@ -101,14 +101,14 @@
       } else {
 
         // empty container
-        // 
+        //
         // div.content-node.text#text_25
         //   div.content     <--- trigger
 
         var content = range.startContainer;
         var nodeId = $(content).parent().attr('id');
         var nodeIndex = this.document.getPosition(nodeId);
-        
+
         result["start"] = [nodeIndex, 0];
       }
 
@@ -120,13 +120,13 @@
         result["end"] = result["start"];
 
       } else if (range.endContainer.nodeType === Node.TEXT_NODE) {
-                
+
         // Extract content-node
-        // 
+        //
         var content = $(range.endContainer).parent().parent()[0];
         var nodeId = $(content).parent().attr('id');
         var nodeIndex = this.document.getPosition(nodeId);
-        
+
         // starting character of selection (span or br node)
         var ch = range.endContainer.parentElement;
 
@@ -137,14 +137,14 @@
       } else {
 
         // empty container
-        // 
+        //
         // div.content-node.text#text_25
         //   div.content     <--- trigger
 
         var content = range.endContainer;
         var nodeId = $(content).parent().attr('id');
         var nodeIndex = this.document.getPosition(nodeId);
-        
+
         result["end"] = [nodeIndex, 0];
       }
 
@@ -156,7 +156,7 @@
 
     // Renders the current selection
     // --------
-    // 
+    //
 
     this.renderSelection = function() {
       var sel = this.document.selection;
@@ -169,7 +169,7 @@
 
       // Special case (position cursor after )
       var startChars = $(startNode).find('.content')[0].children;
-      
+
       var startChar;
       if (sel.start[1] >= startChars.length) {
         startChar = _.last(startChars);
@@ -180,7 +180,7 @@
       if (sel.isCollapsed()) {
         range.setStart(startChar, 1);
         range.setEnd(startChar, 1);
-        
+
       } else {
         // FIXME: this crashes when selecting whole paragraph via triple-click
         var endNode = this.$('.content-node')[sel.end[0]];
@@ -191,7 +191,7 @@
         // Use startChar as endChar but with offset 1
         // <span>a</span>
         // <span>a</span>
-        // <span>a</span> <-- 
+        // <span>a</span> <--
 
         if (sel.end[1] >= chars.length) {
           endChar = _.last(chars);
@@ -205,7 +205,7 @@
       }
 
       this.positionCursor();
-      
+
       this.renderSelectionRange();
 
       domSel.removeAllRanges();
@@ -249,7 +249,7 @@
 
     // Position cursor and selection
     // --------
-    // 
+    //
 
     this.positionCursor = function() {
       var sel = this.document.selection;
@@ -266,7 +266,7 @@
           ch = _.last(chars);
           $(this.cursor).addClass('after');
         } else {
-          ch = chars[sel.end[1]];  
+          ch = chars[sel.end[1]];
         }
         $(ch).append(this.cursor);
       }
@@ -302,7 +302,7 @@
 
     // Cleanup view before removing it
     // --------
-    // 
+    //
 
     this.dispose = function() {
       this.disposeHandlers();
@@ -340,7 +340,7 @@
     this.surface = surface;
     this.container = el;
   };
-  
+
   ViewAdapter.__prototype__ = function() {
 
     function insertOrAppend(container, pos, el) {
@@ -355,7 +355,7 @@
 
     // Creates a new node view
     // --------
-    // 
+    //
 
     this.createNodeView = function(node) {
       var Node = Surface.nodeTypes[node.type];

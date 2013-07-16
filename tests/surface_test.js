@@ -10,9 +10,8 @@ if (typeof exports !== 'undefined') {
   _ = root._;
   Surface = root.Substance.Surface;
   Document = root.Substance.Document;
-  DocumentController = root.Substance.DocumentController;
+  Editor = root.Substance.Document.Editor;
 }
-
 
 var ID_IDX = 1;
 
@@ -34,9 +33,10 @@ var SurfaceTest = function() {
   this.setup = function() {
     ID_IDX = 1;
 
-    this.__document = new Substance.Document({id: "surface_test"});
-    this.document = new Substance.DocumentController(this.__document);
-    this.surface = new Substance.Surface(this.document);
+    this.__document = new Document({id: "surface_test"});
+    this.editor = new Editor(this.__document);
+
+    this.surface = new Surface(this.editor);
 
     $('.test-center .test-output').show();
     $('.test-center .test-output').html(this.surface.el);

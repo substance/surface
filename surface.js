@@ -8,13 +8,14 @@
   // Substance.Surface
   // ==========================================================================
 
-  var Surface = function(doc) {
+  var Surface = function(editor) {
     Substance.View.call(this);
 
     var that = this;
 
     // Incoming
-    this.document = doc;
+    this.editor = editor;
+
 
     // For outgoing events
     // this.session = options.session;
@@ -24,9 +25,9 @@
     this.viewAdapter = new Surface.ViewAdapter(this, this.el);
     this.nodeAdapter = this.onNodeContentUpdate.bind(this);
 
-    this.document.on('selection:changed', this.renderSelection, this);
-    this.document.onViewChange(this.viewAdapter);
-    this.document.onTextNodeChange(this.nodeAdapter);
+    this.editor.selection.on('selection:changed', this.renderSelection, this);
+    this.editor.onViewChange(this.viewAdapter);
+    this.editor.onTextNodeChange(this.nodeAdapter);
 
     this.cursor = $('<div class="cursor"></div>')[0];
 
@@ -89,7 +90,7 @@
         var content = $(range.startContainer).parent().parent()[0];
         var nodeId = $(content).parent().attr('id');
         
-        var nodeIndex = this.document.getPosition(nodeId);
+        var nodeIndex = this.editor.getPosition(nodeId);
         
         // starting character of selection (span or br node)
         var startChar = range.startContainer.parentElement;
@@ -107,7 +108,7 @@
 
         var content = range.startContainer;
         var nodeId = $(content).parent().attr('id');
-        var nodeIndex = this.document.getPosition(nodeId);
+        var nodeIndex = this.editor.getPosition(nodeId);
         
         result["start"] = [nodeIndex, 0];
       }
@@ -124,7 +125,7 @@
         // 
         var content = $(range.endContainer).parent().parent()[0];
         var nodeId = $(content).parent().attr('id');
-        var nodeIndex = this.document.getPosition(nodeId);
+        var nodeIndex = this.editor.getPosition(nodeId);
         
         // starting character of selection (span or br node)
         var ch = range.endContainer.parentElement;
@@ -142,12 +143,12 @@
 
         var content = range.endContainer;
         var nodeId = $(content).parent().attr('id');
-        var nodeIndex = this.document.getPosition(nodeId);
+        var nodeIndex = this.editor.getPosition(nodeId);
         
         result["end"] = [nodeIndex, 0];
       }
 
-      this.document.select(result);
+      this.editor.selection.set(result);
       return result;
     };
 
@@ -157,7 +158,7 @@
     // 
 
     this.renderSelection = function() {
-      var sel = this.document.selection;
+      var sel = this.editor.selection;
       if (!sel || sel.isNull()) return;
 
       var domSel = window.getSelection(),
@@ -211,7 +212,7 @@
     };
 
     this.renderSelectionRange = function() {
-      var sel = this.document.selection;
+      var sel = this.editor.selection;
 
       // Do nothing if selection is collapsed
       this.$('span.selected').removeClass('selected');
@@ -250,9 +251,10 @@
     // 
 
     this.positionCursor = function() {
-      var sel = this.document.selection;
-
+      var sel = this.editor.selection;
+      // Remove cursor
       $(this.cursor).removeClass('after').remove();
+
       if (sel.isCollapsed()) {
         var node = this.$('.content-node')[sel.end[0]];
         var chars = $(node).find('.content')[0].children;
@@ -266,7 +268,18 @@
         } else {
           ch = chars[sel.end[1]];  
         }
+
+        // this.$('.content-node').append();
+
+        // console.log('POS', $(ch).position());
+        var pos = $(ch).position();
+
         $(ch).append(this.cursor);
+        $(this.cursor).css({
+          top: pos.top,
+          left: pos.left,
+          height: "20px"
+        })
       }
     };
 
@@ -279,7 +292,7 @@
       this.nodes = {};
 
       //TODO: rethink. Is this dependency to document intentional
-      var nodes = this.document.getNodes();
+      var nodes = this.editor.getNodes();
       _.each(nodes, function(node) {
         this.nodes[node.id] = new Substance.Text(node);
       }, this);
@@ -291,7 +304,7 @@
 
     this.render = function(id) {
       this.$el.empty();
-      _.each(this.document.getNodes(), function(n) {
+      _.each(this.editor.getNodes(), function(n) {
         $(this.nodes[n.id].render().el).appendTo(this.$el);
       }, this);
 
@@ -309,9 +322,9 @@
       }, this);
 
       // unbind document property change listeners
-      this.document.unbind("selection:changed", this.renderSelection);
-      this.document.unbind(this.viewAdapter);
-      this.document.unbind(this.nodeAdapter);
+      this.editor.selection.unbind("selection:changed", this.renderSelection);
+      this.editor.unbind(this.viewAdapter);
+      this.editor.unbind(this.nodeAdapter);
     };
 
     // This listener function is used to handle "set" and "update" operations
@@ -361,11 +374,11 @@
     };
 
     this.insert = function(pos, val) {
-      var doc = this.surface.document;
+      var editor = this.surface.editor;
       var nodes = this.surface.nodes;
       var id = val;
 
-      var nodeView = this.createNodeView(doc.get(id));
+      var nodeView = this.createNodeView(editor.get(id));
       var el = nodeView.render().el;
       nodes[id] = nodeView;
 

@@ -233,6 +233,30 @@
         sel.expand('left', 'char');
         assert.isEqual(sel.direction, 'left');
         sel.expand('left', 'char');
+      },
+
+      "Move to next word", function() {
+        var sel = this.editor.selection;
+
+        // Undo previous split
+        sel.set({
+          start: [2, 4],
+          end: [2, 4]
+        });
+
+        sel.move('right', 'word');
+        sel.move('left', 'word');
+        sel.move('left', 'word');
+        sel.move('left', 'word');
+
+        this.editor.write('boink');
+      },
+
+      "Move to next word", function() {
+        var sel = this.editor.selection;
+        sel.expand('left', 'word');
+        sel.expand('left', 'word');
+        sel.expand('left', 'word');
       }
     ];
   };

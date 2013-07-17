@@ -13,12 +13,8 @@
 
     var that = this;
 
-    // Incoming
+    // Incoming events
     this.editor = editor;
-
-
-    // For outgoing events
-    // this.session = options.session;
 
     // Bind handlers to establish co-transformations on html elements
     // according to model properties
@@ -161,9 +157,6 @@
       var sel = this.editor.selection;
       if (!sel || sel.isNull()) return;
 
-      var domSel = window.getSelection(),
-          range = window.document.createRange();
-
       var startNode = this.$('.content-node')[sel.start[0]];
 
       // Special case (position cursor after )
@@ -176,11 +169,8 @@
         startChar = startChars[sel.start[1]];
       }
 
-      if (sel.isCollapsed()) {
-        range.setStart(startChar, 1);
-        range.setEnd(startChar, 1);
-        
-      } else {
+      
+      if (!sel.isCollapsed()) {
         // FIXME: this crashes when selecting whole paragraph via triple-click
         var endNode = this.$('.content-node')[sel.end[0]];
         var endOffset = 0;
@@ -198,17 +188,12 @@
         } else {
           endChar = chars[sel.end[1]];
         }
-
-        range.setStart(startChar, 0);
-        range.setEnd(endChar, endOffset);
       }
 
       this.positionCursor();
       
       this.renderSelectionRange();
 
-      domSel.removeAllRanges();
-      domSel.addRange(range);
     };
 
     this.renderSelectionRange = function() {
@@ -266,24 +251,30 @@
           // -> draw cursor after the last element
           ch = _.last(chars);
 
-          pos = $(ch).position();
-          pos.left += $(ch).width();
-
-          // $(this.cursor).addClass('after');
+          if (ch) {
+            pos = $(ch).position();
+            pos.left += $(ch).width();
+          } else {
+            pos = {
+              left: 0,
+              top: 0
+            };
+          }
         } else {
           ch = chars[sel.end[1]];
           pos = $(ch).position();  
         }
 
-        // this.$('.content-node').append();
-        // console.log('POS', $(ch).position());
-        
-        $(ch).append(this.cursor);
+        if (ch) {
+          $(ch).append(this.cursor);
+        } else {
+          $(node).append(this.cursor);
+        }
 
         $(this.cursor).css({
           top: pos.top,
           left: pos.left,
-          height: $(ch).height()
+          height: '20px'
         })
       }
     };

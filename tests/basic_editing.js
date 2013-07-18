@@ -6,7 +6,6 @@
   var SurfaceTest = root.Substance.Surface.AbstractTest;
   var registerTest = root.Substance.Test.registerTest;
 
-
   // Some example paragraphs
   // --------
   // 
@@ -24,62 +23,62 @@
 
     this.actions = [
       "Insert some text", function() {
-        console.log('inserting some text');
         this.insertContent(P1);
       },
 
       "Insert some more text", function() {
         this.insertContent(P2);
         this.insertContent(P3);
+        this.insertContent(P4);
       },
 
       // Selection API
       // --------
 
       "Set single cursor", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [1,2],
           end: [1,2]
         });
       },
 
       "Edge case: Select last char of text node", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [1,39],
           end: [1,39]
         });
       },
 
       "Insert period after last char", function() {
-        this.editor.write(".");
+        this.writer.write(".");
         
-        var nodeId = this.editor.get('content').nodes[1];
-        var node = this.editor.get(nodeId);
+        var nodeId = this.writer.get('content').nodes[1];
+        var node = this.writer.get(nodeId);
         assert.isEqual(P2+".", node.content);
       },
 
       "Make a selection", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [0, 5],
           end: [1, 10],
         });
       },
 
       "Delete selection", function() {
-        this.editor.delete();
+        this.writer.delete();
       },
 
       "Delete previous character for collapsed (single cursor) selection", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [0, 4],
           end: [0, 4]
         });
 
-        this.editor.delete();
+        this.writer.delete();
       },
 
       "Select last three chars of a textnode", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [0, 1],
           end: [0, 4]
         });
@@ -87,7 +86,7 @@
       },
 
       "Select last char in text node", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [0, 3],
           end: [0, 4]
         });
@@ -95,7 +94,7 @@
       },
 
       "Position cursor after last char and hit backspace", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [0, 4],
           end: [0, 4]
         });
@@ -107,7 +106,7 @@
         assert.isEqual(0, $('.content-node span.selected').length);
         assert.isEqual(1, $('.content-node span .cursor').length);
 
-        this.editor.delete();
+        this.writer.delete();
 
         assert.isEqual(1, $('.content-node span .cursor').length);
         // After delection there must be three remaining chars in the first paragraph
@@ -116,53 +115,53 @@
 
 
       "Move cursor to previous char", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [1, 30],
           end: [1, 30]
         });
 
-        this.editor.selection.move('left');
-        var sel = this.editor.selection;
+        this.writer.selection.move('left');
+        var sel = this.writer.selection;
         assert.isDeepEqual([1,29], sel.start);
         assert.isDeepEqual([1,29], sel.end);
       },
 
       "Move cursor to next char", function() {
-        this.editor.selection.move('right');
+        this.writer.selection.move('right');
 
-        var sel = this.editor.selection;
+        var sel = this.writer.selection;
         assert.isDeepEqual([1,30], sel.start);
         assert.isDeepEqual([1,30], sel.end);
       },
 
       "Move cursor to next paragraph", function() {
-        this.editor.selection.move('right');
-        var sel = this.editor.selection;
+        this.writer.selection.move('right');
+        var sel = this.writer.selection;
         assert.isDeepEqual([2,0], sel.start);
         assert.isDeepEqual([2,0], sel.end);
       },
 
       "Move cursor back to prev paragraph", function() {
-        this.editor.selection.move('left');
-        var sel = this.editor.selection;
+        this.writer.selection.move('left');
+        var sel = this.writer.selection;
         assert.isDeepEqual([1,30], sel.start);
         assert.isDeepEqual([1,30], sel.end);
       },
 
       "Collapse cursor after multi-char selection", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [1, 18],
           end: [1, 24]
         });
-        this.editor.selection.move('right');
+        this.writer.selection.move('right');
 
-        var sel = this.editor.selection;
+        var sel = this.writer.selection;
         assert.isDeepEqual([1,24], sel.start);
         assert.isDeepEqual([1,24], sel.end);
       },
 
       "Collapse cursor before multi-char selection", function() {
-        var sel = this.editor.selection;
+        var sel = this.writer.selection;
         sel.set({
           start: [1, 18],
           end: [1, 24]
@@ -173,13 +172,13 @@
       },
 
       "Merge with previous text node", function() {
-        var sel = this.editor.selection;
+        var sel = this.writer.selection;
         sel.set({
           start: [1, 0],
           end: [1, 0]
         });
 
-        this.editor.delete();
+        this.writer.delete();
 
         assert.isDeepEqual([0,3], sel.start);
         assert.isDeepEqual([0,3], sel.end);
@@ -187,35 +186,35 @@
 
       // Think pressing enter
       "Split text node at current cursor position (inverse of prev merge)", function() {
-        this.editor.insertNode('text');
+        this.writer.insertNode('text');
       },
 
       "Merge back (revert the text split)", function() {
-        this.editor.delete();
+        this.writer.delete();
       },
 
       // Think pressing enter in the middle of a sentence
       "Split text node at current cursor position (in-between)", function() {
-        this.editor.selection.set({
+        this.writer.selection.set({
           start: [1, 2],
           end: [1, 2]
         });        
-        this.editor.insertNode('text');
+        this.writer.insertNode('text');
       },
 
       // Think pressing enter in the middle of a sentence
       "Split text node at (cusor before first char)", function() {
         // Undo previous split
-        this.editor.delete();
-        this.editor.selection.set({
+        this.writer.delete();
+        this.writer.selection.set({
           start: [1, 0],
           end: [1, 0]
         });
-        this.editor.insertNode('text');
+        this.writer.insertNode('text');
       },
 
       "Expand selection (to the right)", function() {
-        var sel = this.editor.selection;
+        var sel = this.writer.selection;
 
         // Undo previous split
         sel.set({
@@ -236,7 +235,7 @@
       },
 
       "Move to next word", function() {
-        var sel = this.editor.selection;
+        var sel = this.writer.selection;
 
         // Undo previous split
         sel.set({
@@ -249,11 +248,11 @@
         sel.move('left', 'word');
         sel.move('left', 'word');
 
-        this.editor.write('boink');
+        this.writer.write('boink');
       },
 
       "Move to next word", function() {
-        var sel = this.editor.selection;
+        var sel = this.writer.selection;
         sel.expand('left', 'word');
         sel.expand('left', 'word');
         sel.expand('left', 'word');

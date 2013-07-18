@@ -2,7 +2,8 @@
 
 var _,
     Surface,
-    Calculator;
+    Document,
+    Writer;
 
 if (typeof exports !== 'undefined') {
   throw new Error("Surface does not support Node.");
@@ -10,7 +11,7 @@ if (typeof exports !== 'undefined') {
   _ = root._;
   Surface = root.Substance.Surface;
   Document = root.Substance.Document;
-  Editor = root.Substance.Document.Editor;
+  Writer = root.Substance.Document.Writer;
 }
 
 var ID_IDX = 1;
@@ -34,9 +35,9 @@ var SurfaceTest = function() {
     ID_IDX = 1;
 
     this.__document = new Document({id: "surface_test"});
-    this.editor = new Editor(this.__document);
+    this.writer = new Writer(this.__document);
 
-    this.surface = new Surface(this.editor);
+    this.surface = new Surface(this.writer);
 
     $('.test-center .test-output').show();
     $('.test-center .test-output').html(this.surface.el);

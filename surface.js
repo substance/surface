@@ -2,6 +2,7 @@
 
   var _ = root._;
   var Substance = root.Substance;
+  var View = Substance.Application.View;
   var util = Substance.util;
   var Operator = Substance.Operator;
 
@@ -9,7 +10,7 @@
   // ==========================================================================
 
   var Surface = function(editor) {
-    Substance.View.call(this);
+    View.call(this);
 
     var that = this;
 
@@ -433,10 +434,11 @@
   TextNodeAdapter.__prototype__.prototype = Operator.TextOperation.StringAdapter.prototype;
   TextNodeAdapter.prototype = new TextNodeAdapter.__prototype__();
 
+
   Surface.TextNodeAdapter = TextNodeAdapter;
   Surface.ViewAdapter = ViewAdapter;
 
-  Surface.Prototype.prototype = Substance.View.prototype;
+  Surface.Prototype.prototype = View.prototype;
   Surface.prototype = new Surface.Prototype();
 
   Substance.Surface = Surface;

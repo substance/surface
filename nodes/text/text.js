@@ -2,6 +2,7 @@
 
   var _ = root._;
   var Substance = root.Substance;
+  var View = Substance.Application.View;
   var util = Substance.util;
   var Surface = Substance.Surface;
 
@@ -9,7 +10,7 @@
   // ==========================================================================
 
   var Text = function(node) {
-    Substance.View.call(this);
+    View.call(this);
     this.node = node;
 
     this.$el.addClass('content-node text');
@@ -70,7 +71,7 @@
     };
   };
 
-  Text.Prototype.prototype = Substance.View.prototype;
+  Text.Prototype.prototype = View.prototype;
   Text.prototype = new Text.Prototype();
 
   Substance.Text = Text;

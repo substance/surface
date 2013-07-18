@@ -313,7 +313,7 @@
     // 
 
     this.dispose = function() {
-      this.disposeHandlers();
+      this.stopListening();
       _.each(this.nodes, function(n) {
         n.dispose();
       }, this);

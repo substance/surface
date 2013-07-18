@@ -31,7 +31,7 @@
 
     this.dispose = function() {
       console.log('disposing text view');
-      this.disposeHandlers();
+      this.stopListening();
     },
 
     this.renderContent = function() {
@@ -46,7 +46,7 @@
       var chars = str.split('');
       var charEls = _.map(chars, function(ch) {
         if (ch === " ") ch = " ";
-        return $('<span style="white-space: pre-wrap;">'+ch+'</span>')[0];
+        return $('<span>'+ch+'</span>')[0];
       });
 
       var spans = content.childNodes;

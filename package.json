@@ -20,7 +20,7 @@
   },
   "devDependencies": {
     "substance-test": "0.2.x",
-    "substance-document": "0.2.x"
+    "substance-document": "0.5.x"
   },
   "version"       : "0.1.0"
 }

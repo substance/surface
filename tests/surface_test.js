@@ -9,7 +9,7 @@ var assert = Test.assert;
 var registerTest = Test.registerTest;
 var SurfaceTest = require('./surface_test');
 
-var Surface = require('..');
+var Surface = require('../index');
 var Document = require('substance-document');
 var Writer = Document.Writer;
 

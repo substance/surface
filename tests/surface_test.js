@@ -1,18 +1,18 @@
-(function(root) {
+"use strict";
 
-var _,
-    Surface,
-    Document,
-    Writer;
+// Import
+// ========
 
-if (typeof exports !== 'undefined') {
-  throw new Error("Surface does not support Node.");
-} else {
-  _ = root._;
-  Surface = root.Substance.Surface;
-  Document = root.Substance.Document;
-  Writer = root.Substance.Document.Writer;
-}
+var _    = require('underscore');
+var substance_test = require('substance-test');
+var assert = substance_test.assert;
+var registerTest = substance_test.registerTest;
+var SurfaceTest = require('./surface_test');
+
+var Surface = require('..');
+var Document = require('substance-document');
+var Writer = Document.Writer;
+
 
 var ID_IDX = 1;
 
@@ -60,10 +60,10 @@ var SurfaceTest = function() {
 
   // Verify state
   // -----------
-  // 
+  //
   // Checks if the produced output of the Surface reflects
   // The given document state
-  // 
+  //
 
   this.verify = function() {
     console.log('verifying..');
@@ -84,6 +84,4 @@ var SurfaceTest = function() {
 // Export
 // ====
 
-root.Substance.Surface.AbstractTest = SurfaceTest;
-
-})(this);
+module.exports = SurfaceTest;

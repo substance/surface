@@ -1,6 +1,8 @@
 "use strict";
 
 var _ = require('underscore');
+var util = require('substance-util');
+var html = util.html;
 var View = require('substance-application').View;
 var Surface = require('../../surface');
 
@@ -22,7 +24,7 @@ Text.Prototype = function() {
   //
 
   this.render = function() {
-    this.$el.html(_.tpl('text', this.node));
+    this.$el.html(html.tpl('text', this.node));
     this.renderContent();
     return this;
   };

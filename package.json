@@ -1,0 +1,26 @@
+{
+  "name"          : "substance-surface",
+  "description"   : "An extensible low-level interface for semantic rich text editing.",
+  "url"           : "http://github.com/substance/surface/",
+  "keywords"      : ["text editor", "browser"],
+  "author"        : "Michael Aufreiter",
+  "contributors"  : ["Oliver Buchtala"],
+  "repository": {
+      "type": "git",
+      "url": "https://github.com/substance/surface.git"
+  },
+  "engines": {
+    "node": ">=0.8.x"
+  },
+  "dependencies": {
+    "underscore": "1.5.x",
+    "substance-application": "0.1.x",
+    "substance-operator": "0.2.x",
+    "substance-util": "0.2.x"
+  },
+  "devDependencies": {
+    "substance-test": "0.2.x",
+    "substance-document": "0.2.x"
+  },
+  "version"       : "0.1.0"
+}

@@ -187,7 +187,7 @@ var BasicEditing = function() {
 
       this.writer.delete();
 
-      assert.isDeepEqual([0,99], sel.start);
+      assert.isDeepEqual([0,3], sel.start);
       assert.isDeepEqual([0,3], sel.end);
     },
 

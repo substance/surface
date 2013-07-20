@@ -14,13 +14,13 @@
   },
   "dependencies": {
     "underscore": "1.5.x",
-    "substance-application": "0.1.x",
-    "substance-operator": "0.2.x",
-    "substance-util": "0.2.x"
+    "substance-application": "0.1.0-alpha",
+    "substance-operator": "0.2.0-alpha",
+    "substance-util": "0.2.0-alpha"
   },
   "devDependencies": {
-    "substance-test": "0.2.x",
-    "substance-document": "0.5.x"
+    "substance-test": "0.2.0-alpha",
+    "substance-document": "0.5.0-alpha"
   },
-  "version"       : "0.1.0"
+  "version"       : "0.3.0-alpha"
 }

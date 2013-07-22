@@ -7,22 +7,22 @@ var Operator = require('substance-operator');
 // Substance.Surface
 // ==========================================================================
 
-var Surface = function(editor) {
+var Surface = function(writer) {
   View.call(this);
 
   var that = this;
 
   // Incoming events
-  this.editor = editor;
+  this.writer = writer;
 
   // Bind handlers to establish co-transformations on html elements
   // according to model properties
   this.viewAdapter = new Surface.ViewAdapter(this, this.el);
   this.nodeAdapter = this.onNodeContentUpdate.bind(this);
 
-  this.editor.selection.on('selection:changed', this.renderSelection, this);
-  this.editor.onViewChange(this.viewAdapter);
-  this.editor.onTextNodeChange(this.nodeAdapter);
+  this.writer.selection.on('selection:changed', this.renderSelection, this);
+  this.writer.onViewChange(this.viewAdapter);
+  this.writer.onTextNodeChange(this.nodeAdapter);
 
   this.cursor = $('<div class="cursor"></div>')[0];
 
@@ -56,6 +56,31 @@ Surface.Prototype = function() {
     return Array.prototype.slice.call(el.childNodes, start, end);
   }
 
+
+  // Renders all registered annotations
+  // ---------------
+  // 
+  // TODO: find a way to render a delta, instead of everything
+
+  this.renderAnnotations = function() {
+    var writer = this.writer;
+    var annotations = this.writer.getAnnotations();
+
+    _.each(annotations, function(a) {
+      var node = writer.get(a.node);
+      
+      var content = this.$('#'+node.id+' .content')[0];
+      console.log('NODE', node);
+
+      console.log('CONTENT', this.$('#'+node.id+' .content'));
+
+      var chars = childRange(content, a.range[0], a.range[1]);
+      $(chars).addClass(a.type);
+      console.log('CHAARZ', chars);
+
+    }, this);
+  };
+
   // Read out current DOM selection and update selection in the model
   // ---------------
 
@@ -87,7 +112,7 @@ Surface.Prototype = function() {
       content = $(range.startContainer).parent().parent()[0];
       nodeId = $(content).parent().attr('id');
 
-      nodeIndex = this.editor.getPosition(nodeId);
+      nodeIndex = this.writer.getPosition(nodeId);
 
       // starting character of selection (span or br node)
       var startChar = range.startContainer.parentElement;
@@ -105,7 +130,7 @@ Surface.Prototype = function() {
 
       content = range.startContainer;
       nodeId = $(content).parent().attr('id');
-      nodeIndex = this.editor.getPosition(nodeId);
+      nodeIndex = this.writer.getPosition(nodeId);
 
       result["start"] = [nodeIndex, 0];
     }
@@ -122,7 +147,7 @@ Surface.Prototype = function() {
       //
       content = $(range.endContainer).parent().parent()[0];
       nodeId = $(content).parent().attr('id');
-      nodeIndex = this.editor.getPosition(nodeId);
+      nodeIndex = this.writer.getPosition(nodeId);
 
       // starting character of selection (span or br node)
       var ch = range.endContainer.parentElement;
@@ -140,12 +165,12 @@ Surface.Prototype = function() {
 
       content = range.endContainer;
       nodeId = $(content).parent().attr('id');
-      nodeIndex = this.editor.getPosition(nodeId);
+      nodeIndex = this.writer.getPosition(nodeId);
 
       result["end"] = [nodeIndex, 0];
     }
 
-    this.editor.selection.set(result);
+    this.writer.selection.set(result);
     return result;
   };
 
@@ -155,7 +180,7 @@ Surface.Prototype = function() {
   //
 
   this.renderSelection = function() {
-    var sel = this.editor.selection;
+    var sel = this.writer.selection;
     if (!sel || sel.isNull()) return;
 
     var startNode = this.$('.content-node')[sel.start[0]];
@@ -199,7 +224,7 @@ Surface.Prototype = function() {
   };
 
   this.renderSelectionRange = function() {
-    var sel = this.editor.selection;
+    var sel = this.writer.selection;
 
     // Do nothing if selection is collapsed
     this.$('span.selected').removeClass('selected');
@@ -238,7 +263,7 @@ Surface.Prototype = function() {
   //
 
   this.positionCursor = function() {
-    var sel = this.editor.selection;
+    var sel = this.writer.selection;
     // Remove cursor
     $(this.cursor).remove();
 
@@ -290,7 +315,7 @@ Surface.Prototype = function() {
     this.nodes = {};
 
     //TODO: rethink. Is this dependency to document intentional
-    var nodes = this.editor.getNodes();
+    var nodes = this.writer.getNodes();
     _.each(nodes, function(node) {
       this.nodes[node.id] = new Surface.nodeTypes["text"](node);
     }, this);
@@ -302,9 +327,11 @@ Surface.Prototype = function() {
 
   this.render = function() {
     this.$el.empty();
-    _.each(this.editor.getNodes(), function(n) {
+    _.each(this.writer.getNodes(), function(n) {
       $(this.nodes[n.id].render().el).appendTo(this.$el);
     }, this);
+
+    this.renderAnnotations();
 
     return this;
   };
@@ -320,9 +347,9 @@ Surface.Prototype = function() {
     }, this);
 
     // unbind document property change listeners
-    this.editor.selection.unbind("selection:changed", this.renderSelection);
-    this.editor.unbind(this.viewAdapter);
-    this.editor.unbind(this.nodeAdapter);
+    this.writer.selection.unbind("selection:changed", this.renderSelection);
+    this.writer.unbind(this.viewAdapter);
+    this.writer.unbind(this.nodeAdapter);
   };
 
   // This listener function is used to handle "set" and "update" operations
@@ -372,11 +399,11 @@ ViewAdapter.__prototype__ = function() {
   };
 
   this.insert = function(pos, val) {
-    var editor = this.surface.editor;
+    var writer = this.surface.writer;
     var nodes = this.surface.nodes;
     var id = val;
 
-    var nodeView = this.createNodeView(editor.get(id));
+    var nodeView = this.createNodeView(writer.get(id));
     var el = nodeView.render().el;
     nodes[id] = nodeView;
 

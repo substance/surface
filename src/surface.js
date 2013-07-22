@@ -23,6 +23,7 @@ var Surface = function(writer) {
   this.writer.selection.on('selection:changed', this.renderSelection, this);
   this.writer.onViewChange(this.viewAdapter);
   this.writer.onTextNodeChange(this.nodeAdapter);
+  this.writer.on('annotation:changed', this.renderAnnotation, this);
 
   this.cursor = $('<div class="cursor"></div>')[0];
 
@@ -65,21 +66,17 @@ Surface.Prototype = function() {
   this.renderAnnotations = function() {
     var writer = this.writer;
     var annotations = this.writer.getAnnotations();
-
     _.each(annotations, function(a) {
-      var node = writer.get(a.node);
-      
-      var content = this.$('#'+node.id+' .content')[0];
-      console.log('NODE', node);
-
-      console.log('CONTENT', this.$('#'+node.id+' .content'));
-
-      var chars = childRange(content, a.range[0], a.range[1]);
-      $(chars).addClass(a.type);
-      console.log('CHAARZ', chars);
-
+      this.renderAnnotation(a);
     }, this);
   };
+
+  this.renderAnnotation = function(a) {
+    var node = this.writer.get(a.node);
+    var content = this.$('#'+node.id+' .content')[0];
+    var chars = childRange(content, a.range[0], a.range[1]);
+    $(chars).addClass(a.type);
+  }
 
   // Read out current DOM selection and update selection in the model
   // ---------------
@@ -350,6 +347,7 @@ Surface.Prototype = function() {
     this.writer.selection.unbind("selection:changed", this.renderSelection);
     this.writer.unbind(this.viewAdapter);
     this.writer.unbind(this.nodeAdapter);
+    this.writer.unbind(this.renderAnnotation);
   };
 
   // This listener function is used to handle "set" and "update" operations

@@ -75,7 +75,7 @@ Surface.Prototype = function() {
     var node = this.writer.get(a.node);
     var content = this.$('#'+node.id+' .content')[0];
     var chars = childRange(content, a.range[0], a.range[1]);
-    $(chars).addClass(a.type);
+    $(chars).addClass(a.type).addClass('annotation');
   }
 
   // Read out current DOM selection and update selection in the model

@@ -1,4 +1,4 @@
-"use_strict";
+"use strict";
 
 var _ = require('underscore');
 var View = require('substance-application').View;

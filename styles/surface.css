@@ -72,7 +72,12 @@
 }
 
 .content-node.image .cursor {
+  /*top: 0px;*/
+  /*bottom: 0px;*/
+  /*right: 0px;*/
+  /*width: 20px;*/
   height: 100%;
+  /*height: 30px;*/
 }
 
 
@@ -152,10 +157,23 @@
   padding: 0px;
 }
 
-.content-node.image span {
-  width: 100%;
+.content-node.image > div {
+  /*width: 100%;*/
 }
 
-.content-node.image img {
+.content-node.image div.selected .overlay {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 0px;
+  right: 0px;
+  background: rgba(255,0,0, 0.5);
+}
+
+/*.content-node.image div.selected .overlay {
+  
+}*/
+
+.content-node.image div img {
   width: 100%;
 }

@@ -224,7 +224,7 @@ Surface.Prototype = function() {
     var sel = this.writer.selection;
 
     // Do nothing if selection is collapsed
-    this.$('span.selected').removeClass('selected');
+    this.$('.selected').removeClass('selected');
     if (sel.isCollapsed()) return;
 
     function selectChars(chars) {

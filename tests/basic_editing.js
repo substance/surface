@@ -111,11 +111,11 @@ var BasicEditing = function() {
       // that compares the selection in the model with
       // the DOM equivalent
       assert.isEqual(0, $('.content-node span.selected').length);
-      assert.isEqual(1, $('.content-node span .cursor').length);
+      assert.isEqual(1, $('.content-node .cursor').length);
 
       this.writer.delete();
 
-      assert.isEqual(1, $('.content-node span .cursor').length);
+      assert.isEqual(1, $('.content-node .cursor').length);
       // After delection there must be three remaining chars in the first paragraph
       assert.isEqual(33, $('.content-node:first .content')[0].children.length);
     },

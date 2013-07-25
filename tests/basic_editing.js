@@ -258,9 +258,7 @@ var BasicEditing = function() {
       sel.move('left', 'word');
       sel.move('left', 'word');
       sel.move('left', 'word');
-
     },
-
 
     "Copy selected content", function() {
       this.writer.selection.set({
@@ -279,7 +277,8 @@ var BasicEditing = function() {
         end: [0, 8]
       });
 
-      // this.writer.paste();
+      console.log(this.writer.clipboard.getContent());
+      this.writer.paste();
       // var view = this.writer.clipboard.getContent().get('content').nodes;
       // assert.isEqual(1, view.length);
     },

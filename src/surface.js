@@ -289,17 +289,19 @@ Surface.Prototype = function() {
         pos = $(ch).position();
       }
 
-      if (ch) {
-        $(ch).append(this.cursor);
-      } else {
-        $(node).append(this.cursor);
-      }
+      // if (ch) {
+      //   $(ch).append(this.cursor);
+      // } else {
+      $(node).append(this.cursor);
+      // }
 
+      // TODO: dynamically 
       $(this.cursor).css({
         top: pos.top,
-        left: pos.left,
-        height: '20px'
+        left: pos.left
+        // height: '20px' -> getHeightBasedOnContext() -> 100% for image, line-height for text and heading and so on.
       });
+
     }
   };
 
@@ -314,7 +316,7 @@ Surface.Prototype = function() {
     //TODO: rethink. Is this dependency to document intentional
     var nodes = this.writer.getNodes();
     _.each(nodes, function(node) {
-      this.nodes[node.id] = new Surface.nodeTypes["text"](node);
+      this.nodes[node.id] = new Surface.nodeTypes[node.type](node);
     }, this);
   };
 

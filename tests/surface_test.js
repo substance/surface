@@ -3,12 +3,7 @@
 // Import
 // ========
 
-var _    = require('underscore');
-var Test = require('substance-test');
-var assert = Test.assert;
-var registerTest = Test.registerTest;
 var SurfaceTest = require('./surface_test');
-
 var Surface = require('../index');
 var Document = require('substance-document');
 var Writer = Document.Writer;
@@ -27,10 +22,6 @@ var SurfaceTest = function() {
     return ID_IDX;
   };
 
-  this.op = function(idx) {
-    this.comp[OP(idx)](VAL(idx));
-  };
-
   this.setup = function() {
     ID_IDX = 1;
 
@@ -47,29 +38,23 @@ var SurfaceTest = function() {
 
   this.insertContent = function(content) {
     var id = this.uuid("text_");
-    this.__document.apply(["create", {
+    this.__document.create({
       "id": id,
       "type": "text",
       "content": content
-    }]);
-    this.__document.apply(["position", "content", {
-      "nodes": [id],
-      "target": -1
-    }]);
+    });
+    this.__document.position("content", [id], -1);
   };
 
   this.insertImage = function(url) {
     var id = this.uuid("image_");
-    this.__document.apply(["create", {
+    this.__document.create({
       "id": id,
       "type": "image",
       "content": " ",
       "url": url
-    }]);
-    this.__document.apply(["position", "content", {
-      "nodes": [id],
-      "target": -1
-    }]);
+    });
+    this.__document.position("content", [id], -1);
   };
 
   // Verify state

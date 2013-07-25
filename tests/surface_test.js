@@ -58,6 +58,20 @@ var SurfaceTest = function() {
     }]);
   };
 
+  this.insertImage = function(url) {
+    var id = this.uuid("image_");
+    this.__document.apply(["create", {
+      "id": id,
+      "type": "image",
+      "content": " ",
+      "url": url
+    }]);
+    this.__document.apply(["position", "content", {
+      "nodes": [id],
+      "target": -1
+    }]);
+  };
+
   // Verify state
   // -----------
   //

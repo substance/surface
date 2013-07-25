@@ -12,26 +12,14 @@
 }
 
 
-#container #document .content-node.selected .content {
-  opacity: 1.0;
-}
-
-#container #document.structure-mode .content-node.selected {
-  background: rgba(47,43,39, 0.05);
-}
-
-
-#document.structure-mode .content-node .content, #document.edit-mode .content-node .content {
-  opacity: 0.5;
-}
-
-
 /* Textish Behavior
 -------------------------------------------------------------------------------*/
 
 
 .content-node.text .content, .content-node.heading .content {
   white-space: pre-wrap;
+  white-space: -moz-pre-wrap;
+  white-space: -pre-wrap;
 }
 
 
@@ -97,7 +85,7 @@
 
 /* Selected states */
 
-.content-node .content span.selected { background: rgba(0,0,200,0.05); }
+.content-node .content span.selected { background: rgba(0,169, 255, 0.25); }
 
 .content-node .content .idea.selected { background-color: rgba(102, 182, 32, 0.4); }
 .content-node .content .question.selected { background-color: rgba(16, 167, 222, 0.4);}
@@ -157,7 +145,7 @@
   padding: 0px;
 }
 
-.content-node.image > div {
+.content-node.image div.image-char {
   /*width: 100%;*/
 }
 
@@ -167,7 +155,7 @@
   bottom: 0px;
   left: 0px;
   right: 0px;
-  background: rgba(255,0,0, 0.5);
+  background: rgba(0,169, 255, 0.25);
 }
 
 /*.content-node.image div.selected .overlay {

@@ -54,7 +54,8 @@ Surface.Prototype = function() {
   // ---------------
 
   function childRange(el, start, end) {
-    return Array.prototype.slice.call(el.childNodes, start, end);
+    // debugger;
+    return Array.prototype.slice.call(el.children, start, end);
   }
 
 
@@ -228,6 +229,7 @@ Surface.Prototype = function() {
     if (sel.isCollapsed()) return;
 
     function selectChars(chars) {
+      // debugger;
       $(chars).addClass('selected');
     }
 

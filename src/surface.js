@@ -74,6 +74,18 @@ Surface.Prototype = function() {
     }
   };
 
+
+  this.prevLine = function() {
+    console.log('DO STUFF to move cursor down, which includes changing the model.');
+    // this.xPos = 
+    // this.writer.selection.
+  };
+
+  this.nextLine = function() {
+    console.log('DO stuff to move cursor down, which inlcudes changing the model.')
+  };
+
+
   // Renders all registered annotations
   // ---------------
   // 
@@ -176,6 +188,7 @@ Surface.Prototype = function() {
     }
 
     this.writer.selection.set(result);
+
     return result;
   };
 

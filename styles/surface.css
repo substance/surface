@@ -85,7 +85,7 @@
 
 /* Selected states */
 
-.content-node .content span.selected { background: rgba(0,169, 255, 0.25); }
+.content-node .content span.selected { background: rgba(0,0,0,0.08); }
 
 .content-node .content .idea.selected { background-color: rgba(102, 182, 32, 0.4); }
 .content-node .content .question.selected { background-color: rgba(16, 167, 222, 0.4);}

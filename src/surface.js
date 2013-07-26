@@ -23,7 +23,7 @@ var Surface = function(writer) {
   this.writer.selection.on('selection:changed', this.renderSelection, this);
   this.writer.onViewChange(this.viewAdapter);
   this.writer.onTextNodeChange(this.nodeAdapter);
-  this.writer.on('annotation:changed', this.renderAnnotation, this);
+  this.writer.on('annotation:changed', this.updateAnnotation, this);
 
   this.cursor = $('<div class="cursor"></div>')[0];
 
@@ -58,6 +58,21 @@ Surface.Prototype = function() {
     return Array.prototype.slice.call(el.children, start, end);
   }
 
+  this.updateAnnotation = function(annotation, oldRange) {
+    // TODO: we could compute a diff to apply the change in a minimalistic way
+    var node = this.writer.get(annotation.node);
+    var content = this.$('#'+node.id+' .content')[0];
+
+    if (oldRange !== undefined) {
+      var oldChars = childRange(content, oldRange[0], oldRange[1]);
+      $(oldChars).removeClass(annotation.type).removeClass('annotation');
+    }
+
+    if (annotation.range) {
+      var chars = childRange(content, annotation.range[0], annotation.range[1]);
+      $(chars).addClass(annotation.type).addClass('annotation');
+    }
+  };
 
   // Renders all registered annotations
   // ---------------
@@ -65,19 +80,11 @@ Surface.Prototype = function() {
   // TODO: find a way to render a delta, instead of everything
 
   this.renderAnnotations = function() {
-    var writer = this.writer;
     var annotations = this.writer.getAnnotations();
     _.each(annotations, function(a) {
-      this.renderAnnotation(a);
+      this.updateAnnotation(a);
     }, this);
   };
-
-  this.renderAnnotation = function(a) {
-    var node = this.writer.get(a.node);
-    var content = this.$('#'+node.id+' .content')[0];
-    var chars = childRange(content, a.range[0], a.range[1]);
-    $(chars).addClass(a.type).addClass('annotation');
-  }
 
   // Read out current DOM selection and update selection in the model
   // ---------------

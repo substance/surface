@@ -201,7 +201,6 @@ Surface.Prototype = function() {
     var sel = this.writer.selection;
     if (!sel || sel.isNull()) return;
 
-    console.log('rendering selection...');
     window.getSelection().collapseToStart();
 
     var startNode = this.$('.content-node')[sel.start[0]];

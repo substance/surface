@@ -1,14 +1,25 @@
 "use strict";
 
-var _ = require('underscore');
-var View = require('substance-application').View;
-var Operator = require('substance-operator');
+var _ = require("underscore");
+var View = require("substance-application").View;
+var Operator = require("substance-operator");
 
 // Substance.Surface
 // ==========================================================================
 
 var Surface = function(writer) {
   View.call(this);
+
+  // Registered Node Types
+  // ------------
+  // 
+  // TODO: use dependency injection
+
+  this.nodeTypes = {
+    "paragraph": require("substance-nodes/paragraph"),
+    "heading": require("substance-nodes/heading"),
+    "image": require("substance-nodes/image")
+  };
 
   var that = this;
 
@@ -37,18 +48,7 @@ var Surface = function(writer) {
   });
 };
 
-
-
-
-// Must be called by node types for registratoin
-// ---------------
-
-// Surface.registerContentType = function(key, clazz) {
-//   if (Surface.nodeTypes[key]) throw new Error('"'+key+'" node has already been registered');
-//   Surface.nodeTypes[key] = clazz;
-// };
-
-Surface.Prototype = function() {
+Surface.Prototype = function(nodeTypes) {
 
   // Private helpers
   // ---------------
@@ -322,7 +322,7 @@ Surface.Prototype = function() {
   this.build = function() {
     this.nodes = {};
     _.each(this.writer.getNodes(), function(node) {
-      var NodeView = require('substance-nodes/'+node.type).View;
+      var NodeView = this.nodeTypes[node.type].View
       this.nodes[node.id] = new NodeView(node);
     }, this);
   };
@@ -400,7 +400,7 @@ ViewAdapter.__prototype__ = function() {
   //
 
   this.createNodeView = function(node) {
-    var NodeView = require('substance-nodes/'+node.type).View;
+    var NodeView = this.nodeTypes[node.type].View
     if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
     return new NodeView(node);
   };

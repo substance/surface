@@ -16,7 +16,7 @@
 -------------------------------------------------------------------------------*/
 
 
-.content-node.paragraph .content, .content-node.heading .content {
+.content-node.text .content {
   white-space: pre-wrap;
   white-space: -moz-pre-wrap;
   white-space: -pre-wrap;
@@ -31,6 +31,24 @@
 }
 
 .content-node.paragraph .content {
+  min-height: 28px;
+}
+
+/* Codeblock Node
+-------------------------------------------------------------------------------*/
+
+.content-node.codeblock {
+  /*background: #f5f5f5;*/
+  border: 1px dashed #ddd;
+  margin-bottom: 20px;
+  line-height: 20px;
+  padding: 10px 10px;
+}
+
+.content-node.codeblock .content {
+  font-family: 'Source Code Pro';
+  font-size: 14px;
+  color: #777;
   min-height: 28px;
 }
 

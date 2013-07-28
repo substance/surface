@@ -12,25 +12,25 @@
 }
 
 
-/* Textish Behavior
+/* Textish Styles
 -------------------------------------------------------------------------------*/
 
 
-.content-node.text .content, .content-node.heading .content {
+.content-node.paragraph .content, .content-node.heading .content {
   white-space: pre-wrap;
   white-space: -moz-pre-wrap;
   white-space: -pre-wrap;
 }
 
 
-/* Text Node (Later Paragraph?)
+/* Paragraph Node
 -------------------------------------------------------------------------------*/
 
-.content-node.text {
+.content-node.paragraph {
   padding: 20px 0px;
 }
 
-.content-node.text .content {
+.content-node.paragraph .content {
   min-height: 20px;
 }
 
@@ -92,9 +92,9 @@
 .content-node .content .error.selected { background-color: rgba(237, 96, 48, 0.4); }
 
 
-.content-node.text .emphasis { font-style: italic; }
+.content-node .emphasis { font-style: italic; }
 /*.content-node.text .link { background-color: #00CFEA; }*/
-.content-node.text .strong { font-weight: bold; }
+.content-node .strong { font-weight: bold; }
 
 
 /* Code Node

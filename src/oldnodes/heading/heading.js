@@ -23,7 +23,7 @@ Heading.Prototype = function() {
   //
 
   this.render = function() {
-    this.$el.html(html.tpl('heading', this.node));
+    this.$el.html(html.tpl('text', this.node));
     this.renderContent();
     return this;
   };

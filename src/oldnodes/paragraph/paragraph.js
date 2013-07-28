@@ -6,18 +6,18 @@ var html = util.html;
 var View = require('substance-application').View;
 var Surface = require('../../surface');
 
-// Substance.Text
+// Substance.Paragraph.View
 // ==========================================================================
 
-var Text = function(node) {
+var Paragraph = function(node) {
   View.call(this);
   this.node = node;
 
-  this.$el.addClass('content-node text');
+  this.$el.addClass('content-node paragraph');
   this.$el.attr('id', this.node.id);
 };
 
-Text.Prototype = function() {
+Paragraph.Prototype = function() {
 
   // Rendering
   // =============================
@@ -30,7 +30,7 @@ Text.Prototype = function() {
   };
 
   this.dispose = function() {
-    console.log('disposing text view');
+    console.log('disposing paragraph view');
     this.stopListening();
   };
 
@@ -72,10 +72,10 @@ Text.Prototype = function() {
   };
 };
 
-Text.Prototype.prototype = View.prototype;
-Text.prototype = new Text.Prototype();
+Paragraph.Prototype.prototype = View.prototype;
+Paragraph.prototype = new Paragraph.Prototype();
 
 // Register
-Surface.registerContentType("text", Text);
+Surface.registerContentType("paragraph", Paragraph);
 
-module.exports = Text;
+module.exports = Paragraph;

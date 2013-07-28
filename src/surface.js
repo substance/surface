@@ -3,12 +3,24 @@
 var _ = require('underscore');
 var View = require('substance-application').View;
 var Operator = require('substance-operator');
+// 
 
 // Substance.Surface
 // ==========================================================================
 
 var Surface = function(writer) {
   View.call(this);
+
+  // NOT the right place!
+  // Find better registration mechanism
+  var Document = require('substance-document');
+  
+  // Registered Content types
+  Surface.nodeTypes = {
+    "paragraph": Document.Paragraph.View,
+    "heading": Document.Heading.View,
+    "image": Document.Image.View
+  };
 
   var that = this;
 
@@ -37,16 +49,19 @@ var Surface = function(writer) {
   });
 };
 
-// Registered Content types
-Surface.nodeTypes = {};
+
+
+console.log('DOCUMENT Heading', Document.Heading);
+
+console.log('NODETYPES', Surface.nodeTypes);
 
 // Must be called by node types for registratoin
 // ---------------
 
-Surface.registerContentType = function(key, clazz) {
-  if (Surface.nodeTypes[key]) throw new Error('"'+key+'" node has already been registered');
-  Surface.nodeTypes[key] = clazz;
-};
+// Surface.registerContentType = function(key, clazz) {
+//   if (Surface.nodeTypes[key]) throw new Error('"'+key+'" node has already been registered');
+//   Surface.nodeTypes[key] = clazz;
+// };
 
 Surface.Prototype = function() {
 
@@ -74,16 +89,6 @@ Surface.Prototype = function() {
     }
   };
 
-
-  this.prevLine = function() {
-    console.log('DO STUFF to move cursor down, which includes changing the model.');
-    // this.xPos = 
-    // this.writer.selection.
-  };
-
-  this.nextLine = function() {
-    console.log('DO stuff to move cursor down, which inlcudes changing the model.')
-  };
 
 
   // Renders all registered annotations

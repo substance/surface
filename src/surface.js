@@ -4,6 +4,7 @@ var _ = require("underscore");
 var View = require("substance-application").View;
 var Operator = require("substance-operator");
 
+
 // Substance.Surface
 // ==========================================================================
 
@@ -15,10 +16,11 @@ var Surface = function(writer) {
   // 
   // TODO: use dependency injection
 
+  var nodes = require("substance-nodes");
   this.nodeTypes = {
-    "paragraph": require("substance-nodes/paragraph"),
-    "heading": require("substance-nodes/heading"),
-    "image": require("substance-nodes/image")
+    "paragraph": nodes.Paragraph, // require("substance-nodes/paragraph"),
+    "heading": nodes.Heading, // require("substance-nodes/heading"),
+    "image": nodes.Image // require("substance-nodes/image")
   };
 
   var that = this;

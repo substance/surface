@@ -3,24 +3,12 @@
 var _ = require('underscore');
 var View = require('substance-application').View;
 var Operator = require('substance-operator');
-// 
 
 // Substance.Surface
 // ==========================================================================
 
 var Surface = function(writer) {
   View.call(this);
-
-  // NOT the right place!
-  // Find better registration mechanism
-  var Document = require('substance-document');
-  
-  // Registered Content types
-  Surface.nodeTypes = {
-    "paragraph": Document.Paragraph.View,
-    "heading": Document.Heading.View,
-    "image": Document.Image.View
-  };
 
   var that = this;
 
@@ -51,9 +39,6 @@ var Surface = function(writer) {
 
 
 
-console.log('DOCUMENT Heading', Document.Heading);
-
-console.log('NODETYPES', Surface.nodeTypes);
 
 // Must be called by node types for registratoin
 // ---------------
@@ -88,8 +73,6 @@ Surface.Prototype = function() {
       $(chars).addClass(annotation.type).addClass('annotation');
     }
   };
-
-
 
   // Renders all registered annotations
   // ---------------
@@ -206,6 +189,7 @@ Surface.Prototype = function() {
     var sel = this.writer.selection;
     if (!sel || sel.isNull()) return;
 
+    // Hide native selection in favor of our custom one
     window.getSelection().collapseToStart();
 
     var startNode = this.$('.content-node')[sel.start[0]];
@@ -318,11 +302,7 @@ Surface.Prototype = function() {
         pos = $(ch).position();
       }
 
-      // if (ch) {
-      //   $(ch).append(this.cursor);
-      // } else {
       $(node).append(this.cursor);
-      // }
 
       // TODO: dynamically 
       $(this.cursor).css({
@@ -341,11 +321,9 @@ Surface.Prototype = function() {
 
   this.build = function() {
     this.nodes = {};
-
-    //TODO: rethink. Is this dependency to document intentional
-    var nodes = this.writer.getNodes();
-    _.each(nodes, function(node) {
-      this.nodes[node.id] = new Surface.nodeTypes[node.type](node);
+    _.each(this.writer.getNodes(), function(node) {
+      var NodeView = require('substance-nodes/'+node.type).View;
+      this.nodes[node.id] = new NodeView(node);
     }, this);
   };
 
@@ -422,9 +400,9 @@ ViewAdapter.__prototype__ = function() {
   //
 
   this.createNodeView = function(node) {
-    var Node = Surface.nodeTypes[node.type];
-    if (!Node) throw new Error('Node type "'+node.type+'" not supported');
-    return new Node(node);
+    var NodeView = require('substance-nodes/'+node.type).View;
+    if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
+    return new NodeView(node);
   };
 
   this.insert = function(pos, val) {

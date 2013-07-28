@@ -10,15 +10,6 @@ var Operator = require("substance-operator");
 var Surface = function(writer) {
   View.call(this);
 
-  // Registered Node Types
-  // ------------
-  // 
-  // TODO: use dependency injection
-
-  
-  // debugger;
-
-
   var that = this;
 
   // Incoming events
@@ -44,8 +35,17 @@ var Surface = function(writer) {
   this.$el.mouseup(function(e) {
     that.updateSelection(e);
   });
-};
 
+  this.$el.delegate('img', 'click', function(e) {
+    var $el = $(e.currentTarget).parent().parent().parent();
+    var nodeId = $el.attr('id');
+    that.writer.selection.selectNode(nodeId);
+    return false;
+  });
+};  
+
+// Registered node types
+// ---------------
 
 
 var nodes = require("substance-nodes");
@@ -120,9 +120,13 @@ Surface.Prototype = function(nodeTypes) {
     // desired data
     // start: [nodeindex, characterOffset]
 
+    // debugger;
+
     if (range.startContainer.nodeType === Node.TEXT_NODE) {
+
       // Extract content-node
       //
+
       content = $(range.startContainer).parent().parent()[0];
       nodeId = $(content).parent().attr('id');
 
@@ -135,6 +139,12 @@ Surface.Prototype = function(nodeTypes) {
       charOffset += range.startOffset; // if you clicked on the right-hand area of the span
 
       result["start"] = [nodeIndex, charOffset];
+    } else if (range.startContainer.nodeType === Node.ELEMENT_NODE) {
+      // TODO: this should go into the image node!
+      content = $(range.startContainer).parent();
+      nodeId = $(content).parent().attr('id');
+      nodeIndex = this.writer.getPosition(nodeId);
+      result["start"] = [nodeIndex, 0];
     } else {
 
       // empty container
@@ -170,6 +180,12 @@ Surface.Prototype = function(nodeTypes) {
       chOffset += range.endOffset; // if you clicked on the right-hand area of the span
 
       result["end"] = [nodeIndex, chOffset];
+    } else if (range.endContainer.nodeType === Node.ELEMENT_NODE) {
+      // TODO: this should go into the image node implementation!
+      content = $(range.endContainer).parent();
+      nodeId = $(content).parent().attr('id');      
+      nodeIndex = this.writer.getPosition(nodeId);
+      result["end"] = [nodeIndex, 1];
     } else {
 
       // empty container
@@ -185,10 +201,8 @@ Surface.Prototype = function(nodeTypes) {
     }
 
     this.writer.selection.set(result);
-
     return result;
   };
-
 
   // Renders the current selection
   // --------
@@ -199,7 +213,8 @@ Surface.Prototype = function(nodeTypes) {
     if (!sel || sel.isNull()) return;
 
     // Hide native selection in favor of our custom one
-    window.getSelection().collapseToStart();
+    var wSel = window.getSelection();
+    if (wSel.type !== "None") wSel.collapseToStart();
 
     var startNode = this.$('.content-node')[sel.start[0]];
 
@@ -213,36 +228,16 @@ Surface.Prototype = function(nodeTypes) {
       startChar = startChars[sel.start[1]];
     }
 
-
-    // TODO: fix or remove. this block does nothing
-    // if (!sel.isCollapsed()) {
-    //   // FIXME: this crashes when selecting whole paragraph via triple-click
-    //   var endNode = this.$('.content-node')[sel.end[0]];
-    //   var endOffset = 0;
-    //   var chars = $(endNode).find('.content')[0].children;
-
-    //   // Edge case last char is selected
-    //   // Use startChar as endChar but with offset 1
-    //   // <span>a</span>
-    //   // <span>a</span>
-    //   // <span>a</span> <--
-
-    //   if (sel.end[1] >= chars.length) {
-    //     endChar = _.last(chars);
-    //     endOffset = 1;
-    //   } else {
-    //     endChar = chars[sel.end[1]];
-    //   }
-    // }
-
     this.positionCursor();
-
     this.renderSelectionRange();
-
   };
 
   this.renderSelectionRange = function() {
     var sel = this.writer.selection;
+    if (sel.isNull()) {
+      console.log('selection is null! WHY?!');
+      return;
+    }
 
     // Do nothing if selection is collapsed
     this.$('.selected').removeClass('selected');

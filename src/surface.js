@@ -18,12 +18,12 @@ var Surface = function(writer) {
   // Bind handlers to establish co-transformations on html elements
   // according to model properties
   this.viewAdapter = new Surface.ViewAdapter(this, this.el);
-  this.nodeAdapter = this.onNodeContentUpdate.bind(this);
 
   this.writer.selection.on('selection:changed', this.renderSelection, this);
   this.writer.onViewChange(this.viewAdapter);
-  this.writer.onTextNodeChange(this.nodeAdapter);
-  this.writer.on('annotation:changed', this.updateAnnotation, this);
+  this.writer.onTextNodeChange(this.onNodeContentUpdate, this);
+  this.writer.onPropertyChange(this.onAnnotationChange, this);
+  this.writer.annotator.on('annotation:changed', this.updateAnnotation, this);
 
   this.cursor = $('<div class="cursor"></div>')[0];
 
@@ -42,7 +42,7 @@ var Surface = function(writer) {
     that.writer.selection.selectNode(nodeId);
     return false;
   });
-};  
+};
 
 // Registered node types
 // ---------------
@@ -57,7 +57,7 @@ Surface.nodeTypes = {
 };
 
 
-Surface.Prototype = function(nodeTypes) {
+Surface.Prototype = function() {
 
   // Private helpers
   // ---------------
@@ -85,7 +85,7 @@ Surface.Prototype = function(nodeTypes) {
 
   // Renders all registered annotations
   // ---------------
-  // 
+  //
   // TODO: find a way to render a delta, instead of everything
 
   this.renderAnnotations = function() {
@@ -183,7 +183,7 @@ Surface.Prototype = function(nodeTypes) {
     } else if (range.endContainer.nodeType === Node.ELEMENT_NODE) {
       // TODO: this should go into the image node implementation!
       content = $(range.endContainer).parent();
-      nodeId = $(content).parent().attr('id');      
+      nodeId = $(content).parent().attr('id');
       nodeIndex = this.writer.getPosition(nodeId);
       result["end"] = [nodeIndex, 1];
     } else {
@@ -308,7 +308,7 @@ Surface.Prototype = function(nodeTypes) {
 
       $(node).append(this.cursor);
 
-      // TODO: dynamically 
+      // TODO: dynamically
       $(this.cursor).css({
         top: pos.top,
         left: pos.left
@@ -361,6 +361,7 @@ Surface.Prototype = function(nodeTypes) {
     this.writer.unbind(this.viewAdapter);
     this.writer.unbind(this.nodeAdapter);
     this.writer.unbind(this.renderAnnotation);
+    this.writer.unbind(this.onAnnotationChange);
   };
 
   // This listener function is used to handle "set" and "update" operations
@@ -374,6 +375,47 @@ Surface.Prototype = function(nodeTypes) {
       op.diff.apply(adapter);
     }
   };
+
+
+  this.onAnnotationChange = function(objOp) {
+
+    // Hack: needing this to filter events on "annotations"
+    // TODO: this should be solved in a clean API way
+    var schema = this.writer.__document.schema;
+    var annotation;
+
+    if (objOp.type === "create" || objOp.type === "delete") {
+      annotation = objOp.val;
+    } else if (objOp.type === "set") {
+      annotation = this.writer.get(objOp.path[0]);
+    }
+
+    if (!annotation) return;
+
+    var types = schema.typeChain(annotation.type);
+    if(types.indexOf("annotation") < 0) return;
+
+
+    console.log("Updating annotation: ", objOp);
+
+    if (objOp.type === "create") {
+      this.updateAnnotation(annotation);
+    } else if (objOp.type === "delete") {
+      this.updateAnnotation({
+        id: annotation.id,
+        type: annotation.type,
+        node: annotation.node
+      }, annotation.range);
+    } else if (objOp.type === "set") {
+      if (objOp.path[1] === "range") {
+        this.updateAnnotation(annotation, objOp.original);
+      }
+    } else {
+      console.log("Incremental updates are not supported: only create/delete/set");
+    }
+
+  };
+
 };
 
 

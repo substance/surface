@@ -53,7 +53,8 @@ var nodes = require("substance-nodes");
 Surface.nodeTypes = {
   "paragraph": nodes.Paragraph,
   "heading": nodes.Heading,
-  "image": nodes.Image
+  "image": nodes.Image,
+  "codeblock": nodes.Codeblock
 };
 
 

@@ -4,7 +4,6 @@ var _ = require("underscore");
 var View = require("substance-application").View;
 var Operator = require("substance-operator");
 
-
 // Substance.Surface
 // ==========================================================================
 
@@ -16,12 +15,9 @@ var Surface = function(writer) {
   // 
   // TODO: use dependency injection
 
-  var nodes = require("substance-nodes");
-  this.nodeTypes = {
-    "paragraph": nodes.Paragraph, // require("substance-nodes/paragraph"),
-    "heading": nodes.Heading, // require("substance-nodes/heading"),
-    "image": nodes.Image // require("substance-nodes/image")
-  };
+  
+  // debugger;
+
 
   var that = this;
 
@@ -49,6 +45,17 @@ var Surface = function(writer) {
     that.updateSelection(e);
   });
 };
+
+
+
+var nodes = require("substance-nodes");
+
+Surface.nodeTypes = {
+  "paragraph": nodes.Paragraph,
+  "heading": nodes.Heading,
+  "image": nodes.Image
+};
+
 
 Surface.Prototype = function(nodeTypes) {
 
@@ -296,7 +303,7 @@ Surface.Prototype = function(nodeTypes) {
         } else {
           pos = {
             left: 0,
-            top: 0
+            top: 22
           };
         }
       } else {
@@ -324,7 +331,7 @@ Surface.Prototype = function(nodeTypes) {
   this.build = function() {
     this.nodes = {};
     _.each(this.writer.getNodes(), function(node) {
-      var NodeView = this.nodeTypes[node.type].View
+      var NodeView = Surface.nodeTypes[node.type].View;
       this.nodes[node.id] = new NodeView(node);
     }, this);
   };
@@ -402,7 +409,7 @@ ViewAdapter.__prototype__ = function() {
   //
 
   this.createNodeView = function(node) {
-    var NodeView = this.nodeTypes[node.type].View
+    var NodeView = Surface.nodeTypes[node.type].View;
     if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
     return new NodeView(node);
   };

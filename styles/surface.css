@@ -31,7 +31,7 @@
 }
 
 .content-node.paragraph .content {
-  min-height: 20px;
+  min-height: 28px;
 }
 
 /* Heading Node
@@ -50,6 +50,7 @@
 
 .content-node .cursor {
   position: absolute;
+  top: 22px;
   height: 20px;
   width: 2px;
   background: #00ACEA;

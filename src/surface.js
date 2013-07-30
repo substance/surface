@@ -3,6 +3,8 @@
 var _ = require("underscore");
 var View = require("substance-application").View;
 var Operator = require("substance-operator");
+var util = require("substance-util");
+var html = util.html;
 
 // Substance.Surface
 // ==========================================================================
@@ -15,9 +17,10 @@ var Surface = function(writer) {
   // Incoming events
   this.writer = writer;
 
+
   // Bind handlers to establish co-transformations on html elements
   // according to model properties
-  this.viewAdapter = new Surface.ViewAdapter(this, this.el);
+  this.viewAdapter = new Surface.ViewAdapter(this);
 
   this.writer.selection.on('selection:changed', this.renderSelection, this);
   this.writer.onViewChange(this.viewAdapter);
@@ -83,6 +86,58 @@ Surface.Prototype = function() {
       var chars = childRange(content, annotation.range[0], annotation.range[1]);
       $(chars).addClass(annotation.type).addClass('annotation');
     }
+  };
+
+
+  // Annotate current selection
+  // --------
+  //
+  // insertNode('image', {medium: 'foo', large: 'bar'})
+
+  this.insertNode = function(type, options) {
+    this.writer.insertNode(type, options);
+    this.hideNodeInserter();
+    return false;
+  };
+
+  this.toggleNodeInserter = function() {
+    var $nodeToggles = this.$('.node-toggles');
+
+    // get top and left pos of the cursor
+    var cursorScreenPos = this.getCursorPos();
+
+    $nodeToggles.css({
+      top: cursorScreenPos.top,
+      left: cursorScreenPos.left+64
+    });
+
+    $nodeToggles.fadeIn();
+    // And show it
+    // _.delay(function() {
+    //   $nodeToggles.fadeOut();
+    // }, 2000);
+    
+  };
+
+  this.hideNodeInserter = function() {
+    this.$('.node-toggles').hide();
+  };
+
+  // Get Cursor position, relative to .surface .nodes
+  // ---------------
+  //
+
+  this.getCursorPos = function() {
+    var relativePos = this.$('.cursor').position();
+    
+    var nodePos = this.writer.selection.getCursor()[0];
+    var node = this.writer.__document.getNodeFromPosition('content', nodePos);
+    var nodeScreenPos = this.$('#'+node.id).position();
+
+    return {
+      left: relativePos.left,
+      top: relativePos.top + nodeScreenPos.top
+    };
   };
 
   // Renders all registered annotations
@@ -213,6 +268,7 @@ Surface.Prototype = function() {
   this.renderSelection = function() {
     var sel = this.writer.selection;
     if (!sel || sel.isNull()) return;
+    this.hideNodeInserter();
 
     // Hide native selection in favor of our custom one
     var wSel = window.getSelection();
@@ -338,9 +394,10 @@ Surface.Prototype = function() {
   //
 
   this.render = function() {
-    this.$el.empty();
+    this.$el.html(html.tpl('surface'));
+
     _.each(this.writer.getNodes(), function(n) {
-      $(this.nodes[n.id].render().el).appendTo(this.$el);
+      $(this.nodes[n.id].render().el).appendTo(this.$('.nodes'));
     }, this);
 
     this.renderAnnotations();
@@ -426,9 +483,9 @@ Surface.Prototype = function() {
 // Adapter that maps model operations to changes on the according html element
 //
 
-var ViewAdapter = function(surface, el) {
+var ViewAdapter = function(surface) {
   this.surface = surface;
-  this.container = el;
+  // this.container = surface.$('.nodes')[0];
 };
 
 ViewAdapter.__prototype__ = function() {
@@ -442,6 +499,11 @@ ViewAdapter.__prototype__ = function() {
       container.appendChild(el);
     }
   }
+
+  // TODO: 
+  this.container = function() {
+    return this._container = this._container || this.surface.$('.nodes')[0];
+  };
 
   // Creates a new node view
   // --------
@@ -462,25 +524,25 @@ ViewAdapter.__prototype__ = function() {
     var el = nodeView.render().el;
     nodes[id] = nodeView;
 
-    insertOrAppend(this.container, pos, el);
+    insertOrAppend(this.container(), pos, el);
   };
 
   this.delete = function(pos, nodeId) {
     var nodes = this.surface.nodes;
-    var childs = this.container.childNodes;
+    var childs = this.container().childNodes;
 
-    this.container.removeChild(childs[pos]);
+    this.container().removeChild(childs[pos]);
     var view = nodes[nodeId];
     view.dispose();
     delete nodes[nodeId];
   };
 
   this.move = function(val, oldPos, newPos) {
-    var childs = this.container.childNodes;
+    var childs = this.container().childNodes;
 
     var el = childs[oldPos];
-    this.container.removeChild(el);
-    insertOrAppend(this.container, newPos, el);
+    this.container().removeChild(el);
+    insertOrAppend(this.container(), newPos, el);
   };
 };
 

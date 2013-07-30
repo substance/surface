@@ -3,7 +3,13 @@
 -------------------------------------------------------------------------------*/
 
 #container .surface {
-  padding: 50px 60px;
+  /*padding: 50px 60px;*/
+}
+
+/* Very important dude */
+/* Makes sure .nodes is used as a reference for absolute positioning */
+#container .surface .nodes {
+  position: relative;
 }
 
 /* Generic node styles */
@@ -11,6 +17,9 @@
   position: relative;
 }
 
+.content-node {
+  margin: 0 60px;
+}
 
 /* Textish Styles
 -------------------------------------------------------------------------------*/

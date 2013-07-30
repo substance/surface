@@ -37,10 +37,10 @@ var Surface = function(writer) {
   });
 
   this.$el.delegate('img', 'click', function(e) {
-    // var $el = $(e.currentTarget).parent().parent().parent();
-    // var nodeId = $el.attr('id');
-    // that.writer.selection.selectNode(nodeId);
-    // return false;
+    var $el = $(e.currentTarget).parent().parent().parent();
+    var nodeId = $el.attr('id');
+    that.writer.selection.selectNode(nodeId);
+    return false;
   });
 };
 

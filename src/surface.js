@@ -37,10 +37,10 @@ var Surface = function(writer) {
   });
 
   this.$el.delegate('img', 'click', function(e) {
-    var $el = $(e.currentTarget).parent().parent().parent();
-    var nodeId = $el.attr('id');
-    that.writer.selection.selectNode(nodeId);
-    return false;
+    // var $el = $(e.currentTarget).parent().parent().parent();
+    // var nodeId = $el.attr('id');
+    // that.writer.selection.selectNode(nodeId);
+    // return false;
   });
 };
 
@@ -54,7 +54,8 @@ Surface.nodeTypes = {
   "paragraph": nodes.Paragraph,
   "heading": nodes.Heading,
   "image": nodes.Image,
-  "codeblock": nodes.Codeblock
+  "codeblock": nodes.Codeblock,
+  "codeline": nodes.Codeline
 };
 
 
@@ -179,7 +180,7 @@ Surface.Prototype = function() {
 
       var chOffset = indexOf.call(content.childNodes, ch);
       chOffset += range.endOffset; // if you clicked on the right-hand area of the span
-
+      
       result["end"] = [nodeIndex, chOffset];
     } else if (range.endContainer.nodeType === Node.ELEMENT_NODE) {
       // TODO: this should go into the image node implementation!

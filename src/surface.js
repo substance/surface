@@ -54,6 +54,7 @@ var Surface = function(writer) {
 var nodes = require("substance-nodes");
 
 Surface.nodeTypes = {
+  "node": nodes.Node,
   "paragraph": nodes.Paragraph,
   "heading": nodes.Heading,
   "image": nodes.Image,
@@ -112,11 +113,6 @@ Surface.Prototype = function() {
     });
 
     $nodeToggles.fadeIn();
-    // And show it
-    // _.delay(function() {
-    //   $nodeToggles.fadeOut();
-    // }, 2000);
-    
   };
 
   this.hideNodeInserter = function() {

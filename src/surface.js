@@ -75,26 +75,16 @@ Surface.Prototype = function() {
 
   this.insertNode = function(type, options) {
     this.writer.insertNode(type, options);
-    this.hideNodeInserter();
     return false;
   };
 
-  this.toggleNodeInserter = function() {
-    var $nodeToggles = this.$('.node-toggles');
+  // Really?
+  // ---------------
+  //  
 
-    // get top and left pos of the cursor
-    var cursorScreenPos = this.getCursorPos();
-
-    $nodeToggles.css({
-      top: cursorScreenPos.top,
-      left: cursorScreenPos.left+64
-    });
-
-    $nodeToggles.fadeIn();
-  };
-
-  this.hideNodeInserter = function() {
-    this.$('.node-toggles').hide();
+  this.insertImage = function(type, data) {
+    this.writer.insertImage(data);
+    return false;
   };
 
   // Get Cursor position, relative to .surface .nodes
@@ -268,7 +258,6 @@ Surface.Prototype = function() {
   this.renderSelection = function() {
     var sel = this.writer.selection;
     if (!sel || sel.isNull()) return;
-    this.hideNodeInserter();
 
     // Hide native selection in favor of our custom one
     var wSel = window.getSelection();
@@ -369,9 +358,7 @@ Surface.Prototype = function() {
       $(this.cursor).css({
         top: pos.top,
         left: pos.left
-        // height: '20px' -> getHeightBasedOnContext() -> 100% for image, line-height for text and heading and so on.
       });
-
     }
   };
 

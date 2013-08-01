@@ -113,6 +113,11 @@
   background: #00ACEA;
 }
 
+/*
+  blinking from http://codepen.io/hofweber/pen/vbJHc
+  thanks patch!
+*/
+
 .content-node .cursor {
   -webkit-animation: blink 1.2s step-end infinite;
      -moz-animation: blink 1.2s step-end infinite;

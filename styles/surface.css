@@ -1,4 +1,3 @@
-
 /* Node
 -------------------------------------------------------------------------------*/
 
@@ -113,6 +112,20 @@
   width: 2px;
   background: #00ACEA;
 }
+
+.content-node .cursor {
+  -webkit-animation: blink 1.2s step-end infinite;
+     -moz-animation: blink 1.2s step-end infinite;
+      -ms-animation: blink 1.2s step-end infinite;
+       -o-animation: blink 1.2s step-end infinite;
+          animation: blink 1.2s step-end infinite;
+}
+
+@-webkit-keyframes blink {0% {background: #00ACEA} 50% {background: transparent;}}
+   @-moz-keyframes blink {0% {background: #00ACEA} 50% {background: transparent;}}
+    @-ms-keyframes blink {0% {background: #00ACEA} 50% {background: transparent;}}
+     @-o-keyframes blink {0% {background: #00ACEA} 50% {background: transparent;}}
+        @keyframes blink {0% {background: #00ACEA} 50% {background: transparent;}}
 
 .content-node.heading .cursor {
   height: 30px;

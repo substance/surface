@@ -105,8 +105,7 @@ Surface.Prototype = function() {
   this.getCursorPos = function() {
     var relativePos = this.$('.cursor').position();
     
-    var nodePos = this.writer.selection.getCursor()[0];
-    var node = this.writer.__document.getNodeFromPosition('content', nodePos);
+    var node = this.writer.selection.cursor.node;
     var nodeScreenPos = this.$('#'+node.id).position();
 
     return {

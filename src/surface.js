@@ -105,8 +105,8 @@ Surface.Prototype = function() {
   this.getCursorPos = function() {
     var relativePos = this.$('.cursor').position();
     
-    var nodePos = this.writer.selection.getCursor()[0];
-    var node = this.writer.__document.getNodeFromPosition('content', nodePos);
+    var cursor = this.writer.selection.cursor;
+    var node = cursor.node;
     var nodeScreenPos = this.$('#'+node.id).position();
 
     return {
@@ -268,9 +268,11 @@ Surface.Prototype = function() {
   //
 
   this.renderSelection = function() {
-    var sel = this.writer.selection;
-    if (!sel || sel.isNull()) return;
+
+    if (this.writer.selection.isNull()) return;
     this.hideNodeInserter();
+
+    var sel = this.writer.selection.range();
 
     // Hide native selection in favor of our custom one
     var wSel = window.getSelection();
@@ -294,6 +296,7 @@ Surface.Prototype = function() {
 
   this.renderSelectionRange = function() {
     var sel = this.writer.selection;
+
     if (sel.isNull()) {
       console.log('selection is null! WHY?!');
       return;
@@ -303,32 +306,13 @@ Surface.Prototype = function() {
     this.$('.selected').removeClass('selected');
     if (sel.isCollapsed()) return;
 
-    function selectChars(chars) {
+    var ranges = sel.getRanges();
+    for (var i = 0; i < ranges.length; i++) {
+      var range = ranges[i];
+      var content = $('#'+range.node.id+' .content')[0];
+      var chars = childRange(content, sel.start[1]);
       $(chars).addClass('selected');
-    }
-
-    var nodes = sel.getNodes();
-    if (nodes.length > 1) {
-      _.each(nodes, function(node, index) {
-        var content = $('#'+node.id+' .content')[0];
-        var chars;
-        if (index === 0) {
-          chars = childRange(content, sel.start[1]);
-          selectChars(chars);
-        } else if (index===nodes.length-1) {
-          chars = childRange(content, 0, sel.end[1]);
-          selectChars(chars);
-        } else {
-          chars = childRange(content, 0);
-          selectChars(chars);
-        }
-      });
-    } else { // range within one node
-      var node = nodes[0];
-      var content = $('#'+node.id+' .content')[0];
-      var chars = childRange(content, sel.start[1], sel.end[1]);
-      selectChars(chars);
-    }
+    };
   };
 
   // Position cursor and selection
@@ -336,45 +320,45 @@ Surface.Prototype = function() {
   //
 
   this.positionCursor = function() {
-    var sel = this.writer.selection;
+    var cursor = this.writer.selection.cursor;
+    if (!cursor.isValid()) return;
+
     // Remove cursor
     $(this.cursor).remove();
 
-    if (sel.isCollapsed()) {
-      var node = this.$('.content-node')[sel.end[0]];
-      var chars = $(node).find('.content')[0].children;
-      var ch;
-      var pos;
+    var node = this.$('.content-node')[cursor.nodePos];
+    var chars = $(node).find('.content')[0].children;
+    var ch;
+    var pos;
 
-      if (sel.start[1] >= chars.length) {
-        // Special case: Cursor is after last element
-        // -> draw cursor after the last element
-        ch = _.last(chars);
+    if (cursor.charPos >= chars.length) {
+      // Special case: Cursor is after last element
+      // -> draw cursor after the last element
+      ch = _.last(chars);
 
-        if (ch) {
-          pos = $(ch).position();
-          pos.left += $(ch).width();
-        } else {
-          pos = {
-            left: 0,
-            top: 22
-          };
-        }
-      } else {
-        ch = chars[sel.end[1]];
+      if (ch) {
         pos = $(ch).position();
+        pos.left += $(ch).width();
+      } else {
+        pos = {
+          left: 0,
+          top: 22
+        };
       }
-
-      $(node).append(this.cursor);
-
-      // TODO: dynamically
-      $(this.cursor).css({
-        top: pos.top,
-        left: pos.left
-        // height: '20px' -> getHeightBasedOnContext() -> 100% for image, line-height for text and heading and so on.
-      });
-
+    } else {
+      ch = chars[cursor.charPos];
+      pos = $(ch).position();
     }
+
+    $(node).append(this.cursor);
+
+    // TODO: dynamically
+    $(this.cursor).css({
+      top: pos.top,
+      left: pos.left
+      // height: '20px' -> getHeightBasedOnContext() -> 100% for image, line-height for text and heading and so on.
+    });
+
   };
 
 

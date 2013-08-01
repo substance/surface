@@ -53,7 +53,7 @@ var Surface = function(writer) {
 // ---------------
 
 
-var nodes = require("substance-nodes");
+var nodes = require("substance-article/nodes");
 
 Surface.nodeTypes = {
   "node": nodes.Node,
@@ -300,7 +300,6 @@ Surface.Prototype = function() {
     if (sel.isCollapsed()) return;
 
     function selectChars(chars) {
-      // debugger;
       $(chars).addClass('selected');
     }
 

@@ -22,11 +22,13 @@ var Surface = function(writer) {
   // according to model properties
   this.viewAdapter = new Surface.ViewAdapter(this);
 
-  this.writer.selection.on('selection:changed', this.renderSelection, this);
-  this.writer.onViewChange(this.viewAdapter);
-  this.writer.onTextNodeChange(this.onNodeContentUpdate, this);
-  this.writer.onPropertyChange(this.onAnnotationChange, this);
-  this.writer.annotator.on('annotation:changed', this.updateAnnotation, this);
+  // storing DOM selections for incremental updates
+  this._annotatedElements = {};
+
+  this.listenTo(this.writer, "selection:changed", this.renderSelection);
+  this.listenTo(this.writer, "view:changed", this.viewAdapter);
+  this.listenTo(this.writer, "textnode:changed", this.onNodeContentUpdate);
+  this.listenTo(this.writer, "annotation:changed", this.updateAnnotation);
 
   this.cursor = $('<div class="cursor"></div>')[0];
 
@@ -72,28 +74,6 @@ Surface.Prototype = function() {
     // debugger;
     return Array.prototype.slice.call(el.children, start, end);
   }
-
-  this.updateAnnotation = function(annotation, oldRange) {
-    // TODO: we could compute a diff to apply the change in a minimalistic way
-    var node = this.writer.get(annotation.node);
-    var content = this.$('#'+node.id+' .content')[0];
-
-    if (oldRange !== undefined) {
-      var oldChars = childRange(content, oldRange[0], oldRange[1]);
-      $(oldChars).removeClass(annotation.type).removeClass('annotation');
-    }
-
-    if (annotation.range) {
-      var chars = childRange(content, annotation.range[0], annotation.range[1]);
-      $(chars).addClass(annotation.type).addClass('annotation');
-    }
-  };
-
-
-  // Annotate current selection
-  // --------
-  //
-  // insertNode('image', {medium: 'foo', large: 'bar'})
 
   this.insertNode = function(type, options) {
     this.writer.insertNode(type, options);
@@ -144,9 +124,31 @@ Surface.Prototype = function() {
   this.renderAnnotations = function() {
     var annotations = this.writer.getAnnotations();
     _.each(annotations, function(a) {
-      this.updateAnnotation(a);
+      this.updateAnnotation("update", a);
     }, this);
   };
+
+  // Updates a given annotation
+  // --------
+  //
+
+  this.updateAnnotation = function(changeType, annotation) {
+    //debugger;
+
+    // on delete and update we remove the classes
+    if (changeType === "delete" || changeType === "update") {
+      $(this._annotatedElements[annotation.id]).removeClass(annotation.type).removeClass('annotation');
+      delete this._annotatedElements[annotation.id];
+    }
+
+    if (changeType === "create" || changeType === "update") {
+      var node = this.writer.get(annotation.path[0]);
+      var content = this.$('#'+node.id+' .content')[0];
+      this._annotatedElements[annotation.id] = childRange(content, annotation.range[0], annotation.range[1]);
+      $(this._annotatedElements[annotation.id]).addClass(annotation.type).addClass('annotation');
+    }
+  };
+
 
   // Read out current DOM selection and update selection in the model
   // ---------------
@@ -411,12 +413,7 @@ Surface.Prototype = function() {
       n.dispose();
     }, this);
 
-    // unbind document property change listeners
-    this.writer.selection.unbind("selection:changed", this.renderSelection);
-    this.writer.unbind(this.viewAdapter);
-    this.writer.unbind(this.nodeAdapter);
-    this.writer.unbind(this.renderAnnotation);
-    this.writer.unbind(this.onAnnotationChange);
+    this.stopListening();
   };
 
   // This listener function is used to handle "set" and "update" operations
@@ -431,47 +428,9 @@ Surface.Prototype = function() {
     }
   };
 
-
-  this.onAnnotationChange = function(objOp) {
-
-    // Hack: needing this to filter events on "annotations"
-    // TODO: this should be solved in a clean API way
-    var schema = this.writer.__document.schema;
-    var annotation;
-
-    if (objOp.type === "create" || objOp.type === "delete") {
-      annotation = objOp.val;
-    } else if (objOp.type === "set") {
-      annotation = this.writer.get(objOp.path[0]);
-    }
-
-    if (!annotation) return;
-
-    var types = schema.typeChain(annotation.type);
-    if(types.indexOf("annotation") < 0) return;
-
-
-    console.log("Updating annotation: ", objOp);
-
-    if (objOp.type === "create") {
-      this.updateAnnotation(annotation);
-    } else if (objOp.type === "delete") {
-      this.updateAnnotation({
-        id: annotation.id,
-        type: annotation.type,
-        node: annotation.node
-      }, annotation.range);
-    } else if (objOp.type === "set") {
-      if (objOp.path[1] === "range") {
-        this.updateAnnotation(annotation, objOp.original);
-      }
-    } else {
-      console.log("Incremental updates are not supported: only create/delete/set");
-    }
-
-  };
-
 };
+
+_.extend(Surface.Prototype, util.Events.Listener);
 
 
 // Content View Adapter
@@ -498,7 +457,8 @@ ViewAdapter.__prototype__ = function() {
 
   // TODO: 
   this.container = function() {
-    return this._container = this._container || this.surface.$('.nodes')[0];
+    this._container = this._container || this.surface.$('.nodes')[0];
+    return this._container;
   };
 
   // Creates a new node view

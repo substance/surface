@@ -143,8 +143,13 @@ Surface.Prototype = function() {
     if (changeType === "create" || changeType === "update") {
       var node = this.writer.get(annotation.path[0]);
       var content = this.$('#'+node.id+' .content')[0];
-      this._annotatedElements[annotation.id] = childRange(content, annotation.range[0], annotation.range[1]);
-      $(this._annotatedElements[annotation.id]).addClass(annotation.type).addClass('annotation');
+
+      if (content === undefined) {
+        console.error("Ohooh. content element not found!");
+      } else {
+        this._annotatedElements[annotation.id] = childRange(content, annotation.range[0], annotation.range[1]);
+        $(this._annotatedElements[annotation.id]).addClass(annotation.type).addClass('annotation');
+      }
     }
   };
 
@@ -392,7 +397,10 @@ Surface.Prototype = function() {
   this.render = function() {
     this.$el.html(html.tpl('surface'));
 
-    _.each(this.writer.getNodes(), function(n) {
+    var nodes = this.writer.getNodes();
+    console.log("Surface.render()", "this.writer.getNodes()", nodes);
+
+    _.each(nodes, function(n) {
       $(this.nodes[n.id].render().el).appendTo(this.$('.nodes'));
     }, this);
 

@@ -60,8 +60,7 @@ Surface.nodeTypes = {
   "paragraph": nodes.Paragraph,
   "heading": nodes.Heading,
   "image": nodes.Image,
-  "codeblock": nodes.Codeblock,
-  "codeline": nodes.Codeline
+  "codeblock": nodes.Codeblock
 };
 
 
@@ -426,7 +425,6 @@ Surface.Prototype = function() {
       op.diff.apply(adapter);
     }
   };
-
 };
 
 _.extend(Surface.Prototype, util.Events.Listener);

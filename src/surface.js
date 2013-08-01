@@ -56,7 +56,7 @@ var Surface = function(writer) {
 var nodes = require("substance-article/nodes");
 
 Surface.nodeTypes = {
-  "node": nodes.Node,
+  "constructor": nodes.Constructor,
   "paragraph": nodes.Paragraph,
   "heading": nodes.Heading,
   "image": nodes.Image,
@@ -70,7 +70,6 @@ Surface.Prototype = function() {
   // ---------------
 
   function childRange(el, start, end) {
-    // debugger;
     return Array.prototype.slice.call(el.children, start, end);
   }
 

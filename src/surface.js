@@ -17,7 +17,6 @@ var Surface = function(writer) {
   // Incoming events
   this.writer = writer;
 
-
   // Bind handlers to establish co-transformations on html elements
   // according to model properties
   this.viewAdapter = new Surface.ViewAdapter(this);
@@ -47,6 +46,7 @@ var Surface = function(writer) {
     that.writer.selection.selectNode(nodeId);
     return false;
   });
+
 };
 
 // Registered node types
@@ -56,7 +56,7 @@ var Surface = function(writer) {
 var nodes = require("substance-article/nodes");
 
 Surface.nodeTypes = {
-  "node": nodes.Node,
+  "constructor": nodes.Constructor,
   "paragraph": nodes.Paragraph,
   "heading": nodes.Heading,
   "image": nodes.Image,
@@ -70,32 +70,21 @@ Surface.Prototype = function() {
   // ---------------
 
   function childRange(el, start, end) {
-    // debugger;
     return Array.prototype.slice.call(el.children, start, end);
   }
 
   this.insertNode = function(type, options) {
     this.writer.insertNode(type, options);
-    this.hideNodeInserter();
     return false;
   };
 
-  this.toggleNodeInserter = function() {
-    var $nodeToggles = this.$('.node-toggles');
+  // Really?
+  // ---------------
+  //  
 
-    // get top and left pos of the cursor
-    var cursorScreenPos = this.getCursorPos();
-
-    $nodeToggles.css({
-      top: cursorScreenPos.top,
-      left: cursorScreenPos.left+64
-    });
-
-    $nodeToggles.fadeIn();
-  };
-
-  this.hideNodeInserter = function() {
-    this.$('.node-toggles').hide();
+  this.insertImage = function(type, data) {
+    this.writer.insertImage(data);
+    return false;
   };
 
   // Get Cursor position, relative to .surface .nodes
@@ -270,25 +259,10 @@ Surface.Prototype = function() {
   this.renderSelection = function() {
 
     if (this.writer.selection.isNull()) return;
-    this.hideNodeInserter();
-
-    var sel = this.writer.selection.range();
 
     // Hide native selection in favor of our custom one
     var wSel = window.getSelection();
     if (wSel.type !== "None") wSel.collapseToStart();
-
-    var startNode = this.$('.content-node')[sel.start[0]];
-
-    // Special case (position cursor after )
-    var startChars = $(startNode).find('.content')[0].children;
-
-    var startChar;
-    if (sel.start[1] >= startChars.length) {
-      startChar = _.last(startChars);
-    } else {
-      startChar = startChars[sel.start[1]];
-    }
 
     this.positionCursor();
     this.renderSelectionRange();
@@ -310,7 +284,7 @@ Surface.Prototype = function() {
     for (var i = 0; i < ranges.length; i++) {
       var range = ranges[i];
       var content = $('#'+range.node.id+' .content')[0];
-      var chars = childRange(content, sel.start[1]);
+      var chars = childRange(content, range.start, range.end);
       $(chars).addClass('selected');
     };
   };
@@ -327,7 +301,9 @@ Surface.Prototype = function() {
     $(this.cursor).remove();
 
     var node = this.$('.content-node')[cursor.nodePos];
-    var chars = $(node).find('.content')[0].children;
+    var content = $(node).find('.content')[0];
+    var chars = content.children;
+
     var ch;
     var pos;
 
@@ -356,7 +332,6 @@ Surface.Prototype = function() {
     $(this.cursor).css({
       top: pos.top,
       left: pos.left
-      // height: '20px' -> getHeightBasedOnContext() -> 100% for image, line-height for text and heading and so on.
     });
 
   };
@@ -389,6 +364,9 @@ Surface.Prototype = function() {
     }, this);
 
     this.renderAnnotations();
+
+    // TODO: fixme
+    this.$('input.image-files').hide();
 
     return this;
   };

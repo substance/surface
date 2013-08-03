@@ -36,8 +36,13 @@ var Surface = function(writer) {
 
   this.$el.addClass('surface');
 
+  // TODO: this interfers with the native dom selection
+  // E.g. when double clicking to select a word triple clicking to select the whole line/paragraph
+  
   this.$el.mouseup(function(e) {
-    that.updateSelection(e);
+    // _.delay(function() {
+      that.updateSelection(e);  
+    // }, 500);
   });
 
   this.$el.delegate('img', 'click', function(e) {

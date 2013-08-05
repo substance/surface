@@ -426,7 +426,7 @@ ViewAdapter.__prototype__ = function() {
   //
 
   this.createNodeView = function(node) {
-    var NodeView = this.nodeTypes[node.type].View;
+    var NodeView = this.surface.nodeTypes[node.type].View;
     if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
     return new NodeView(node);
   };

@@ -16,15 +16,15 @@
   },
   "dependencies": {
     "underscore": "1.5.x",
-    "substance-util": "git+https://github.com/substance/util.git#0.2.1",
-    "substance-application": "git+https://github.com/substance/application.git#0.1.1",
-    "substance-operator": "git+https://github.com/substance/operator.git#0.2.1"
+    "substance-util": "git+https://github.com/substance/util.git#master",
+    "substance-application": "git+https://github.com/substance/application.git#master",
+    "substance-operator": "git+https://github.com/substance/operator.git#master"
   },
   "devDependencies": {
-    "substance-test": "git+https://github.com/substance/test.git#0.2.1",
-    "substance-document": "git+https://github.com/substance/document.git#0.5.1"
+    "substance-test": "git+https://github.com/substance/test.git#master",
+    "substance-document": "git+https://github.com/substance/document.git#master"
   },
-  "version": "0.3.1",
+  "version": "0.3.0",
   "engines": {
     "node": ">=0.8.x",
     "npm": ">=1.1.x"

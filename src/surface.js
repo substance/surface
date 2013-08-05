@@ -17,6 +17,9 @@ var Surface = function(writer) {
   // Incoming events
   this.writer = writer;
 
+  // Pull out the registered nodetypes on the written article
+  this.nodeTypes = writer.__document.nodeTypes;
+
   // Bind handlers to establish co-transformations on html elements
   // according to model properties
   this.viewAdapter = new Surface.ViewAdapter(this);
@@ -53,21 +56,6 @@ var Surface = function(writer) {
   });
 
 };
-
-// Registered node types
-// ---------------
-
-
-var nodes = require("substance-article/nodes");
-
-Surface.nodeTypes = {
-  "constructor": nodes.Constructor,
-  "paragraph": nodes.Paragraph,
-  "heading": nodes.Heading,
-  "image": nodes.Image,
-  "codeblock": nodes.Codeblock
-};
-
 
 Surface.Prototype = function() {
 
@@ -349,7 +337,7 @@ Surface.Prototype = function() {
   this.build = function() {
     this.nodes = {};
     _.each(this.writer.getNodes(), function(node) {
-      var NodeView = Surface.nodeTypes[node.type].View;
+      var NodeView = this.nodeTypes[node.type].View;
       this.nodes[node.id] = new NodeView(node);
     }, this);
   };
@@ -438,7 +426,7 @@ ViewAdapter.__prototype__ = function() {
   //
 
   this.createNodeView = function(node) {
-    var NodeView = Surface.nodeTypes[node.type].View;
+    var NodeView = this.nodeTypes[node.type].View;
     if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
     return new NodeView(node);
   };

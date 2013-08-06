@@ -62,6 +62,7 @@
 
 
 /* Annotations
+// TODO: this should be moved outside the surface
 -------------------------------------------------------------------------------*/
 
 .content-node .idea { background-color: rgba(102, 182, 32, 0.3); }

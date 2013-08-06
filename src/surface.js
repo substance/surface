@@ -67,6 +67,19 @@ var Surface = function(writer, options) {
       return false;
     });
   }
+
+  this.$el.delegate('.annotation', 'mouseover', function(e) {
+    var annotationId = $(e.currentTarget).attr('data-id');
+    var $spans = $(that._annotatedElements[annotationId]);
+
+    $spans.addClass('active');
+    return false;
+  });
+
+  // TODO: Maybe this can be optimized
+  this.$el.delegate('.annotation', 'mouseout', function(e) {
+    that.$('.annotation.active').removeClass('active');
+  });
 };
 
 Surface.Prototype = function() {
@@ -142,7 +155,11 @@ Surface.Prototype = function() {
         console.error("Ohooh. content element not found!");
       } else {
         this._annotatedElements[annotation.id] = childRange(content, annotation.range[0], annotation.range[1]);
-        $(this._annotatedElements[annotation.id]).addClass(annotation.type).addClass('annotation');
+        var $spans = $(this._annotatedElements[annotation.id]);
+        $spans.attr({
+          "data-id": annotation.id
+        });
+        $spans.addClass(annotation.type).addClass('annotation');
       }
     }
   };

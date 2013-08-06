@@ -9,7 +9,12 @@ var html = util.html;
 // Substance.Surface
 // ==========================================================================
 
-var Surface = function(writer) {
+var Surface = function(writer, options) {
+  
+  options = _.extend({
+    editable: true
+  }, options);
+
   View.call(this);
 
   var that = this;
@@ -42,22 +47,26 @@ var Surface = function(writer) {
 
   this.$el.addClass('surface');
 
-  // TODO: this interfers with the native dom selection
-  // E.g. when double clicking to select a word triple clicking to select the whole line/paragraph
-  
-  this.$el.mouseup(function(e) {
-    // _.delay(function() {
-      that.updateSelection(e);  
-    // }, 500);
-  });
+  // The editable surface responds to selection changes
 
-  this.$el.delegate('img', 'click', function(e) {
-    var $el = $(e.currentTarget).parent().parent().parent();
-    var nodeId = $el.attr('id');
-    that.writer.selection.selectNode(nodeId);
-    return false;
-  });
+  if (options.editable) {
 
+    // TODO: this interfers with the native dom selection
+    // E.g. when double clicking to select a word triple clicking to select the whole line/paragraph
+
+    this.$el.mouseup(function(e) {
+      // _.delay(function() {
+        that.updateSelection(e);  
+      // }, 500);
+    });
+
+    this.$el.delegate('img', 'click', function(e) {
+      var $el = $(e.currentTarget).parent().parent().parent();
+      var nodeId = $el.attr('id');
+      that.writer.selection.selectNode(nodeId);
+      return false;
+    });
+  }
 };
 
 Surface.Prototype = function() {

@@ -381,6 +381,10 @@ Surface.Prototype = function() {
   };
 
   this.onCreateNode = function(node) {
+    if (this.nodeTypes[node.type] === undefined) {
+      // a node type which is not rendered in the surface... ignoring it.
+      return;
+    }
     var NodeView = this.nodeTypes[node.type].View;
     if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
     this.nodes[node.id] = new NodeView(node);

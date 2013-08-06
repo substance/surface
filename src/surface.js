@@ -22,15 +22,18 @@ var Surface = function(writer) {
 
   // Bind handlers to establish co-transformations on html elements
   // according to model properties
-  this.viewAdapter = new Surface.ViewAdapter(this);
+  this._viewAdapter = new Surface.ViewAdapter(this);
 
   // storing DOM selections for incremental updates
   this._annotatedElements = {};
 
-  this.listenTo(this.writer, "selection:changed", this.renderSelection);
-  this.listenTo(this.writer, "view:changed", this.viewAdapter);
-  this.listenTo(this.writer, "textnode:changed", this.onNodeContentUpdate);
-  this.listenTo(this.writer, "annotation:changed", this.updateAnnotation);
+  this.listenTo(this.writer.selection,  "selection:changed", this.renderSelection);
+  this.listenTo(this.writer.__document, "node:created", this.onCreateNode);
+  this.listenTo(this.writer.__document, "node:deleted", this.onDeleteNode);
+  this.listenTo(this.writer.__document, "property:updated", this.onUpdateView);
+  this.listenTo(this.writer.__document, "property:set", this.onSetNodeContent);
+  this.listenTo(this.writer.__document, "property:updated", this.onUpdateNodeContent);
+  this.listenTo(this.writer.annotator,  "annotation:changed", this.updateAnnotation);
 
   this.cursor = $('<div class="cursor"></div>')[0];
 
@@ -279,7 +282,7 @@ Surface.Prototype = function() {
       var content = $('#'+range.node.id+' .content')[0];
       var chars = childRange(content, range.start, range.end);
       $(chars).addClass('selected');
-    };
+    }
   };
 
   // Position cursor and selection
@@ -377,16 +380,32 @@ Surface.Prototype = function() {
     this.stopListening();
   };
 
+  this.onCreateNode = function(node) {
+    var NodeView = this.nodeTypes[node.type].View;
+    if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
+    this.nodes[node.id] = new NodeView(node);
+  };
+
+  this.onDeleteNode = function(nodeId) {
+    if (this.nodes[nodeId]) this.nodes[nodeId].dispose();
+    delete this.nodes[nodeId];
+  };
+
   // This listener function is used to handle "set" and "update" operations
-  this.onNodeContentUpdate = function(op) {
-    if (op.type === "set") {
-      // TODO: delegate to surface
-      this.nodes[op.path[0]].render();
-    } else if (op.type === "update") {
-      // Note: op.diff should be a text operation
-      var adapter = new Surface.TextNodeAdapter(this.nodes[op.path[0]], this);
-      op.diff.apply(adapter);
-    }
+  this.onSetNodeContent = function(path) {
+    if (path.length !== 2 || path[1] !== "content") return;
+    this.nodes[path[0]].render();
+  };
+
+  this.onUpdateNodeContent = function(path, diff) {
+    if (path.length !== 2 || path[1] !== "content") return;
+    var adapter = new Surface.TextNodeAdapter(this.nodes[path[0]], this);
+    diff.apply(adapter);
+  };
+
+  this.onUpdateView = function(path, diff) {
+    if (path.length !== 2 || path[0] !== "content" || path[1] !== "nodes") return;
+    diff.apply(this._viewAdapter);
   };
 };
 
@@ -415,7 +434,6 @@ ViewAdapter.__prototype__ = function() {
     }
   }
 
-  // TODO: 
   this.container = function() {
     this._container = this._container || this.surface.$('.nodes')[0];
     return this._container;
@@ -425,37 +443,19 @@ ViewAdapter.__prototype__ = function() {
   // --------
   //
 
-  this.createNodeView = function(node) {
-    var NodeView = this.surface.nodeTypes[node.type].View;
-    if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
-    return new NodeView(node);
-  };
-
-  this.insert = function(pos, val) {
-    var writer = this.surface.writer;
+  this.insert = function(pos, nodeId) {
     var nodes = this.surface.nodes;
-    var id = val;
-
-    var nodeView = this.createNodeView(writer.get(id));
-    var el = nodeView.render().el;
-    nodes[id] = nodeView;
-
+    var el = nodes[nodeId].render().el;
     insertOrAppend(this.container(), pos, el);
   };
 
-  this.delete = function(pos, nodeId) {
-    var nodes = this.surface.nodes;
+  this.delete = function(pos) {
     var childs = this.container().childNodes;
-
     this.container().removeChild(childs[pos]);
-    var view = nodes[nodeId];
-    view.dispose();
-    delete nodes[nodeId];
   };
 
   this.move = function(val, oldPos, newPos) {
     var childs = this.container().childNodes;
-
     var el = childs[oldPos];
     this.container().removeChild(el);
     insertOrAppend(this.container(), newPos, el);

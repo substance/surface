@@ -49,7 +49,7 @@ var Surface = function(writer, options) {
   this.build();
 
   this.$el.addClass('surface');
-  this.$el.addClass(options.view);
+  this.$el.addClass(this.writer.view);
 
   // The editable surface responds to selection changes
 
@@ -156,7 +156,8 @@ Surface.Prototype = function() {
       var content = this.$('#'+node.id+' .content')[0];
 
       if (content === undefined) {
-        console.error("Ohooh. content element not found!");
+        // Actually, this is valid for read-only types
+        console.log("Ohooh. content element not found!");
       } else {
         this._annotatedElements[annotation.id] = childRange(content, annotation.range[0], annotation.range[1]);
         var $spans = $(this._annotatedElements[annotation.id]);

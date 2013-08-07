@@ -12,12 +12,15 @@ var html = util.html;
 var Surface = function(writer, options) {
   
   options = _.extend({
-    editable: true
+    editable: true,
+    view: "content"
   }, options);
 
   View.call(this);
 
   var that = this;
+
+  this.options = options;
 
   // Incoming events
   this.writer = writer;
@@ -46,6 +49,7 @@ var Surface = function(writer, options) {
   this.build();
 
   this.$el.addClass('surface');
+  this.$el.addClass(options.view);
 
   // The editable surface responds to selection changes
 

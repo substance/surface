@@ -41,6 +41,7 @@ var Surface = function(writer, options) {
   this.listenTo(this.writer.__document, "property:updated", this.onUpdateView);
   this.listenTo(this.writer.__document, "property:set", this.onSetNodeContent);
   this.listenTo(this.writer.__document, "property:updated", this.onUpdateNodeContent);
+  this.listenTo(this.writer.__document, "graph:reset", this.reset);
   this.listenTo(this.writer.annotator,  "annotation:changed", this.updateAnnotation);
 
   this.cursor = $('<div class="cursor"></div>')[0];
@@ -398,6 +399,16 @@ Surface.Prototype = function() {
     return this;
   };
 
+  this.reset = function() {
+    _.each(this.nodes, function(nodeView) {
+      nodeView.dispose();
+    });
+    this._annotatedElements = {};
+
+    this.build();
+    this.render();
+  };
+
   // Cleanup view before removing it
   // --------
   //
@@ -422,7 +433,9 @@ Surface.Prototype = function() {
   };
 
   this.onDeleteNode = function(nodeId) {
-    if (this.nodes[nodeId]) this.nodes[nodeId].dispose();
+    if (this.nodes[nodeId]) {
+      this.nodes[nodeId].dispose();
+    }
     delete this.nodes[nodeId];
   };
 
@@ -454,7 +467,6 @@ _.extend(Surface.Prototype, util.Events.Listener);
 
 var ViewAdapter = function(surface) {
   this.surface = surface;
-  // this.container = surface.$('.nodes')[0];
 };
 
 ViewAdapter.__prototype__ = function() {
@@ -470,8 +482,7 @@ ViewAdapter.__prototype__ = function() {
   }
 
   this.container = function() {
-    this._container = this._container || this.surface.$('.nodes')[0];
-    return this._container;
+    return this.surface.$('.nodes')[0];
   };
 
   // Creates a new node view

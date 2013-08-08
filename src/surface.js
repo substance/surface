@@ -76,13 +76,12 @@ var Surface = function(writer, options) {
   this.$el.delegate('.annotation', 'mouseover', function(e) {
     var annotationId = $(e.currentTarget).attr('data-id');
     var $spans = $(that._annotatedElements[annotationId]);
-
     $spans.addClass('active');
     return false;
   });
 
   // TODO: Maybe this can be optimized
-  this.$el.delegate('.annotation', 'mouseout', function(e) {
+  this.$el.delegate('.annotation', 'mouseout', function() {
     that.$('.annotation.active').removeClass('active');
   });
 };
@@ -143,31 +142,51 @@ Surface.Prototype = function() {
   // --------
   //
 
+  var removeAnnotation = function(elements, type) {
+    var $elements = $(elements);
+    $elements.removeClass(type).removeClass('annotation');
+    $elements.removeAttr("data-id");
+  };
+
+  var addAnnotation = function(elements, id, type) {
+    var $elements = $(elements);
+    $elements.attr({ "data-id": id });
+    $elements.addClass(type).addClass('annotation');
+  };
+
   this.updateAnnotation = function(changeType, annotation) {
-    //debugger;
+
+    var nodeId = annotation.path[0];
+    var content = this.el.querySelector('#'+nodeId+' .content');
 
     // on delete and update we remove the classes
-    if (changeType === "delete" || changeType === "update") {
-      $(this._annotatedElements[annotation.id]).removeClass(annotation.type).removeClass('annotation');
+    if (changeType === "delete") {
+      removeAnnotation(this._annotatedElements[annotation.id], annotation.type);
       delete this._annotatedElements[annotation.id];
     }
 
-    if (changeType === "create" || changeType === "update") {
-      var node = this.writer.get(annotation.path[0]);
+    else if (changeType === "create") {
+      // TODO: when does this happen and is it ok?
+      if (content === undefined) return;
 
-      if (node !== undefined) {
-        var content = this.$('#'+node.id+' .content')[0];
+      var elements = childRange(content, annotation.range[0], annotation.range[1]);
+      this._annotatedElements[annotation.id] = elements;
+      addAnnotation(elements, annotation.id, annotation.type);
+    }
 
-        // TODO: add comment about why it might be ok, that there is no content
-        if (content !== undefined) {
-          this._annotatedElements[annotation.id] = childRange(content, annotation.range[0], annotation.range[1]);
-          var $spans = $(this._annotatedElements[annotation.id]);
-          $spans.attr({
-            "data-id": annotation.id
-          });
-          $spans.addClass(annotation.type).addClass('annotation');
-        }
-      }
+    else if (changeType === "update") {
+      // TODO: when does this happen and is it ok?
+      if (content === undefined) return;
+
+      var newElements = childRange(content, annotation.range[0], annotation.range[1]);
+      var oldElements = this._annotatedElements[annotation.id];
+
+      var toAdd = _.difference(newElements, oldElements);
+      var toRemove = _.difference(oldElements, newElements);
+
+      this._annotatedElements[annotation.id] = newElements;
+      addAnnotation(toAdd, annotation.id, annotation.type);
+      removeAnnotation(toRemove, annotation.type);
     }
   };
 

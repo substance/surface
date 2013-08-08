@@ -81,8 +81,11 @@ var Surface = function(writer, options) {
   });
 
   // TODO: Maybe this can be optimized
-  this.$el.delegate('.annotation', 'mouseout', function() {
-    that.$('.annotation.active').removeClass('active');
+  this.$el.delegate('.annotation', 'mouseout', function(e) {
+    var annotationId = $(e.currentTarget).attr('data-id');
+    var $spans = $(that._annotatedElements[annotationId]);
+    $spans.removeClass('active');
+    return false;
   });
 };
 

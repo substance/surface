@@ -10,7 +10,7 @@ var html = util.html;
 // ==========================================================================
 
 var Surface = function(writer, options) {
-  
+
   options = _.extend({
     editable: true,
     view: "content"
@@ -61,7 +61,7 @@ var Surface = function(writer, options) {
 
     this.$el.mouseup(function(e) {
       // _.delay(function() {
-        that.updateSelection(e);  
+        that.updateSelection(e);
       // }, 500);
     });
 
@@ -103,7 +103,7 @@ Surface.Prototype = function() {
 
   // Really?
   // ---------------
-  //  
+  //
 
   this.insertImage = function(type, data) {
     this.writer.insertImage(data);
@@ -116,7 +116,7 @@ Surface.Prototype = function() {
 
   this.getCursorPos = function() {
     var relativePos = this.$('.cursor').position();
-    
+
     var cursor = this.writer.selection.cursor;
     var node = cursor.node;
     var nodeScreenPos = this.$('#'+node.id).position();
@@ -154,18 +154,19 @@ Surface.Prototype = function() {
 
     if (changeType === "create" || changeType === "update") {
       var node = this.writer.get(annotation.path[0]);
-      var content = this.$('#'+node.id+' .content')[0];
 
-      if (content === undefined) {
-        // Actually, this is valid for read-only types
-        console.log("Ohooh. content element not found!");
-      } else {
-        this._annotatedElements[annotation.id] = childRange(content, annotation.range[0], annotation.range[1]);
-        var $spans = $(this._annotatedElements[annotation.id]);
-        $spans.attr({
-          "data-id": annotation.id
-        });
-        $spans.addClass(annotation.type).addClass('annotation');
+      if (node !== undefined) {
+        var content = this.$('#'+node.id+' .content')[0];
+
+        // TODO: add comment about why it might be ok, that there is no content
+        if (content !== undefined) {
+          this._annotatedElements[annotation.id] = childRange(content, annotation.range[0], annotation.range[1]);
+          var $spans = $(this._annotatedElements[annotation.id]);
+          $spans.attr({
+            "data-id": annotation.id
+          });
+          $spans.addClass(annotation.type).addClass('annotation');
+        }
       }
     }
   };
@@ -254,7 +255,7 @@ Surface.Prototype = function() {
 
       var chOffset = indexOf.call(content.childNodes, ch);
       chOffset += range.endOffset; // if you clicked on the right-hand area of the span
-      
+
       result["end"] = [nodeIndex, chOffset];
     } else if (range.endContainer.nodeType === Node.ELEMENT_NODE) {
       // TODO: this should go into the image node implementation!

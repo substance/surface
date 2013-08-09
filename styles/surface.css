@@ -2,7 +2,7 @@
 -------------------------------------------------------------------------------*/
 
 #container .surface {
-
+  position: relative;
 }
 
 /* Very important dude */
@@ -24,9 +24,9 @@
 /* Cursor
 -------------------------------------------------------------------------------*/
 
-.content-node .cursor {
+#container .surface .cursor {
   position: absolute;
-  top: 22px;
+  top: 0px;
   height: 20px;
   width: 2px;
   background: #00ACEA;
@@ -37,7 +37,7 @@
   thanks patch!
 */
 
-.content-node .cursor {
+#container .surface .cursor {
   -webkit-animation: blink 1.2s step-end infinite;
      -moz-animation: blink 1.2s step-end infinite;
       -ms-animation: blink 1.2s step-end infinite;
@@ -50,16 +50,6 @@
     @-ms-keyframes blink {0% {background: #00ACEA} 50% {background: transparent;}}
      @-o-keyframes blink {0% {background: #00ACEA} 50% {background: transparent;}}
         @keyframes blink {0% {background: #00ACEA} 50% {background: transparent;}}
-
-.content-node.heading .cursor {
-  height: 30px;
-}
-
-.content-node.image .cursor {
-  height: 100%;
-}
-
-
 
 /* Annotations
 // TODO: this should be moved outside the surface

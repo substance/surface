@@ -44,8 +44,6 @@ var Surface = function(writer, options) {
   this.listenTo(this.writer.__document, "graph:reset", this.reset);
   this.listenTo(this.writer.annotator,  "annotation:changed", this.updateAnnotation);
 
-  this.cursor = $('<div class="cursor"></div>')[0];
-
   // Start building the initial stuff
   this.build();
 
@@ -60,9 +58,7 @@ var Surface = function(writer, options) {
     // E.g. when double clicking to select a word triple clicking to select the whole line/paragraph
 
     this.$el.mouseup(function(e) {
-      // _.delay(function() {
-        that.updateSelection(e);
-      // }, 500);
+      that.updateSelection(e);
     });
 
     this.$el.delegate('img', 'click', function(e) {
@@ -73,6 +69,7 @@ var Surface = function(writer, options) {
     });
   }
 
+/*
   this.$el.delegate('.annotation', 'mouseover', function(e) {
     var annotationId = $(e.currentTarget).attr('data-id');
     var $spans = $(that._annotatedElements[annotationId]);
@@ -87,16 +84,13 @@ var Surface = function(writer, options) {
     $spans.removeClass('active');
     return false;
   });
+*/
 };
 
 Surface.Prototype = function() {
 
   // Private helpers
   // ---------------
-
-  function childRange(el, start, end) {
-    return Array.prototype.slice.call(el.children, start, end);
-  }
 
   this.insertNode = function(type, options) {
     this.writer.insertNode(type, options);
@@ -135,10 +129,12 @@ Surface.Prototype = function() {
   // TODO: find a way to render a delta, instead of everything
 
   this.renderAnnotations = function() {
+    /*
     var annotations = this.writer.getAnnotations();
     _.each(annotations, function(a) {
       this.updateAnnotation("update", a);
     }, this);
+    */
   };
 
   // Updates a given annotation
@@ -146,19 +142,23 @@ Surface.Prototype = function() {
   //
 
   var removeAnnotation = function(elements, type) {
+    /*
     var $elements = $(elements);
     $elements.removeClass(type).removeClass('annotation');
     $elements.removeAttr("data-id");
+    */
   };
 
   var addAnnotation = function(elements, id, type) {
+    /*
     var $elements = $(elements);
     $elements.attr({ "data-id": id });
     $elements.addClass(type).addClass('annotation');
+    */
   };
 
   this.updateAnnotation = function(changeType, annotation) {
-
+    /*
     var nodeId = annotation.path[0];
     var content = this.el.querySelector('#'+nodeId+' .content');
 
@@ -191,6 +191,21 @@ Surface.Prototype = function() {
       addAnnotation(toAdd, annotation.id, annotation.type);
       removeAnnotation(toRemove, annotation.type);
     }
+    */
+  };
+
+  var _findNodeElement = function(node) {
+    var current = node;
+
+    while(current !== undefined) {
+      if ($(current).is("div.content-node")) {
+        return current;
+      }
+
+      current = current.parentElement;
+    }
+
+    return null;
   };
 
 
@@ -198,109 +213,38 @@ Surface.Prototype = function() {
   // ---------------
 
   this.updateSelection = function() {
-    var indexOf = Array.prototype.indexOf;
-    var sel = window.getSelection();
+    var wSel = window.getSelection();
 
-    if (sel.type === "None") return null;
-
-    var range = sel.getRangeAt(0);
-    var result = {};
-
-    var content, nodeId, nodeIndex;
-
-    // CHECK START CONTAINER/OFFSET STUFF
-    // ----------------
-
-    // div.content-node.text#text_25
-    //   div.content
-    //     span|br
-    //       TEXT_NODE  <-- trigger
-    //
-    // desired data
-    // start: [nodeindex, characterOffset]
-
-    // debugger;
-
-    if (range.startContainer.nodeType === Node.TEXT_NODE) {
-
-      // Extract content-node
-      //
-
-      content = $(range.startContainer).parent().parent()[0];
-      nodeId = $(content).parent().attr('id');
-
-      nodeIndex = this.writer.getPosition(nodeId);
-
-      // starting character of selection (span or br node)
-      var startChar = range.startContainer.parentElement;
-
-      var charOffset = indexOf.call(content.childNodes, startChar);
-      charOffset += range.startOffset; // if you clicked on the right-hand area of the span
-
-      result["start"] = [nodeIndex, charOffset];
-    } else if (range.startContainer.nodeType === Node.ELEMENT_NODE) {
-      // TODO: this should go into the image node!
-      content = $(range.startContainer).parent();
-      nodeId = $(content).parent().attr('id');
-      nodeIndex = this.writer.getPosition(nodeId);
-      result["start"] = [nodeIndex, 0];
+    var wRange = wSel.getRangeAt(0);
+    var wStartPos = [wSel.anchorNode, wSel.anchorOffset];
+    var wEndPos;
+    if (wRange.startContainer === wSel.anchorNode && wRange.startOffset === wSel.anchorOffset) {
+      wEndPos = [wRange.endContainer, wRange.endOffset];
     } else {
-
-      // empty container
-      //
-      // div.content-node.text#text_25
-      //   div.content     <--- trigger
-
-      content = range.startContainer;
-      nodeId = $(content).parent().attr('id');
-      nodeIndex = this.writer.getPosition(nodeId);
-
-      result["start"] = [nodeIndex, 0];
+      wEndPos = [wRange.startContainer, wRange.startOffset];
     }
 
+    var startNode = _findNodeElement(wStartPos[0]);
+    var endNode = _findNodeElement(wEndPos[0]);
 
-    // CHECK END CONTAINER/OFFSET STUFF
-    // ----------------
-
-    if (range.isCollapsed) {
-      result["end"] = result["start"];
-
-    } else if (range.endContainer.nodeType === Node.TEXT_NODE) {
-      // Extract content-node
-      //
-      content = $(range.endContainer).parent().parent()[0];
-      nodeId = $(content).parent().attr('id');
-      nodeIndex = this.writer.getPosition(nodeId);
-
-      // starting character of selection (span or br node)
-      var ch = range.endContainer.parentElement;
-
-      var chOffset = indexOf.call(content.childNodes, ch);
-      chOffset += range.endOffset; // if you clicked on the right-hand area of the span
-
-      result["end"] = [nodeIndex, chOffset];
-    } else if (range.endContainer.nodeType === Node.ELEMENT_NODE) {
-      // TODO: this should go into the image node implementation!
-      content = $(range.endContainer).parent();
-      nodeId = $(content).parent().attr('id');
-      nodeIndex = this.writer.getPosition(nodeId);
-      result["end"] = [nodeIndex, 1];
-    } else {
-
-      // empty container
-      //
-      // div.content-node.text#text_25
-      //   div.content     <--- trigger
-
-      content = range.endContainer;
-      nodeId = $(content).parent().attr('id');
-      nodeIndex = this.writer.getPosition(nodeId);
-
-      result["end"] = [nodeIndex, 0];
+    if (!startNode) {
+      console.log("TODO: FIXME.");
+      return;
     }
 
-    this.writer.selection.set(result);
-    return result;
+    var startNodeId = startNode.getAttribute("id");
+    var startNodePos = this.writer.getPosition(startNodeId);
+    var startCharPos = this.nodes[startNodeId].getCharPosition(wStartPos[0], wStartPos[1]);
+
+    var endNodeId = endNode.getAttribute("id");
+    var endNodePos = this.writer.getPosition(endNodeId);
+    var endCharPos = this.nodes[endNodeId].getCharPosition(wEndPos[0], wEndPos[1]);
+
+    var startPos = [startNodePos, startCharPos];
+    var endPos = [endNodePos, endCharPos];
+    console.log("startPos", startPos, "endPos", endPos);
+    this.writer.selection.set({start: startPos, end: endPos});
+
   };
 
   // Renders the current selection
@@ -308,83 +252,55 @@ Surface.Prototype = function() {
   //
 
   this.renderSelection = function() {
+    console.log("renderSelection");
 
     if (this.writer.selection.isNull()) return;
 
     // Hide native selection in favor of our custom one
     var wSel = window.getSelection();
-    if (wSel.type !== "None") wSel.collapseToStart();
 
-    this.positionCursor();
-    this.renderSelectionRange();
-  };
+    var range = this.writer.selection.range();
+    var startNode = this.writer.getNodeFromPosition(range.start[0]);
+    var startNodeView = this.nodes[startNode.id];
+    var wStartPos = startNodeView.getDOMPosition(range.start[1]);
 
-  this.renderSelectionRange = function() {
-    var sel = this.writer.selection;
+    var endNode = this.writer.getNodeFromPosition(range.end[0]);
+    var endNodeView = this.nodes[endNode.id];
+    var wEndPos = endNodeView.getDOMPosition(range.end[1]);
 
-    if (sel.isNull()) {
-      console.log('selection is null! WHY?!');
-      return;
-    }
+    var wRange = document.createRange();
+    wRange.setStart(wStartPos[0], wStartPos[1]);
+    wRange.setEnd(wEndPos[0], wEndPos[1]);
+    wSel.removeAllRanges();
+    wSel.addRange(wRange);
 
-    // Do nothing if selection is collapsed
-    this.$('.selected').removeClass('selected');
-    if (sel.isCollapsed()) return;
-
-    var ranges = sel.getRanges();
-    for (var i = 0; i < ranges.length; i++) {
-      var range = ranges[i];
-      var content = $('#'+range.node.id+' .content')[0];
-      var chars = childRange(content, range.start, range.end);
-      $(chars).addClass('selected');
+    if (this.writer.selection.isReverse()) {
+      this.positionCursor(wSel, wStartPos);
+    } else {
+      this.positionCursor(wSel, wEndPos);
     }
   };
 
-  // Position cursor and selection
+  // Position cursor
   // --------
   //
 
-  this.positionCursor = function() {
-    var cursor = this.writer.selection.cursor;
-    if (!cursor.isValid()) return;
+  this.positionCursor = function(wSel, wPos) {
 
-    // Remove cursor
-    $(this.cursor).remove();
+    var range = document.createRange();
+    range.setStart(wPos[0], wPos[1]);
+    var rect = range.getClientRects()[0];
 
-    var node = this.$('.content-node')[cursor.nodePos];
-    var content = $(node).find('.content')[0];
-    var chars = content.children;
+    console.log("positionCursor: rect", rect);
 
-    var ch;
-    var pos;
+    var surfaceOffset = this.el.getClientRects()[0];
 
-    if (cursor.charPos >= chars.length) {
-      // Special case: Cursor is after last element
-      // -> draw cursor after the last element
-      ch = _.last(chars);
-
-      if (ch) {
-        pos = $(ch).position();
-        pos.left += $(ch).width();
-      } else {
-        pos = {
-          left: 0,
-          top: 22
-        };
-      }
-    } else {
-      ch = chars[cursor.charPos];
-      pos = $(ch).position();
-    }
-
-    $(node).append(this.cursor);
-
-    // TODO: dynamically
-    $(this.cursor).css({
-      top: pos.top,
-      left: pos.left
-    });
-
+    var cursorPos = {
+      top: rect.top-surfaceOffset.top,
+      left:rect.left-surfaceOffset.left,
+      height: rect.height
+    };
+    this.$cursor.css(cursorPos);
   };
 
 
@@ -407,6 +323,7 @@ Surface.Prototype = function() {
   this.render = function() {
     this.$el.html(html.tpl('surface'));
 
+
     var nodes = this.writer.getNodes();
     console.log("Surface.render()", "this.writer.getNodes()", nodes);
 
@@ -414,10 +331,12 @@ Surface.Prototype = function() {
       $(this.nodes[n.id].render().el).appendTo(this.$('.nodes'));
     }, this);
 
-    this.renderAnnotations();
+    // this.renderAnnotations();
 
     // TODO: fixme
     this.$('input.image-files').hide();
+    this.$cursor = this.$('.cursor');
+    // this.$cursor.hide();
 
     return this;
   };

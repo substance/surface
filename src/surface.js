@@ -32,9 +32,6 @@ var Surface = function(writer, options) {
   // according to model properties
   this._viewAdapter = new Surface.ViewAdapter(this);
 
-  // storing DOM selections for incremental updates
-  this._annotatedElements = {};
-
   this.listenTo(this.writer.selection,  "selection:changed", this.renderSelection);
   this.listenTo(this.writer.__document, "node:created", this.onCreateNode);
   this.listenTo(this.writer.__document, "node:deleted", this.onDeleteNode);
@@ -69,130 +66,12 @@ var Surface = function(writer, options) {
     });
   }
 
-/*
-  this.$el.delegate('.annotation', 'mouseover', function(e) {
-    var annotationId = $(e.currentTarget).attr('data-id');
-    var $spans = $(that._annotatedElements[annotationId]);
-    $spans.addClass('active');
-    return false;
-  });
-
-  // TODO: Maybe this can be optimized
-  this.$el.delegate('.annotation', 'mouseout', function(e) {
-    var annotationId = $(e.currentTarget).attr('data-id');
-    var $spans = $(that._annotatedElements[annotationId]);
-    $spans.removeClass('active');
-    return false;
-  });
-*/
 };
 
 Surface.Prototype = function() {
 
   // Private helpers
   // ---------------
-
-  this.insertNode = function(type, options) {
-    this.writer.insertNode(type, options);
-    return false;
-  };
-
-  // Really?
-  // ---------------
-  //
-
-  this.insertImage = function(type, data) {
-    this.writer.insertImage(data);
-    return false;
-  };
-
-  // Get Cursor position, relative to .surface .nodes
-  // ---------------
-  //
-
-  this.getCursorPos = function() {
-    var relativePos = this.$('.cursor').position();
-
-    var cursor = this.writer.selection.cursor;
-    var node = cursor.node;
-    var nodeScreenPos = this.$('#'+node.id).position();
-
-    return {
-      left: relativePos.left,
-      top: relativePos.top + nodeScreenPos.top
-    };
-  };
-
-  // Renders all registered annotations
-  // ---------------
-  //
-  // TODO: find a way to render a delta, instead of everything
-
-  this.renderAnnotations = function() {
-    /*
-    var annotations = this.writer.getAnnotations();
-    _.each(annotations, function(a) {
-      this.updateAnnotation("update", a);
-    }, this);
-    */
-  };
-
-  // Updates a given annotation
-  // --------
-  //
-
-  var removeAnnotation = function(elements, type) {
-    /*
-    var $elements = $(elements);
-    $elements.removeClass(type).removeClass('annotation');
-    $elements.removeAttr("data-id");
-    */
-  };
-
-  var addAnnotation = function(elements, id, type) {
-    /*
-    var $elements = $(elements);
-    $elements.attr({ "data-id": id });
-    $elements.addClass(type).addClass('annotation');
-    */
-  };
-
-  this.updateAnnotation = function(changeType, annotation) {
-    /*
-    var nodeId = annotation.path[0];
-    var content = this.el.querySelector('#'+nodeId+' .content');
-
-    // on delete and update we remove the classes
-    if (changeType === "delete") {
-      removeAnnotation(this._annotatedElements[annotation.id], annotation.type);
-      delete this._annotatedElements[annotation.id];
-    }
-
-    else if (changeType === "create") {
-      // TODO: when does this happen and is it ok?
-      if (content === undefined) return;
-
-      var elements = childRange(content, annotation.range[0], annotation.range[1]);
-      this._annotatedElements[annotation.id] = elements;
-      addAnnotation(elements, annotation.id, annotation.type);
-    }
-
-    else if (changeType === "update") {
-      // TODO: when does this happen and is it ok?
-      if (content === undefined) return;
-
-      var newElements = childRange(content, annotation.range[0], annotation.range[1]);
-      var oldElements = this._annotatedElements[annotation.id];
-
-      var toAdd = _.difference(newElements, oldElements);
-      var toRemove = _.difference(oldElements, newElements);
-
-      this._annotatedElements[annotation.id] = newElements;
-      addAnnotation(toAdd, annotation.id, annotation.type);
-      removeAnnotation(toRemove, annotation.type);
-    }
-    */
-  };
 
   var _findNodeElement = function(node) {
     var current = node;
@@ -208,6 +87,47 @@ Surface.Prototype = function() {
     return null;
   };
 
+  // Delegate to Writer.insertNode
+  // --------
+
+  this.insertNode = function(type, options) {
+    this.writer.insertNode(type, options);
+    return false;
+  };
+
+  // Really?
+  // ---------------
+  //
+
+  this.insertImage = function(type, data) {
+    this.writer.insertImage(data);
+    return false;
+  };
+
+  // Renders all registered annotations
+  // ---------------
+  //
+  // TODO: find a way to render a delta, instead of everything
+
+  this.renderAnnotations = function() {
+    // TODO: implement
+  };
+
+  // Updates a given annotation
+  // --------
+  //
+
+  var removeAnnotation = function(elements, type) {
+    // TODO: implement
+  };
+
+  var addAnnotation = function(elements, id, type) {
+    // TODO: implement
+  };
+
+  this.updateAnnotation = function(changeType, annotation) {
+    // TODO: implement
+  };
 
   // Read out current DOM selection and update selection in the model
   // ---------------
@@ -237,10 +157,6 @@ Surface.Prototype = function() {
     var startNode = _findNodeElement(wStartPos[0]);
     var endNode = _findNodeElement(wEndPos[0]);
 
-    if (!startNode) {
-      console.log("TODO: FIXME.");
-      return;
-    }
 
     var startNodeId = startNode.getAttribute("id");
     var startNodePos = this.writer.getPosition(startNodeId);
@@ -250,11 +166,11 @@ Surface.Prototype = function() {
     var endNodePos = this.writer.getPosition(endNodeId);
     var endCharPos = this.nodes[endNodeId].getCharPosition(wEndPos[0], wEndPos[1]);
 
+    // the selection range in Document.Selection coordinates
     var startPos = [startNodePos, startCharPos];
     var endPos = [endNodePos, endCharPos];
-    console.log("startPos", startPos, "endPos", endPos);
-    this.writer.selection.set({start: startPos, end: endPos});
 
+    this.writer.selection.set({start: startPos, end: endPos});
   };
 
   // Renders the current selection
@@ -264,7 +180,10 @@ Surface.Prototype = function() {
   this.renderSelection = function() {
     console.log("renderSelection");
 
-    if (this.writer.selection.isNull()) return;
+    if (this.writer.selection.isNull()) {
+      this.$cursor.hide();
+      return;
+    }
 
     // Hide native selection in favor of our custom one
     var wSel = window.getSelection();
@@ -297,12 +216,11 @@ Surface.Prototype = function() {
 
   this.positionCursor = function(wSel, wPos) {
 
+    // Create a temporary range that is placed at the given position
     var range = document.createRange();
     range.setStart(wPos[0], wPos[1]);
+
     var rect = range.getClientRects()[0];
-
-    console.log("positionCursor: rect", rect);
-
     var surfaceOffset = this.el.getClientRects()[0];
 
     var cursorPos = {
@@ -310,7 +228,8 @@ Surface.Prototype = function() {
       left:rect.left-surfaceOffset.left,
       height: rect.height
     };
-    this.$cursor.css(cursorPos);
+
+    this.$cursor.css(cursorPos).show();
   };
 
 
@@ -346,7 +265,7 @@ Surface.Prototype = function() {
     // TODO: fixme
     this.$('input.image-files').hide();
     this.$cursor = this.$('.cursor');
-    // this.$cursor.hide();
+    this.$cursor.hide();
 
     return this;
   };

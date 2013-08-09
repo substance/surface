@@ -216,12 +216,22 @@ Surface.Prototype = function() {
     var wSel = window.getSelection();
 
     var wRange = wSel.getRangeAt(0);
-    var wStartPos = [wSel.anchorNode, wSel.anchorOffset];
+    var wStartPos;
     var wEndPos;
-    if (wRange.startContainer === wSel.anchorNode && wRange.startOffset === wSel.anchorOffset) {
-      wEndPos = [wRange.endContainer, wRange.endOffset];
-    } else {
-      wEndPos = [wRange.startContainer, wRange.startOffset];
+
+    // Note: there are three different cases:
+    // 1. selection started at startContainer (regular)
+    // 2. selection started at endContainer (reverse)
+    // 3. selection done via double click (anchor in different to range boundaries)
+    // In cases 1. + 3. the range is used as given, in case 2. reversed.
+
+    wStartPos = [wRange.startContainer, wRange.startOffset];
+    wEndPos = [wRange.endContainer, wRange.endOffset];
+
+    if (wRange.endContainer === wSel.anchorNode && wRange.endOffset === wSel.anchorOffset) {
+      var tmp = wStartPos;
+      wStartPos = wEndPos;
+      wEndPos = tmp;
     }
 
     var startNode = _findNodeElement(wStartPos[0]);

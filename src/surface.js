@@ -271,7 +271,7 @@ Surface.Prototype = function() {
       // But, this is just a safe fallback.
       // You should try to fix it: In NodeView.getDOMPosition() try to return
       // a range that has a proper client rects
-      rect = range.startContainer.getClientRects()[0];
+      rect = wSel.anchorNode.getClientRects()[0];
       if (range.startOffset === 0) {
         top = rect.top;
         left = rect.left;

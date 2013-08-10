@@ -172,6 +172,11 @@ Surface.Prototype = function() {
   this.updateSelection = function() {
     var wSel = window.getSelection();
 
+    if ($(wSel.anchorNode.parentElement).is(".cursor")) {
+      this.writer.selection.collapse("cursor");
+      return;
+    }
+
     var wRange = wSel.getRangeAt(0);
     var wStartPos;
     var wEndPos;

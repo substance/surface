@@ -215,7 +215,6 @@ Surface.Prototype = function() {
   //
 
   this.renderSelection = function() {
-    console.log("renderSelection");
 
     if (this.writer.selection.isNull()) {
       this.$cursor.hide();
@@ -235,8 +234,8 @@ Surface.Prototype = function() {
     var wEndPos = endNodeView.getDOMPosition(range.end[1]);
 
     var wRange = document.createRange();
-    wRange.setStart(wStartPos[0], wStartPos[1]);
-    wRange.setEnd(wEndPos[0], wEndPos[1]);
+    wRange.setStart(wStartPos.startContainer, wStartPos.startOffset);
+    wRange.setEnd(wEndPos.endContainer, wEndPos.endOffset);
     wSel.removeAllRanges();
     wSel.addRange(wRange);
 
@@ -251,19 +250,38 @@ Surface.Prototype = function() {
   // --------
   //
 
-  this.positionCursor = function(wSel, wPos) {
-
-    // Create a temporary range that is placed at the given position
-    var range = document.createRange();
-    range.setStart(wPos[0], wPos[1]);
+  this.positionCursor = function(wSel, range) {
 
     var rect = range.getClientRects()[0];
     var surfaceOffset = this.el.getClientRects()[0];
 
+    var top, left, height;
+
+    if (rect !== undefined) {
+      top = rect.top;
+      left = rect.left;
+      height = rect.height;
+    } else {
+      // HACK: sometimes the range does not have a client
+      // But, this is just a safe fallback.
+      // You should try to fix it: In NodeView.getDOMPosition() try to return
+      // a range that has a proper client rects
+      rect = range.startContainer.getClientRects()[0];
+      if (range.startOffset === 0) {
+        top = rect.top;
+        left = rect.left;
+        height = rect.height;
+      } else {
+        top = rect.top;
+        left = rect.right;
+        height = rect.height;
+      }
+    }
+
     var cursorPos = {
-      top: rect.top-surfaceOffset.top,
-      left:rect.left-surfaceOffset.left,
-      height: rect.height
+      top: top-surfaceOffset.top,
+      left: left-surfaceOffset.left,
+      height: height
     };
 
     this.$cursor.css(cursorPos).show();

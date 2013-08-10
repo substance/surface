@@ -289,7 +289,9 @@ Surface.Prototype = function() {
       height: height
     };
 
+    this.$cursor.remove();
     this.$cursor.css(cursorPos).show();
+    this.$el.append(this.$cursor);
   };
 
 

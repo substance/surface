@@ -110,23 +110,60 @@ Surface.Prototype = function() {
   // TODO: find a way to render a delta, instead of everything
 
   this.renderAnnotations = function() {
-    // TODO: implement
+    //debugger;
+
+    var annotations = this.writer.getAnnotations();
+    var groups = {};
+
+    // group the annotations by node id
+    _.each(annotations, function(a){
+      var nodeId = a.path[0];
+      groups[nodeId] = groups[nodeId] || [];
+      groups[nodeId].push(a);
+    });
+
+    _.each(groups, function(group, nodeId) {
+      var nodeView = this.nodes[nodeId];
+
+      if (nodeView === undefined) {
+        console.log("There are annotations for node: ", nodeId);
+        return;
+      }
+
+      if (nodeView.renderAnnotations === undefined) {
+        console.log("NodeView does not support annotations: ", nodeView);
+        return;
+      }
+
+      nodeView.renderAnnotations(group);
+    }, this);
   };
 
   // Updates a given annotation
   // --------
   //
 
-  var removeAnnotation = function(elements, type) {
-    // TODO: implement
-  };
-
-  var addAnnotation = function(elements, id, type) {
-    // TODO: implement
-  };
-
   this.updateAnnotation = function(changeType, annotation) {
-    // TODO: implement
+    console.log("Updating annotation: ", annotation);
+
+    // TODO: make this incrementally....
+    // currently everthing must be rerendered
+    var nodeId = annotation.path[0];
+    var nodeView = this.nodes[nodeId];
+
+    if (nodeView === undefined) {
+      console.log("No node view for annotated node: ", nodeId);
+      return;
+    }
+
+    var annotations = this.writer.getAnnotations({node: nodeId});
+
+    if (nodeView.renderAnnotations === undefined) {
+      console.log("NodeView does not support annotations: ", nodeView);
+      return;
+    }
+
+    nodeView.renderAnnotations(annotations);
   };
 
   // Read out current DOM selection and update selection in the model
@@ -260,7 +297,7 @@ Surface.Prototype = function() {
       $(this.nodes[n.id].render().el).appendTo(this.$('.nodes'));
     }, this);
 
-    // this.renderAnnotations();
+    this.renderAnnotations();
 
     // TODO: fixme
     this.$('input.image-files').hide();

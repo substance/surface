@@ -220,6 +220,7 @@ Surface.Prototype = function() {
     this.writer.selection.set({start: startPos, end: endPos});
   };
 
+
   // Renders the current selection
   // --------
   //

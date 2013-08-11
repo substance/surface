@@ -92,23 +92,6 @@ Surface.Prototype = function() {
     return null;
   };
 
-  // Delegate to Writer.insertNode
-  // --------
-
-  this.insertNode = function(type, options) {
-    this.writer.insertNode(type, options);
-    return false;
-  };
-
-  // Really?
-  // ---------------
-  //
-
-  this.insertImage = function(type, data) {
-    this.writer.insertImage(data);
-    return false;
-  };
-
   // Renders all registered annotations
   // ---------------
   //
@@ -129,17 +112,14 @@ Surface.Prototype = function() {
 
     _.each(groups, function(group, nodeId) {
       var nodeView = this.nodes[nodeId];
-
       if (nodeView === undefined) {
         console.log("There are annotations for node: ", nodeId);
         return;
       }
-
       if (nodeView.renderAnnotations === undefined) {
         console.log("NodeView does not support annotations: ", nodeView);
         return;
       }
-
       nodeView.renderAnnotations(group);
     }, this);
   };

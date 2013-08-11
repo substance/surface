@@ -73,24 +73,20 @@ var Surface = function(writer, options) {
 
 };
 
-Surface.Prototype = function() {
-
-  // Private helpers
-  // ---------------
-
-  var _findNodeElement = function(node) {
-    var current = node;
-
-    while(current !== undefined) {
-      if ($(current).is("div.content-node")) {
-        return current;
-      }
-
-      current = current.parentElement;
+// Private helpers
+// ---------------
+var _findNodeElement = function(node) {
+  var current = node;
+  while(current !== undefined) {
+    if ($(current).is("div.content-node")) {
+      return current;
     }
+    current = current.parentElement;
+  }
+  return null;
+};
 
-    return null;
-  };
+Surface.Prototype = function() {
 
   // Renders all registered annotations
   // ---------------
@@ -154,7 +150,7 @@ Surface.Prototype = function() {
   // Read out current DOM selection and update selection in the model
   // ---------------
 
-  this.updateSelection = function() {
+  this.updateSelection = function(e) {
     var wSel = window.getSelection();
 
     // HACK: sometimes it happens that the selection anchor node is undefined.
@@ -172,6 +168,11 @@ Surface.Prototype = function() {
     var wRange = wSel.getRangeAt(0);
     var wStartPos;
     var wEndPos;
+
+    // Preparing information for EOL-HACK (see below).
+    // The hack only needs to be applied of the mouse event is in a different 'line'
+    // than the DOM Range provided by the browser
+    Surface.Hacks.prepareEndOfLineHack.call(this, e, wRange);
 
     // Note: there are three different cases:
     // 1. selection started at startContainer (regular)
@@ -248,50 +249,15 @@ Surface.Prototype = function() {
   // --------
   //
 
-  // HACK: sometimes the range does not have a client
-  // But, this is just a safe fallback.
-  // You should try to fix it: In NodeView.getDOMPosition() try to return
-  // a range that has a proper client rects
-  var _undefined_rect_hack = function(wSel, range, cursorPos) {
-    console.log("#FIXME: Surface.positionCursor HACK. rect===undefined.");
-    var rect = wSel.anchorNode.getClientRects()[0];
-    cursorPos.top = rect.top;
-    cursorPos.left = rect.left;
-    cursorPos.height = rect.height;
-    if (range.startOffset !== 0) {
-      cursorPos.left = rect.right;
-    }
-  };
-
-  // render the cursor in the next line if we are at the end of line
-  var _end_of_line_hack = function(range, cursorPos) {
-    // TODO: detect end of node...
-    try {
-      var rect = range.getClientRects()[0];
-      var range2 = document.createRange();
-      range2.setStart(range.startContainer, range.startOffset+1);
-      var rect2 = range2.getClientRects()[0];
-      if (rect2 && rect2.top !== rect.top) {
-        var nodeEl = _findNodeElement(range.startContainer);
-        var nodeId = nodeEl.getAttribute("id");
-        var first = this.nodes[nodeId].getDOMPosition(0);
-        var firstRect = first.getClientRects()[0];
-        cursorPos.top = rect2.top;
-        cursorPos.left = firstRect.left;
-        cursorPos.height = rect2.height;
-      }
-    } catch (err) {}
-  };
-
   this.positionCursor = function(wSel, range) {
 
     var rect = range.getClientRects()[0];
 
     var cursorPos = {};
-    // HACK1: it still happens that the provided range does not have a client rectangle (?!)
+    // HACK: it still happens that the provided range does not have a client rectangle (?!)
     // In this case we try to take another useful rectangle.
     if (rect === undefined) {
-      _undefined_rect_hack.call(this, wSel, range, cursorPos);
+      Surface.Hacks.undefinedRectHack.call(this, wSel, range, cursorPos);
     } else {
       cursorPos = {
         top: rect.top,
@@ -300,13 +266,15 @@ Surface.Prototype = function() {
       };
     }
 
-    // HACK2: having whitespaces pre-wrapped, the cursor shows add the end of line
+    // HACK: having whitespaces pre-wrapped, the cursor shows add the end of line
     // and not at the begin of line
     // This has a lot to do how the DOM Ranges work, or... do not work.
     // E.g., creating a Range spanning over the character in a new line will
     // not produce a rectangle, but returns that at the end of the previous line (?!)
     // We address this glitch here:
-    _end_of_line_hack.call(this, range, cursorPos);
+    if (this._needEndOfLineHack) {
+      Surface.Hacks.endOfLineHack.call(this, range, cursorPos);
+    }
 
     // make the position relative to the surface
     var surfaceOffset = this.el.getClientRects()[0];
@@ -417,6 +385,60 @@ Surface.Prototype = function() {
 
 _.extend(Surface.Prototype, util.Events.Listener);
 
+Surface.Hacks = new function() {
+
+  // HACK: sometimes the range does not have a client
+  // But, this is just a safe fallback.
+  // You should try to fix it: In NodeView.getDOMPosition() try to return
+  // a range that has a proper client rects
+  this.undefinedRectHack = function(wSel, range, cursorPos) {
+    console.log("#FIXME: Surface.positionCursor HACK. rect===undefined.");
+    var rect = wSel.anchorNode.getClientRects()[0];
+    cursorPos.top = rect.top;
+    cursorPos.left = rect.left;
+    cursorPos.height = rect.height;
+    if (range.startOffset !== 0) {
+      cursorPos.left = rect.right;
+    }
+  };
+
+  // the end-of-line hack gets activated when a mouse down event's y-position
+  // does not correspond to the DOM's selection range.
+  // This is actually a somewhat glitchy browser behavior.
+  this.prepareEndOfLineHack = function(event, range) {
+    var rect = range.getClientRects()[0];
+    if (rect) {
+      var surfaceOffset = this.el.getClientRects()[0];
+      if (event.pageY > (rect.top+rect.height)) {
+        this._needEndOfLineHack = true;
+      }
+    }
+  };
+
+  // render the cursor in the next line if we are at the end of line
+  this.endOfLineHack = function(range, cursorPos) {
+    // TODO: detect end of node...
+    try {
+      this._needEndOfLineHack = false;
+      var rect = range.getClientRects()[0];
+      var range2 = document.createRange();
+      range2.setStart(range.startContainer, range.startOffset+1);
+      var rect2 = range2.getClientRects()[0];
+      if (rect2 && rect2.top !== rect.top) {
+        var nodeEl = _findNodeElement(range.startContainer);
+        var nodeId = nodeEl.getAttribute("id");
+        var first = this.nodes[nodeId].getDOMPosition(0);
+        var firstRect = first.getClientRects()[0];
+        cursorPos.top = rect2.top;
+        cursorPos.left = firstRect.left;
+        cursorPos.height = rect2.height;
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+};
 
 // Content View Adapter
 // --------

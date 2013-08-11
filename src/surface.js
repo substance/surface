@@ -157,6 +157,13 @@ Surface.Prototype = function() {
   this.updateSelection = function() {
     var wSel = window.getSelection();
 
+    // HACK: sometimes it happens that the selection anchor node is undefined.
+    // Try to understand and fix someday.
+    if (wSel.anchorNode === null) {
+      return;
+    }
+
+    // Set selection to the cursor if clicked on the cursor.
     if ($(wSel.anchorNode.parentElement).is(".cursor")) {
       this.writer.selection.collapse("cursor");
       return;
@@ -199,6 +206,7 @@ Surface.Prototype = function() {
 
     this.writer.selection.set({start: startPos, end: endPos});
   };
+
 
   // Renders the current selection
   // --------

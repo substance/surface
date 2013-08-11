@@ -294,7 +294,10 @@ Surface.Prototype = function() {
       height: height
     };
 
+    // removing the cursor to re-trigger begin of CSS animation (~blinking).
+    this.$cursor.remove();
     this.$cursor.css(cursorPos).show();
+    this.$el.append(this.$cursor);
   };
 
 

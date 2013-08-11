@@ -3,7 +3,6 @@
 // Import
 // ========
 
-var _    = require('underscore');
 var Test = require('substance-test');
 var assert = Test.assert;
 var registerTest = Test.registerTest;
@@ -185,10 +184,7 @@ var BasicEditing = function() {
 
     "Merge with previous text node", function() {
       var sel = this.writer.selection;
-      sel.set({
-        start: [1, 0],
-        end: [1, 0]
-      });
+      sel.set([1, 0]);
 
       this.writer.delete();
 
@@ -228,10 +224,7 @@ var BasicEditing = function() {
       var sel = this.writer.selection;
 
       // Undo previous split
-      sel.set({
-        start: [2, 4],
-        end: [2, 4]
-      });
+      sel.set([2, 4]);
 
       sel.expand('right', 'char');
       sel.expand('right', 'char');
@@ -249,10 +242,7 @@ var BasicEditing = function() {
       var sel = this.writer.selection;
 
       // Undo previous split
-      sel.set({
-        start: [2, 4],
-        end: [2, 4]
-      });
+      sel.set([2, 4]);
 
       sel.move('right', 'word');
       sel.move('left', 'word');

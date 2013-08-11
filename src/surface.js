@@ -177,11 +177,6 @@ Surface.Prototype = function() {
   this.updateSelection = function() {
     var wSel = window.getSelection();
 
-    if ($(wSel.anchorNode.parentElement).is(".cursor")) {
-      this.writer.selection.collapse("cursor");
-      return;
-    }
-
     var wRange = wSel.getRangeAt(0);
     var wStartPos;
     var wEndPos;
@@ -219,7 +214,6 @@ Surface.Prototype = function() {
 
     this.writer.selection.set({start: startPos, end: endPos});
   };
-
 
   // Renders the current selection
   // --------
@@ -277,7 +271,7 @@ Surface.Prototype = function() {
       // But, this is just a safe fallback.
       // You should try to fix it: In NodeView.getDOMPosition() try to return
       // a range that has a proper client rects
-      rect = wSel.anchorNode.getClientRects()[0];
+      rect = range.startContainer.getClientRects()[0];
       if (range.startOffset === 0) {
         top = rect.top;
         left = rect.left;
@@ -295,9 +289,7 @@ Surface.Prototype = function() {
       height: height
     };
 
-    this.$cursor.remove();
     this.$cursor.css(cursorPos).show();
-    this.$el.append(this.$cursor);
   };
 
 

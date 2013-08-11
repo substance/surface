@@ -260,39 +260,70 @@ Surface.Prototype = function() {
   // --------
   //
 
+  // HACK: sometimes the range does not have a client
+  // But, this is just a safe fallback.
+  // You should try to fix it: In NodeView.getDOMPosition() try to return
+  // a range that has a proper client rects
+  var _undefined_rect_hack = function(wSel, range, cursorPos) {
+    console.log("#FIXME: Surface.positionCursor HACK. rect===undefined.");
+    var rect = wSel.anchorNode.getClientRects()[0];
+    cursorPos.top = rect.top;
+    cursorPos.left = rect.left;
+    cursorPos.height = rect.height;
+    if (range.startOffset !== 0) {
+      cursorPos.left = rect.right;
+    }
+  };
+
+  // render the cursor in the next line if we are at the end of line
+  var _end_of_line_hack = function(range, cursorPos) {
+    // TODO: detect end of node...
+    try {
+      var rect = range.getClientRects()[0];
+      var range2 = document.createRange();
+      range2.setStart(range.startContainer, range.startOffset+1);
+      var rect2 = range2.getClientRects()[0];
+      if (rect2 && rect2.top !== rect.top) {
+        var nodeEl = _findNodeElement(range.startContainer);
+        var nodeId = nodeEl.getAttribute("id");
+        var first = this.nodes[nodeId].getDOMPosition(0);
+        var firstRect = first.getClientRects()[0];
+        cursorPos.top = rect2.top;
+        cursorPos.left = firstRect.left;
+        cursorPos.height = rect2.height;
+      }
+    } catch (err) {}
+  };
+
   this.positionCursor = function(wSel, range) {
 
     var rect = range.getClientRects()[0];
-    var surfaceOffset = this.el.getClientRects()[0];
 
-    var top, left, height;
-
-    if (rect !== undefined) {
-      top = rect.top;
-      left = rect.left;
-      height = rect.height;
+    var cursorPos = {};
+    // HACK1: it still happens that the provided range does not have a client rectangle (?!)
+    // In this case we try to take another useful rectangle.
+    if (rect === undefined) {
+      _undefined_rect_hack.call(this, wSel, range, cursorPos);
     } else {
-      // HACK: sometimes the range does not have a client
-      // But, this is just a safe fallback.
-      // You should try to fix it: In NodeView.getDOMPosition() try to return
-      // a range that has a proper client rects
-      rect = range.startContainer.getClientRects()[0];
-      if (range.startOffset === 0) {
-        top = rect.top;
-        left = rect.left;
-        height = rect.height;
-      } else {
-        top = rect.top;
-        left = rect.right;
-        height = rect.height;
-      }
+      cursorPos = {
+        top: rect.top,
+        left: rect.left,
+        height: rect.height
+      };
     }
 
-    var cursorPos = {
-      top: top-surfaceOffset.top,
-      left: left-surfaceOffset.left,
-      height: height
-    };
+    // HACK2: having whitespaces pre-wrapped, the cursor shows add the end of line
+    // and not at the begin of line
+    // This has a lot to do how the DOM Ranges work, or... do not work.
+    // E.g., creating a Range spanning over the character in a new line will
+    // not produce a rectangle, but returns that at the end of the previous line (?!)
+    // We address this glitch here:
+    _end_of_line_hack.call(this, range, cursorPos);
+
+    // make the position relative to the surface
+    var surfaceOffset = this.el.getClientRects()[0];
+    cursorPos.top -= surfaceOffset.top;
+    cursorPos.left -= surfaceOffset.left;
 
     // removing the cursor to re-trigger begin of CSS animation (~blinking).
     this.$cursor.remove();

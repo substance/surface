@@ -4,6 +4,8 @@ var _ = require("underscore");
 var View = require("substance-application").View;
 var Operator = require("substance-operator");
 var util = require("substance-util");
+var Commander = require("substance-commander");
+
 var html = util.html;
 
 // Substance.Surface
@@ -44,6 +46,7 @@ var Surface = function(writer, options) {
   // Start building the initial stuff
   this.build();
 
+  this.el.setAttribute("contenteditable", "true");
   this.$el.addClass('surface');
   this.$el.addClass(this.writer.view);
 
@@ -55,13 +58,14 @@ var Surface = function(writer, options) {
     // E.g. when double clicking to select a word triple clicking to select the whole line/paragraph
 
     this.$el.mousedown(function(e) {
-      that.$cursor.css({"z-index": -1});
+       //that.$cursor.css({"z-index": -1});
     });
 
     this.$el.mouseup(function(e) {
-      that.updateSelection(e);
-      that.$cursor.css({"z-index": 1});
-    });
+      this.ignoreNextSelection = true;
+      this.updateSelection(e);
+      //this.$cursor.css({"z-index": 1});
+    }.bind(this));
 
     this.$el.delegate('img', 'click', function(e) {
       var $el = $(e.currentTarget).parent().parent().parent();
@@ -69,6 +73,82 @@ var Surface = function(writer, options) {
       that.writer.selection.selectNode(nodeId);
       return false;
     });
+
+    this._dirt = [];
+
+    this._onKeyDown = function() {
+      this._dirtPossible = true;
+    }.bind(this);
+
+    this._onTextInput = function(e) {
+      console.log("textinput", e);
+      this._dirtPossible = false;
+      while(this._dirt.length > 0) {
+        var dirt = this._dirt.shift();
+        dirt[0].textContent = dirt[1];
+      }
+      this.writer.write(e.data);
+      e.preventDefault();
+    }.bind(this);
+
+    var _manipulate = function(f, dontPrevent) {
+      return function(e) {
+        that._dirtPossible = false;
+        setTimeout(f, 0);
+        if (dontPrevent !== true) {
+          e.preventDefault();
+        }
+      };
+    };
+
+    this.keyboard = new Commander.Mousetrap();
+    this.keyboard.bind([
+        "up", "down", "left", "right",
+        "shift+up", "shift+down", "shift+left", "shift+right",
+        "ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right",
+        "alt+up", "alt+down", "alt+left", "alt+right"
+      ], function() {
+      // call this after the movement has been done by the contenteditable
+      setTimeout(function() {
+        that.ignoreNextSelection = true;
+        that.updateSelection();
+      }, 0);
+    }, "keydown");
+
+    this.keyboard.bind(["backspace"], _manipulate(function() {
+      that.writer.delete("left");
+    }), "keydown");
+
+    this.keyboard.bind(["del"], _manipulate(function() {
+      that.writer.delete("right");
+    }), "keydown");
+
+    this.keyboard.bind(["enter"], _manipulate(function() {
+      that.writer.modifyNode();
+    }), "keydown");
+
+    this.keyboard.bind(["shift+enter"], _manipulate(function() {
+      that.writer.write("\n");
+    }), "keydown");
+
+    this.keyboard.bind(["space"], _manipulate(function() {
+      that.writer.write(" ");
+    }), "keydown");
+
+    this.keyboard.bind(["tab"], _manipulate(function() {
+      that.writer.write("  ");
+    }), "keydown");
+
+    this.keyboard.bind(["command+z"], _manipulate(function() {
+      that.writer.undo();
+    }), "keydown");
+
+    this.keyboard.bind(["command+shift+z"], _manipulate(function() {
+      that.writer.redo();
+    }), "keydown");
+
+    this.makeEditable(this.el);
+
   }
 
 };
@@ -147,6 +227,29 @@ Surface.Prototype = function() {
     nodeView.renderAnnotations(annotations);
   };
 
+  this.makeEditable = function(el) {
+    var that = this;
+
+    var $el = $(el);
+    el.setAttribute("contenteditable", "true");
+    el.addEventListener("keydown", this._onKeyDown);
+    el.addEventListener("textInput", this._onTextInput);
+
+    this._dirt = [];
+    this._observer = new MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (that._dirtPossible) {
+          that._dirt.push([mutation.target, mutation.oldValue]);
+        }
+      });
+    });
+    // configuration of the observer:
+    var config = { subtree: true, characterData: true, characterDataOldValue: true };
+    this._observer.observe(el, config);
+
+    this.keyboard.connect(el);
+  };
+
   // Read out current DOM selection and update selection in the model
   // ---------------
 
@@ -172,7 +275,7 @@ Surface.Prototype = function() {
     // Preparing information for EOL-HACK (see below).
     // The hack only needs to be applied of the mouse event is in a different 'line'
     // than the DOM Range provided by the browser
-    Surface.Hacks.prepareEndOfLineHack.call(this, e, wRange);
+    //Surface.Hacks.prepareEndOfLineHack.call(this, e, wRange);
 
     // Note: there are three different cases:
     // 1. selection started at startContainer (regular)
@@ -192,9 +295,8 @@ Surface.Prototype = function() {
     var startNode = _findNodeElement(wStartPos[0]);
     var endNode = _findNodeElement(wEndPos[0]);
 
-
     var startNodeId = startNode.getAttribute("id");
-    var startNodePos = this.writer.getPosition(startNodeId);
+    var startNodePos = this.writer.getPosition(startNodeId) ;
     var startCharPos = this.nodes[startNodeId].getCharPosition(wStartPos[0], wStartPos[1]);
 
     var endNodeId = endNode.getAttribute("id");
@@ -214,6 +316,11 @@ Surface.Prototype = function() {
   //
 
   this.renderSelection = function() {
+
+    if (this.ignoreNextSelection === true) {
+      this.ignoreNextSelection = false;
+      return;
+    }
 
     if (this.writer.selection.isNull()) {
       this.$cursor.hide();
@@ -238,11 +345,11 @@ Surface.Prototype = function() {
     wSel.removeAllRanges();
     wSel.addRange(wRange);
 
-    if (this.writer.selection.isReverse()) {
-      this.positionCursor(wSel, wStartPos);
-    } else {
-      this.positionCursor(wSel, wEndPos);
-    }
+    // if (this.writer.selection.isReverse()) {
+    //   this.positionCursor(wSel, wStartPos);
+    // } else {
+    //   this.positionCursor(wSel, wEndPos);
+    // }
   };
 
   // Position cursor
@@ -384,61 +491,6 @@ Surface.Prototype = function() {
 };
 
 _.extend(Surface.Prototype, util.Events.Listener);
-
-Surface.Hacks = new function() {
-
-  // HACK: sometimes the range does not have a client
-  // But, this is just a safe fallback.
-  // You should try to fix it: In NodeView.getDOMPosition() try to return
-  // a range that has a proper client rects
-  this.undefinedRectHack = function(wSel, range, cursorPos) {
-    console.log("#FIXME: Surface.positionCursor HACK. rect===undefined.");
-    var rect = wSel.anchorNode.getClientRects()[0];
-    cursorPos.top = rect.top;
-    cursorPos.left = rect.left;
-    cursorPos.height = rect.height;
-    if (range.startOffset !== 0) {
-      cursorPos.left = rect.right;
-    }
-  };
-
-  // the end-of-line hack gets activated when a mouse down event's y-position
-  // does not correspond to the DOM's selection range.
-  // This is actually a somewhat glitchy browser behavior.
-  this.prepareEndOfLineHack = function(event, range) {
-    var rect = range.getClientRects()[0];
-    if (rect) {
-      var surfaceOffset = this.el.getClientRects()[0];
-      if (event.pageY > (rect.top+rect.height)) {
-        this._needEndOfLineHack = true;
-      }
-    }
-  };
-
-  // render the cursor in the next line if we are at the end of line
-  this.endOfLineHack = function(range, cursorPos) {
-    // TODO: detect end of node...
-    try {
-      this._needEndOfLineHack = false;
-      var rect = range.getClientRects()[0];
-      var range2 = document.createRange();
-      range2.setStart(range.startContainer, range.startOffset+1);
-      var rect2 = range2.getClientRects()[0];
-      if (rect2 && rect2.top !== rect.top) {
-        var nodeEl = _findNodeElement(range.startContainer);
-        var nodeId = nodeEl.getAttribute("id");
-        var first = this.nodes[nodeId].getDOMPosition(0);
-        var firstRect = first.getClientRects()[0];
-        cursorPos.top = rect2.top;
-        cursorPos.left = firstRect.left;
-        cursorPos.height = rect2.height;
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-};
 
 // Content View Adapter
 // --------

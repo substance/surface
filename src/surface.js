@@ -47,6 +47,8 @@ var Surface = function(writer, options) {
   this.build();
 
   this.el.setAttribute("contenteditable", "true");
+  
+  this.el.spellcheck = false;
   this.$el.addClass('surface');
   this.$el.addClass(this.writer.view);
 

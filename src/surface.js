@@ -233,7 +233,10 @@ Surface.Prototype = function() {
     var $el = $(el);
     el.setAttribute("contenteditable", "true");
     el.addEventListener("keydown", this._onKeyDown);
-    el.addEventListener("textInput", this._onTextInput);
+
+    // TODO: cleanup... Firefix needs a different event...
+    el.addEventListener("textInput", this._onTextInput, true);
+    el.addEventListener("input", this._onTextInput, true);
 
     this._dirt = [];
     this._observer = new MutationObserver(function(mutations) {

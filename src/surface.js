@@ -46,7 +46,7 @@ var Surface = function(writer, options) {
   // Start building the initial stuff
   this.build();
 
-  this.el.setAttribute("contenteditable", "true");
+  
   
   this.el.spellcheck = false;
   this.$el.addClass('surface');
@@ -56,6 +56,8 @@ var Surface = function(writer, options) {
 
   if (options.editable) {
 
+    this.el.setAttribute("contenteditable", "true");
+    
     // TODO: this interfers with the native dom selection
     // E.g. when double clicking to select a word triple clicking to select the whole line/paragraph
 

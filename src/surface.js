@@ -46,8 +46,6 @@ var Surface = function(doc, options) {
   // Start building the initial stuff
   this.build();
 
-
-
   this.el.spellcheck = false;
   this.$el.addClass('surface');
   this.$el.addClass(this.doc.view);
@@ -58,17 +56,9 @@ var Surface = function(doc, options) {
 
     this.el.setAttribute("contenteditable", "true");
 
-    // TODO: this interfers with the native dom selection
-    // E.g. when double clicking to select a word triple clicking to select the whole line/paragraph
-
-    this.$el.mousedown(function(e) {
-       //that.$cursor.css({"z-index": -1});
-    });
-
     this.$el.mouseup(function(e) {
       this.ignoreNextSelection = true;
       this.updateSelection(e);
-      //this.$cursor.css({"z-index": 1});
     }.bind(this));
 
     this.$el.delegate('img', 'click', function(e) {
@@ -238,7 +228,7 @@ Surface.Prototype = function() {
     var that = this;
 
     var $el = $(el);
-    el.setAttribute("contenteditable", "true");
+
     el.addEventListener("keydown", this._onKeyDown);
 
     // TODO: cleanup... Firefix needs a different event...
@@ -471,8 +461,6 @@ Surface.Prototype = function() {
     _.each(this.nodes, function(nodeView) {
       nodeView.dispose();
     });
-    this._annotatedElements = {};
-
     this.build();
     this.render();
   };

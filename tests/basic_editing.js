@@ -42,49 +42,49 @@ var BasicEditing = function() {
     // --------
 
     "Set single cursor", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [1,2],
         end: [1,2]
       });
     },
 
     "Edge case: Select last char of text node", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [1,39],
         end: [1,39]
       });
     },
 
     "Insert period after last char", function() {
-      this.writer.write(".");
+      this.doc.write(".");
 
-      var nodeId = this.writer.get('content').nodes[1];
-      var node = this.writer.get(nodeId);
+      var nodeId = this.doc.get('content').nodes[1];
+      var node = this.doc.get(nodeId);
       assert.isEqual(P2+".", node.content);
     },
 
     "Make a selection", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [0, 5],
         end: [1, 10],
       });
     },
 
     "Delete selection", function() {
-      this.writer.delete();
+      this.doc.delete();
     },
 
     "Delete previous character for collapsed (single cursor) selection", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [0, 4],
         end: [0, 4]
       });
 
-      this.writer.delete();
+      this.doc.delete();
     },
 
     "Select last three chars of a textnode", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [0, 31],
         end: [0, 34]
       });
@@ -92,7 +92,7 @@ var BasicEditing = function() {
     },
 
     "Select last char in text node", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [0, 33],
         end: [0, 34]
       });
@@ -100,7 +100,7 @@ var BasicEditing = function() {
     },
 
     "Position cursor after last char and hit backspace", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [0, 34],
         end: [0, 34]
       });
@@ -112,7 +112,7 @@ var BasicEditing = function() {
       assert.isEqual(0, $('.content-node span.selected').length);
       assert.isEqual(1, $('.content-node .cursor').length);
 
-      this.writer.delete();
+      this.doc.delete();
 
       assert.isEqual(1, $('.content-node .cursor').length);
       // After delection there must be three remaining chars in the first paragraph
@@ -121,58 +121,58 @@ var BasicEditing = function() {
 
 
     "Move cursor to previous char", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [1, 30],
         end: [1, 30]
       });
 
-      this.writer.selection.move('left');
-      var sel = this.writer.selection;
+      this.doc.selection.move('left');
+      var sel = this.doc.selection;
       assert.isDeepEqual([1,29], sel.start);
       assert.isDeepEqual([1,29], sel.end);
     },
 
     "Move cursor to next char", function() {
-      this.writer.selection.move('right');
+      this.doc.selection.move('right');
 
-      var sel = this.writer.selection;
+      var sel = this.doc.selection;
       assert.isDeepEqual([1,30], sel.start);
       assert.isDeepEqual([1,30], sel.end);
     },
 
     "Move cursor to next paragraph", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [1, 40],
         end: [1, 40]
       });
 
-      this.writer.selection.move('right');
-      var sel = this.writer.selection;
+      this.doc.selection.move('right');
+      var sel = this.doc.selection;
       assert.isDeepEqual([2,0], sel.start);
       assert.isDeepEqual([2,0], sel.end);
     },
 
     "Move cursor back to prev paragraph", function() {
-      this.writer.selection.move('left');
-      var sel = this.writer.selection;
+      this.doc.selection.move('left');
+      var sel = this.doc.selection;
       assert.isDeepEqual([1,40], sel.start);
       assert.isDeepEqual([1,40], sel.end);
     },
 
     "Collapse cursor after multi-char selection", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [1, 18],
         end: [1, 22]
       });
-      this.writer.selection.move('right');
+      this.doc.selection.move('right');
 
-      var sel = this.writer.selection;
+      var sel = this.doc.selection;
       assert.isDeepEqual([1,22], sel.start);
       assert.isDeepEqual([1,22], sel.end);
     },
 
     "Collapse cursor before multi-char selection", function() {
-      var sel = this.writer.selection;
+      var sel = this.doc.selection;
       sel.set({
         start: [1, 18],
         end: [1, 24]
@@ -183,10 +183,10 @@ var BasicEditing = function() {
     },
 
     "Merge with previous text node", function() {
-      var sel = this.writer.selection;
+      var sel = this.doc.selection;
       sel.set([1, 0]);
 
-      this.writer.delete();
+      this.doc.delete();
 
       assert.isDeepEqual([0,33], sel.start);
       assert.isDeepEqual([0,33], sel.end);
@@ -194,34 +194,34 @@ var BasicEditing = function() {
 
     // Think pressing enter
     "Split text node at current cursor position (inverse of prev merge)", function() {
-      this.writer.insertNode('text');
+      this.doc.insertNode('text');
     },
 
     "Merge back (revert the text split)", function() {
-      this.writer.delete();
+      this.doc.delete();
     },
 
     // Think pressing enter in the middle of a sentence
     "Split text node at current cursor position (in-between)", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [1, 5],
         end: [1, 5]
       });
-      this.writer.insertNode('text');
+      this.doc.insertNode('text');
     },
 
     "Split text node at (cusor before first char)", function() {
       // Undo previous split
-      this.writer.delete();
-      this.writer.selection.set({
+      this.doc.delete();
+      this.doc.selection.set({
         start: [1, 0],
         end: [1, 0]
       });
-      this.writer.insertNode('text');
+      this.doc.insertNode('text');
     },
 
     "Expand selection (to the right)", function() {
-      var sel = this.writer.selection;
+      var sel = this.doc.selection;
 
       // Undo previous split
       sel.set([2, 4]);
@@ -239,7 +239,7 @@ var BasicEditing = function() {
     },
 
     "Move to next word", function() {
-      var sel = this.writer.selection;
+      var sel = this.doc.selection;
 
       // Undo previous split
       sel.set([2, 4]);
@@ -251,33 +251,33 @@ var BasicEditing = function() {
     },
 
     "Copy selected content", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [2, 3],
         end: [3, 20]
       });
 
-      this.writer.cut();
-      var view = this.writer.clipboard.getContent().get('content').nodes;
+      this.doc.cut();
+      var view = this.doc.clipboard.getContent().get('content').nodes;
       assert.isEqual(1, view.length);
     },
 
     "Paste clipboard content at current selection", function() {
-      this.writer.selection.set({
+      this.doc.selection.set({
         start: [0, 8],
         end: [0, 8]
       });
 
-      console.log(this.writer.clipboard.getContent());
-      this.writer.paste();
-      // var view = this.writer.clipboard.getContent().get('content').nodes;
+      console.log(this.doc.clipboard.getContent());
+      this.doc.paste();
+      // var view = this.doc.clipboard.getContent().get('content').nodes;
       // assert.isEqual(1, view.length);
     },
 
     // "Copy selected content", function() {
-    //   console.log("TEXT", this.writer.selection.getText());
-    //   this.writer.cut();
+    //   console.log("TEXT", this.doc.selection.getText());
+    //   this.doc.cut();
 
-    //   var view = this.writer.clipboard.getContent().get('content').nodes;
+    //   var view = this.doc.clipboard.getContent().get('content').nodes;
     //   assert.isEqual(1, view.length);
     // }
   ];

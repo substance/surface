@@ -3,9 +3,9 @@
 // Import
 // ========
 
-var Surface = require('../index');
-var Document = require('substance-document');
-var Writer = Document.Writer;
+var Surface = require("../index");
+var Article = require("substance-article");
+var DocumentController = require("substance-document").Controller;
 
 
 var ID_IDX = 1;
@@ -24,13 +24,14 @@ var SurfaceTest = function() {
   this.setup = function() {
     ID_IDX = 1;
 
-    this.__document = new Document({id: "surface_test"});
-    this.writer = new Writer(this.__document);
+    this.__document = new Article({id: "surface_test"});
 
-    this.surface = new Surface(this.writer);
+    this.doc = new DocumentController(this.__document);
+
+    this.surface = new Surface(this.doc);
 
     $('.test-center .test-output').show();
-    $('.test-center .test-output').html(this.surface.el);
+    $('.test-center .test-output').html(this.surface.render().el);
 
     this.fixture();
   };
@@ -39,10 +40,10 @@ var SurfaceTest = function() {
     var id = this.uuid("text_");
     this.__document.create({
       "id": id,
-      "type": "text",
+      "type": "paragraph",
       "content": content
     });
-    this.__document.position("content", [id], -1);
+    this.__document.show("content", [id], -1);
   };
 
   this.insertImage = function(url) {
@@ -53,7 +54,7 @@ var SurfaceTest = function() {
       "content": " ",
       "url": url
     });
-    this.__document.position("content", [id], -1);
+    this.__document.show("content", [id], -1);
   };
 
   // Verify state

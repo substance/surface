@@ -417,15 +417,37 @@ Surface.Prototype = function() {
   // Rendering
   // =============================
   //
+  // input.image-files
+  // .controls
+  // .nodes
+  //   .content-node.paragraph
+  //   .content-node.heading
+  //   ...
+  // .cursor
 
   this.render = function() {
-    this.$el.html(html.tpl('surface'));
 
+    var fileInput = document.createElement('input');
+    fileInput.className = "image-files";
+    fileInput.setAttribute("name", "files[]");
 
-    var nodes = this.doc.getNodes();
+    var controls = document.createElement('div');
+    controls.className = "controls";
+    var nodes = document.createElement('div');
+    nodes.className = "nodes";
+
+    var cursor = document.createElement('div');
+    cursor.className = "cursor";
+
+    this.el.appendChild(fileInput);
+    this.el.appendChild(controls);
+    this.el.appendChild(nodes);
+    this.el.appendChild(cursor);
+
+    var docNodes = this.doc.getNodes();
     console.log("Surface.render()", "this.doc.getNodes()", nodes);
 
-    _.each(nodes, function(n) {
+    _.each(docNodes, function(n) {
       $(this.nodes[n.id].render().el).appendTo(this.$('.nodes'));
     }, this);
 

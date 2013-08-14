@@ -432,7 +432,10 @@ Surface.Prototype = function() {
 
     var fileInput = document.createElement('input');
     fileInput.className = "image-files";
+    fileInput.setAttribute("type", "file");
+
     fileInput.setAttribute("name", "files[]");
+
 
     var controls = document.createElement('div');
     controls.className = "controls";

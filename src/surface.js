@@ -46,8 +46,8 @@ var Surface = function(doc, options) {
   // Start building the initial stuff
   this.build();
 
-  
-  
+
+
   this.el.spellcheck = false;
   this.$el.addClass('surface');
   this.$el.addClass(this.doc.view);
@@ -57,7 +57,7 @@ var Surface = function(doc, options) {
   if (options.editable) {
 
     this.el.setAttribute("contenteditable", "true");
-    
+
     // TODO: this interfers with the native dom selection
     // E.g. when double clicking to select a word triple clicking to select the whole line/paragraph
 
@@ -157,20 +157,23 @@ var Surface = function(doc, options) {
 
 };
 
-// Private helpers
-// ---------------
-var _findNodeElement = function(node) {
-  var current = node;
-  while(current !== undefined) {
-    if ($(current).is("div.content-node")) {
-      return current;
-    }
-    current = current.parentElement;
-  }
-  return null;
-};
-
 Surface.Prototype = function() {
+
+  // Private helpers
+  // ---------------
+  var _findNodeElement = function(node) {
+    var current = node;
+    while(current !== undefined) {
+      if ($(current).is("div.content-node")) {
+        var id = current.getAttribute("id");
+        if (this.nodes[id]) {
+          return current;
+        }
+      }
+      current = current.parentElement;
+    }
+    return null;
+  };
 
   // Renders all registered annotations
   // ---------------
@@ -299,8 +302,8 @@ Surface.Prototype = function() {
       wEndPos = tmp;
     }
 
-    var startNode = _findNodeElement(wStartPos[0]);
-    var endNode = _findNodeElement(wEndPos[0]);
+    var startNode = _findNodeElement.call(this, wStartPos[0]);
+    var endNode = _findNodeElement.call(this, wEndPos[0]);
 
     var startNodeId = startNode.getAttribute("id");
     var startNodePos = this.doc.getPosition(startNodeId) ;

@@ -11,7 +11,7 @@ var html = util.html;
 // Substance.Surface
 // ==========================================================================
 
-var Surface = function(writer, options) {
+var Surface = function(doc, options) {
 
   options = _.extend({
     editable: true,
@@ -25,23 +25,23 @@ var Surface = function(writer, options) {
   this.options = options;
 
   // Incoming events
-  this.writer = writer;
+  this.doc = doc;
 
   // Pull out the registered nodetypes on the written article
-  this.nodeTypes = writer.__document.nodeTypes;
+  this.nodeTypes = doc.__document.nodeTypes;
 
   // Bind handlers to establish co-transformations on html elements
   // according to model properties
   this._viewAdapter = new Surface.ViewAdapter(this);
 
-  this.listenTo(this.writer.selection,  "selection:changed", this.renderSelection);
-  this.listenTo(this.writer.__document, "node:created", this.onCreateNode);
-  this.listenTo(this.writer.__document, "node:deleted", this.onDeleteNode);
-  this.listenTo(this.writer.__document, "property:updated", this.onUpdateView);
-  this.listenTo(this.writer.__document, "property:set", this.onSetNodeContent);
-  this.listenTo(this.writer.__document, "property:updated", this.onUpdateNodeContent);
-  this.listenTo(this.writer.__document, "graph:reset", this.reset);
-  this.listenTo(this.writer.annotator,  "annotation:changed", this.updateAnnotation);
+  this.listenTo(this.doc.selection,  "selection:changed", this.renderSelection);
+  this.listenTo(this.doc.__document, "node:created", this.onCreateNode);
+  this.listenTo(this.doc.__document, "node:deleted", this.onDeleteNode);
+  this.listenTo(this.doc.__document, "property:updated", this.onUpdateView);
+  this.listenTo(this.doc.__document, "property:set", this.onSetNodeContent);
+  this.listenTo(this.doc.__document, "property:updated", this.onUpdateNodeContent);
+  this.listenTo(this.doc.__document, "graph:reset", this.reset);
+  this.listenTo(this.doc.annotator,  "annotation:changed", this.updateAnnotation);
 
   // Start building the initial stuff
   this.build();
@@ -50,7 +50,7 @@ var Surface = function(writer, options) {
   
   this.el.spellcheck = false;
   this.$el.addClass('surface');
-  this.$el.addClass(this.writer.view);
+  this.$el.addClass(this.doc.view);
 
   // The editable surface responds to selection changes
 
@@ -74,7 +74,7 @@ var Surface = function(writer, options) {
     this.$el.delegate('img', 'click', function(e) {
       var $el = $(e.currentTarget).parent().parent().parent();
       var nodeId = $el.attr('id');
-      that.writer.selection.selectNode(nodeId);
+      that.doc.selection.selectNode(nodeId);
       return false;
     });
 
@@ -91,7 +91,7 @@ var Surface = function(writer, options) {
         var dirt = this._dirt.shift();
         dirt[0].textContent = dirt[1];
       }
-      this.writer.write(e.data);
+      this.doc.write(e.data);
       e.preventDefault();
     }.bind(this);
 
@@ -120,35 +120,35 @@ var Surface = function(writer, options) {
     }, "keydown");
 
     this.keyboard.bind(["backspace"], _manipulate(function() {
-      that.writer.delete("left");
+      that.doc.delete("left");
     }), "keydown");
 
     this.keyboard.bind(["del"], _manipulate(function() {
-      that.writer.delete("right");
+      that.doc.delete("right");
     }), "keydown");
 
     this.keyboard.bind(["enter"], _manipulate(function() {
-      that.writer.modifyNode();
+      that.doc.modifyNode();
     }), "keydown");
 
     this.keyboard.bind(["shift+enter"], _manipulate(function() {
-      that.writer.write("\n");
+      that.doc.write("\n");
     }), "keydown");
 
     this.keyboard.bind(["space"], _manipulate(function() {
-      that.writer.write(" ");
+      that.doc.write(" ");
     }), "keydown");
 
     this.keyboard.bind(["tab"], _manipulate(function() {
-      that.writer.write("  ");
+      that.doc.write("  ");
     }), "keydown");
 
     this.keyboard.bind(["command+z"], _manipulate(function() {
-      that.writer.undo();
+      that.doc.undo();
     }), "keydown");
 
     this.keyboard.bind(["command+shift+z"], _manipulate(function() {
-      that.writer.redo();
+      that.doc.redo();
     }), "keydown");
 
     this.makeEditable(this.el);
@@ -180,7 +180,7 @@ Surface.Prototype = function() {
   this.renderAnnotations = function() {
     //debugger;
 
-    var annotations = this.writer.getAnnotations();
+    var annotations = this.doc.getAnnotations();
     var groups = {};
 
     // group the annotations by node id
@@ -221,7 +221,7 @@ Surface.Prototype = function() {
       return;
     }
 
-    var annotations = this.writer.getAnnotations({node: nodeId});
+    var annotations = this.doc.getAnnotations({node: nodeId});
 
     if (nodeView.renderAnnotations === undefined) {
       console.log("NodeView does not support annotations: ", nodeView);
@@ -271,7 +271,7 @@ Surface.Prototype = function() {
 
     // Set selection to the cursor if clicked on the cursor.
     if ($(wSel.anchorNode.parentElement).is(".cursor")) {
-      this.writer.selection.collapse("cursor");
+      this.doc.selection.collapse("cursor");
       return;
     }
 
@@ -303,18 +303,18 @@ Surface.Prototype = function() {
     var endNode = _findNodeElement(wEndPos[0]);
 
     var startNodeId = startNode.getAttribute("id");
-    var startNodePos = this.writer.getPosition(startNodeId) ;
+    var startNodePos = this.doc.getPosition(startNodeId) ;
     var startCharPos = this.nodes[startNodeId].getCharPosition(wStartPos[0], wStartPos[1]);
 
     var endNodeId = endNode.getAttribute("id");
-    var endNodePos = this.writer.getPosition(endNodeId);
+    var endNodePos = this.doc.getPosition(endNodeId);
     var endCharPos = this.nodes[endNodeId].getCharPosition(wEndPos[0], wEndPos[1]);
 
     // the selection range in Document.Selection coordinates
     var startPos = [startNodePos, startCharPos];
     var endPos = [endNodePos, endCharPos];
 
-    this.writer.selection.set({start: startPos, end: endPos});
+    this.doc.selection.set({start: startPos, end: endPos});
   };
 
 
@@ -329,7 +329,7 @@ Surface.Prototype = function() {
       return;
     }
 
-    if (this.writer.selection.isNull()) {
+    if (this.doc.selection.isNull()) {
       this.$cursor.hide();
       return;
     }
@@ -337,12 +337,12 @@ Surface.Prototype = function() {
     // Hide native selection in favor of our custom one
     var wSel = window.getSelection();
 
-    var range = this.writer.selection.range();
-    var startNode = this.writer.getNodeFromPosition(range.start[0]);
+    var range = this.doc.selection.range();
+    var startNode = this.doc.getNodeFromPosition(range.start[0]);
     var startNodeView = this.nodes[startNode.id];
     var wStartPos = startNodeView.getDOMPosition(range.start[1]);
 
-    var endNode = this.writer.getNodeFromPosition(range.end[0]);
+    var endNode = this.doc.getNodeFromPosition(range.end[0]);
     var endNodeView = this.nodes[endNode.id];
     var wEndPos = endNodeView.getDOMPosition(range.end[1]);
 
@@ -352,7 +352,7 @@ Surface.Prototype = function() {
     wSel.removeAllRanges();
     wSel.addRange(wRange);
 
-    // if (this.writer.selection.isReverse()) {
+    // if (this.doc.selection.isReverse()) {
     //   this.positionCursor(wSel, wStartPos);
     // } else {
     //   this.positionCursor(wSel, wEndPos);
@@ -408,7 +408,7 @@ Surface.Prototype = function() {
 
   this.build = function() {
     this.nodes = {};
-    _.each(this.writer.getNodes(), function(node) {
+    _.each(this.doc.getNodes(), function(node) {
       var NodeView = this.nodeTypes[node.type].View;
       this.nodes[node.id] = new NodeView(node);
     }, this);
@@ -422,8 +422,8 @@ Surface.Prototype = function() {
     this.$el.html(html.tpl('surface'));
 
 
-    var nodes = this.writer.getNodes();
-    console.log("Surface.render()", "this.writer.getNodes()", nodes);
+    var nodes = this.doc.getNodes();
+    console.log("Surface.render()", "this.doc.getNodes()", nodes);
 
     _.each(nodes, function(n) {
       $(this.nodes[n.id].render().el).appendTo(this.$('.nodes'));

@@ -2,11 +2,8 @@
 
 var _ = require("underscore");
 var View = require("substance-application").View;
-var Operator = require("substance-operator");
 var util = require("substance-util");
 var Commander = require("substance-commander");
-
-var html = util.html;
 
 // Substance.Surface
 // ==========================================================================
@@ -30,18 +27,35 @@ var Surface = function(doc, options) {
   // Pull out the registered nodetypes on the written article
   this.nodeTypes = doc.__document.nodeTypes;
 
-  // Bind handlers to establish co-transformations on html elements
-  // according to model properties
-  this._viewAdapter = new Surface.ViewAdapter(this);
-
   this.listenTo(this.doc.selection,  "selection:changed", this.renderSelection);
-  this.listenTo(this.doc.__document, "node:created", this.onCreateNode);
-  this.listenTo(this.doc.__document, "node:deleted", this.onDeleteNode);
   this.listenTo(this.doc.__document, "property:updated", this.onUpdateView);
-  this.listenTo(this.doc.__document, "property:set", this.onSetNodeContent);
-  this.listenTo(this.doc.__document, "property:updated", this.onUpdateNodeContent);
   this.listenTo(this.doc.__document, "graph:reset", this.reset);
   this.listenTo(this.doc.annotator,  "annotation:changed", this.updateAnnotation);
+
+  // Experimental: using a factory which creates a view for a given node type
+  // As we want to be able to reuse views
+  // However, as the matter is still under discussion consider the solution here only as provisional.
+  // We should create views, not only elements, as we need more, e.g., event listening stuff
+  // which needs to be disposed later.
+
+  this.viewFactory = {
+    createView: function(node) {
+      var NodeView = that.nodeTypes[node.type].View;
+
+      if (!NodeView) {
+        throw new Error('Node type "'+node.type+'" not supported');
+      }
+
+      // Note: passing the factory to the node views
+      // to allow creation of nested views
+      var nodeView = new NodeView(node, this);
+
+      // we connect the listener here to avoid to pass the document itself into the nodeView
+      nodeView.listenTo(that.doc, "operation:applied", nodeView.onGraphUpdate);
+
+      return nodeView;
+    }
+  };
 
   // Start building the initial stuff
   this.build();
@@ -133,18 +147,16 @@ var Surface = function(doc, options) {
       that.doc.write("  ");
     }), "keydown");
 
-    this.keyboard.bind(["command+z"], _manipulate(function() {
+    this.keyboard.bind(["ctrl+z"], _manipulate(function() {
       that.doc.undo();
     }), "keydown");
 
-    this.keyboard.bind(["command+shift+z"], _manipulate(function() {
+    this.keyboard.bind(["ctrl+shift+z"], _manipulate(function() {
       that.doc.redo();
     }), "keydown");
 
     this.makeEditable(this.el);
-
   }
-
 };
 
 Surface.Prototype = function() {
@@ -227,8 +239,6 @@ Surface.Prototype = function() {
   this.makeEditable = function(el) {
     var that = this;
 
-    var $el = $(el);
-
     el.addEventListener("keydown", this._onKeyDown);
 
     // TODO: cleanup... Firefix needs a different event...
@@ -253,7 +263,8 @@ Surface.Prototype = function() {
   // Read out current DOM selection and update selection in the model
   // ---------------
 
-  this.updateSelection = function(e) {
+  this.updateSelection = function(/*e*/) {
+    console.log("Surface.updateSelection()");
     var wSel = window.getSelection();
 
     // HACK: sometimes it happens that the selection anchor node is undefined.
@@ -454,6 +465,9 @@ Surface.Prototype = function() {
     this.$cursor = this.$('.cursor');
     this.$cursor.hide();
 
+    // keep the nodes for later access
+    this._nodesEl = nodes;
+
     return this;
   };
 
@@ -478,54 +492,6 @@ Surface.Prototype = function() {
     this.stopListening();
   };
 
-  this.onCreateNode = function(node) {
-    if (this.nodeTypes[node.type] === undefined) {
-      // a node type which is not rendered in the surface... ignoring it.
-      return;
-    }
-    var NodeView = this.nodeTypes[node.type].View;
-    if (!NodeView) throw new Error('Node type "'+node.type+'" not supported');
-    this.nodes[node.id] = new NodeView(node);
-  };
-
-  this.onDeleteNode = function(nodeId) {
-    if (this.nodes[nodeId]) {
-      this.nodes[nodeId].dispose();
-    }
-    delete this.nodes[nodeId];
-  };
-
-  // This listener function is used to handle "set" and "update" operations
-  this.onSetNodeContent = function(path) {
-    if (path.length !== 2 || path[1] !== "content") return;
-    this.nodes[path[0]].render();
-  };
-
-  this.onUpdateNodeContent = function(path, diff) {
-    if (path.length !== 2 || path[1] !== "content") return;
-    var adapter = new Surface.TextNodeAdapter(this.nodes[path[0]], this);
-    diff.apply(adapter);
-  };
-
-  this.onUpdateView = function(path, diff) {
-    if (path.length !== 2 || path[0] !== "content" || path[1] !== "nodes") return;
-    diff.apply(this._viewAdapter);
-  };
-};
-
-_.extend(Surface.Prototype, util.Events.Listener);
-
-// Content View Adapter
-// --------
-// Adapter that maps model operations to changes on the according html element
-//
-
-var ViewAdapter = function(surface) {
-  this.surface = surface;
-};
-
-ViewAdapter.__prototype__ = function() {
-
   function insertOrAppend(container, pos, el) {
     var childs = container.childNodes;
     if (pos < childs.length) {
@@ -536,69 +502,51 @@ ViewAdapter.__prototype__ = function() {
     }
   }
 
-  this.container = function() {
-    return this.surface.$('.nodes')[0];
+  this.onUpdateView = function(path, diff) {
+    if (path.length !== 2 || path[0] !== "content" || path[1] !== "nodes") return;
+
+    var nodeId, node;
+    var container = this._nodesEl;
+
+    var children, el;
+
+    if (diff.isInsert()) {
+      // Create a view and insert render it into the nodes container element.
+      nodeId = diff.val;
+      node = this.doc.get(nodeId);
+      // TODO: this will hopefully be solved in a clean way
+      // when we have done the 'renderer' refactorings
+      if (this.nodeTypes[node.type]) {
+        var nodeView = this.viewFactory.createView(node);
+        this.nodes[nodeId] = nodeView;
+        el = nodeView.render().el;
+        insertOrAppend(container, diff.pos, el);
+      }
+    }
+    else if (diff.isDelete()) {
+      // Dispose the view and remove its element from the nodes container
+      nodeId = diff.val;
+      if (this.nodes[nodeId]) {
+        this.nodes[nodeId].dispose();
+      }
+      delete this.nodes[nodeId];
+      children = container.children;
+      container.removeChild(children[diff.pos]);
+    }
+    else if (diff.isMove()) {
+      children = container.children;
+      el = children[diff.pos];
+      container.removeChild(el);
+      insertOrAppend(container, diff.target, el);
+    }
+    else {
+      throw new Error("Illegal state.");
+    }
   };
 
-  // Creates a new node view
-  // --------
-  //
-
-  this.insert = function(pos, nodeId) {
-    var nodes = this.surface.nodes;
-    var el = nodes[nodeId].render().el;
-    insertOrAppend(this.container(), pos, el);
-  };
-
-  this.delete = function(pos) {
-    var childs = this.container().childNodes;
-    this.container().removeChild(childs[pos]);
-  };
-
-  this.move = function(val, oldPos, newPos) {
-    var childs = this.container().childNodes;
-    var el = childs[oldPos];
-    this.container().removeChild(el);
-    insertOrAppend(this.container(), newPos, el);
-  };
 };
 
-ViewAdapter.__prototype__.prototype = Operator.ArrayOperation.ArrayAdapter.prototype;
-ViewAdapter.prototype = new ViewAdapter.__prototype__();
-
-
-// TextNode Content Adapter
-// --------
-//
-// Model operations on properties that are represented as text nodes
-// are transferred to changes on the according html elements.
-//
-
-var TextNodeAdapter = function(node, surface) {
-  this.node = node;
-  this.surface = surface;
-};
-
-TextNodeAdapter.__prototype__ = function() {
-  this.insert = function(pos, str) {
-    this.node.insert(pos, str);
-  };
-
-  this.delete = function(pos, length) {
-    this.node.delete(pos, length);
-  };
-
-  this.get = function() {
-    return this;
-  };
-};
-
-TextNodeAdapter.__prototype__.prototype = Operator.TextOperation.StringAdapter.prototype;
-TextNodeAdapter.prototype = new TextNodeAdapter.__prototype__();
-
-
-Surface.TextNodeAdapter = TextNodeAdapter;
-Surface.ViewAdapter = ViewAdapter;
+_.extend(Surface.Prototype, util.Events.Listener);
 
 Surface.Prototype.prototype = View.prototype;
 Surface.prototype = new Surface.Prototype();

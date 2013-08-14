@@ -1,18 +1,18 @@
 /* Surface
 -------------------------------------------------------------------------------*/
 
-#container .surface {
+.surface {
   position: relative;
 }
 
 /* Very important dude */
 /* Makes sure .nodes is used as a reference for absolute positioning */
-#container .surface .nodes {
+.surface .nodes {
   position: relative;
 }
 
 /* Generic node styles */
-#container .surface .content-node {
+.surface .content-node {
   position: relative;
 }
 
@@ -24,7 +24,7 @@
 /* Cursor
 -------------------------------------------------------------------------------*/
 
-#container .surface .cursor {
+.surface .cursor {
   position: absolute;
   top: 0px;
   height: 20px;
@@ -37,7 +37,7 @@
   thanks patch!
 */
 
-#container .surface .cursor {
+.surface .cursor {
   -webkit-animation: blink 1.2s step-end infinite;
      -moz-animation: blink 1.2s step-end infinite;
       -ms-animation: blink 1.2s step-end infinite;

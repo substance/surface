@@ -413,8 +413,7 @@ Surface.Prototype = function() {
   this.build = function() {
     this.nodes = {};
     _.each(this.doc.getNodes(), function(node) {
-      var NodeView = this.nodeTypes[node.type].View;
-      this.nodes[node.id] = new NodeView(node);
+      this.nodes[node.id] = this.viewFactory.createView(node);
     }, this);
   };
 

@@ -109,11 +109,14 @@ var Surface = function(doc, options) {
       };
     };
 
+    // TODO: many combinations which would probably be easy to handle
+    // using the native event...
     this.keyboard = new Commander.Mousetrap();
     this.keyboard.bind([
         "up", "down", "left", "right",
         "shift+up", "shift+down", "shift+left", "shift+right",
         "ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right",
+        "ctrl+shift+up", "ctrl+shift+down", "ctrl+shift+left", "ctrl+shift+right",
         "alt+up", "alt+down", "alt+left", "alt+right"
       ], function() {
       // call this after the movement has been done by the contenteditable
@@ -264,7 +267,7 @@ Surface.Prototype = function() {
   // ---------------
 
   this.updateSelection = function(/*e*/) {
-    // console.log("Surface.updateSelection()");
+    console.log("Surface.updateSelection()");
     var wSel = window.getSelection();
 
     // HACK: sometimes it happens that the selection anchor node is undefined.

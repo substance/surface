@@ -237,6 +237,9 @@ Surface.Prototype = function() {
     }
 
     nodeView.renderAnnotations(annotations);
+
+    // HACK: after the annotations have been rendered, the DOM selection is corrupted
+    this.renderSelection();
   };
 
   this.makeEditable = function(el) {

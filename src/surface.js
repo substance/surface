@@ -16,7 +16,6 @@ var Surface = function(doc, options) {
   }, options);
 
   View.call(this);
-
   var that = this;
 
   this.options = options;
@@ -31,31 +30,6 @@ var Surface = function(doc, options) {
   this.listenTo(this.doc.__document, "property:updated", this.onUpdateView);
   this.listenTo(this.doc.__document, "graph:reset", this.reset);
   this.listenTo(this.doc.annotator,  "annotation:changed", this.updateAnnotation);
-
-  // Experimental: using a factory which creates a view for a given node type
-  // As we want to be able to reuse views
-  // However, as the matter is still under discussion consider the solution here only as provisional.
-  // We should create views, not only elements, as we need more, e.g., event listening stuff
-  // which needs to be disposed later.
-
-  this.viewFactory = {
-    createView: function(node) {
-      var NodeView = that.nodeTypes[node.type].View;
-
-      if (!NodeView) {
-        throw new Error('Node type "'+node.type+'" not supported');
-      }
-
-      // Note: passing the factory to the node views
-      // to allow creation of nested views
-      var nodeView = new NodeView(node, this);
-
-      // we connect the listener here to avoid to pass the document itself into the nodeView
-      nodeView.listenTo(that.doc, "operation:applied", nodeView.onGraphUpdate);
-
-      return nodeView;
-    }
-  };
 
   // Start building the initial stuff
   this.build();
@@ -91,7 +65,7 @@ var Surface = function(doc, options) {
     this._onTextInput = function(e) {
       //console.log("textinput", e);
       this._dirtPossible = false;
-      while(this._dirt.length > 0) {
+      while (this._dirt.length > 0) {
         var dirt = this._dirt.shift();
         dirt[0].textContent = dirt[1];
       }
@@ -161,6 +135,7 @@ var Surface = function(doc, options) {
     this.makeEditable(this.el);
   }
 };
+
 
 Surface.Prototype = function() {
 
@@ -413,18 +388,21 @@ Surface.Prototype = function() {
 
 
   // Setup
-  // =============================
+  // --------
   //
 
   this.build = function() {
-    this.nodes = {};
-    _.each(this.doc.getNodes(), function(node) {
-      this.nodes[node.id] = this.viewFactory.createView(node);
-    }, this);
+    var Renderer = this.options.renderer || this.doc.__document.constructor.Renderer;
+
+    // Create a Renderer instance, which implicitly constructs all content node views.
+    this.renderer = new Renderer(this.doc);
+
+    // Add some backward compatibility
+    this.nodes = this.renderer.nodes;
   };
 
-  // Rendering
-  // =============================
+  // Render it
+  // --------
   //
   // input.image-files
   // .controls
@@ -442,7 +420,6 @@ Surface.Prototype = function() {
 
     fileInput.setAttribute("name", "files[]");
 
-
     var controls = document.createElement('div');
     controls.className = "controls";
     var nodes = document.createElement('div');
@@ -456,14 +433,16 @@ Surface.Prototype = function() {
     this.el.appendChild(nodes);
     this.el.appendChild(cursor);
 
-    var docNodes = this.doc.getNodes();
     console.log("Surface.render()", "this.doc.getNodes()", nodes);
 
-    _.each(docNodes, function(n) {
-      $(this.nodes[n.id].render().el).appendTo(this.$('.nodes'));
-    }, this);
+    // Actual content goes here
+    // --------
+    // 
+    // We get back a document fragment from the renderer
 
-    this.renderAnnotations();
+    nodes.appendChild(this.renderer.render());
+
+    // this.renderAnnotations();
 
     // TODO: fixme
     this.$('input.image-files').hide();

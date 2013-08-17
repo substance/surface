@@ -34,7 +34,6 @@ var Surface = function(doc, options) {
   // Start building the initial stuff
   this.build();
 
-  this.el.spellcheck = false;
   this.$el.addClass('surface');
   this.$el.addClass(this.doc.view);
 
@@ -43,6 +42,7 @@ var Surface = function(doc, options) {
   if (options.editable) {
 
     this.el.setAttribute("contenteditable", "true");
+    this.el.spellcheck = false;
 
     this.$el.mouseup(function(e) {
       this.ignoreNextSelection = true;

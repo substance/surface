@@ -437,12 +437,12 @@ Surface.Prototype = function() {
 
     // Actual content goes here
     // --------
-    // 
+    //
     // We get back a document fragment from the renderer
 
     nodes.appendChild(this.renderer.render());
 
-    // this.renderAnnotations();
+    this.renderAnnotations();
 
     // TODO: fixme
     this.$('input.image-files').hide();
@@ -501,7 +501,7 @@ Surface.Prototype = function() {
       // TODO: this will hopefully be solved in a clean way
       // when we have done the 'renderer' refactorings
       if (this.nodeTypes[node.type]) {
-        var nodeView = this.viewFactory.createView(node);
+        var nodeView = this.renderer.createView(node);
         this.nodes[nodeId] = nodeView;
         el = nodeView.render().el;
         insertOrAppend(container, diff.pos, el);

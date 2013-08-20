@@ -6,6 +6,8 @@
 var Surface = require("../index");
 var Article = require("substance-article");
 var DocumentController = require("substance-document").Controller;
+var Test = require('substance-test');
+var assert = Test.assert;
 
 
 var ID_IDX = 1;
@@ -32,8 +34,6 @@ var SurfaceTest = function() {
 
     $('.test-center .test-output').show();
     $('.test-center .test-output').html(this.surface.render().el);
-
-    this.fixture();
   };
 
   this.insertContent = function(content) {
@@ -72,12 +72,18 @@ var SurfaceTest = function() {
     console.log('verifying selection..');
   };
 
-  // Load fixture
-  // --------
+  this.verifyTextNodeContent = function(nodeId) {
+    var textEl = this.surface.el.querySelector("div#"+nodeId);
 
-  this.fixture = function() {
-    // TODO: Load some initial seed
+    var wRange = document.createRange();
+    wRange.selectNode(textEl);
+
+    var expected = this.doc.get(nodeId).content;
+    var actual = wRange.toString();
+
+    assert.isEqual(expected, actual);
   };
+
 };
 
 // Export

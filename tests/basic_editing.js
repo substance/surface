@@ -21,6 +21,8 @@ var P2 = "Pack my box with five dozen liquor jugs";
 var P3 = "Fix problem quickly with galvanized jets";
 var P4 = "Heavy boxes perform quick waltzes and jigs";
 
+// TODO: Rewrite. Surface tests must be more surface oriented.
+
 var BasicEditing = function() {
   SurfaceTest.call(this);
 
@@ -28,6 +30,7 @@ var BasicEditing = function() {
   this.fixture = function() {};
 
   this.actions = [
+
     "Insert some text", function() {
       this.insertContent(P1);
     },
@@ -61,6 +64,8 @@ var BasicEditing = function() {
       var nodeId = this.doc.get('content').nodes[1];
       var node = this.doc.get(nodeId);
       assert.isEqual(P2+".", node.content);
+
+      // TODO: check surface
     },
 
     "Make a selection", function() {
@@ -68,19 +73,27 @@ var BasicEditing = function() {
         start: [0, 5],
         end: [1, 10],
       });
+
+      // TODO: check surface
     },
 
     "Delete selection", function() {
-      this.doc.delete();
-    },
-
-    "Delete previous character for collapsed (single cursor) selection", function() {
       this.doc.selection.set({
-        start: [0, 4],
-        end: [0, 4]
+        start: [0, 5],
+        end: [1, 10],
       });
 
       this.doc.delete();
+
+      // TODO: check surface
+    },
+
+    "Delete previous character for collapsed (single cursor) selection", function() {
+      this.doc.selection.set([0, 4]);
+
+      this.doc.delete();
+
+      // TODO: check surface
     },
 
     "Select last three chars of a textnode", function() {
@@ -88,7 +101,11 @@ var BasicEditing = function() {
         start: [0, 31],
         end: [0, 34]
       });
-      assert.isEqual(3, $('.content-node span.selected').length);
+
+      var expected = this.doc.get("text_1").content.substring(31, 34);
+      var actual = window.getSelection().toString();
+
+      assert.isEqual(expected, actual);
     },
 
     "Select last char in text node", function() {
@@ -96,91 +113,94 @@ var BasicEditing = function() {
         start: [0, 33],
         end: [0, 34]
       });
-      assert.isEqual(1, $('.content-node span.selected').length);
+
+      var expected = this.doc.get("text_1").content.substring(33, 34);
+      var actual = window.getSelection().toString();
+
+      assert.isEqual(expected, actual);
     },
 
     "Position cursor after last char and hit backspace", function() {
-      this.doc.selection.set({
-        start: [0, 34],
-        end: [0, 34]
-      });
+      this.doc.selection.set([0, 34]);
 
-      // Make sure there's no selection, but a
-      // TODO: move check to a shared verifySelection
-      // that compares the selection in the model with
-      // the DOM equivalent
-      assert.isEqual(0, $('.content-node span.selected').length);
-      assert.isEqual(1, $('.content-node .cursor').length);
+      assert.isTrue(window.getSelection().isCollapsed);
+      // Note: delete() ~= backspace ... i.e., delete('left')
+      this.doc.delete("left");
 
-      this.doc.delete();
-
-      assert.isEqual(1, $('.content-node .cursor').length);
-      // After delection there must be three remaining chars in the first paragraph
-      assert.isEqual(33, $('.content-node:first .content')[0].children.length);
+      this.verifyTextNodeContent("text_1");
     },
 
+/*
+    // // TODO: like this, it is not a surface test
+    // "Move cursor to previous char", function() {
+    //   this.doc.selection.set([1, 30]);
 
-    "Move cursor to previous char", function() {
-      this.doc.selection.set({
-        start: [1, 30],
-        end: [1, 30]
-      });
+    //   this.doc.selection.move('left', 'char');
+    //   var range = this.doc.selection.range();
+    //   assert.isDeepEqual([1,29], range.start);
+    //   assert.isDeepEqual([1,29], range.end);
+    // },
 
-      this.doc.selection.move('left');
-      var sel = this.doc.selection;
-      assert.isDeepEqual([1,29], sel.start);
-      assert.isDeepEqual([1,29], sel.end);
-    },
+    // // TODO: like this, it is not a surface test
+    // "Move cursor to next char", function() {
+    //   this.doc.selection.set([1, 29]);
 
-    "Move cursor to next char", function() {
-      this.doc.selection.move('right');
+    //   this.doc.selection.move('right');
 
-      var sel = this.doc.selection;
-      assert.isDeepEqual([1,30], sel.start);
-      assert.isDeepEqual([1,30], sel.end);
-    },
+    //   var range = this.doc.selection.range();
+    //   assert.isDeepEqual([1,30], range.start);
+    //   assert.isDeepEqual([1,30], range.end);
+    // },
 
-    "Move cursor to next paragraph", function() {
-      this.doc.selection.set({
-        start: [1, 40],
-        end: [1, 40]
-      });
+    // // TODO: like this, it is not a surface test
+    // "Move cursor to next paragraph", function() {
+    //   this.doc.selection.set([1, 40]);
 
-      this.doc.selection.move('right');
-      var sel = this.doc.selection;
-      assert.isDeepEqual([2,0], sel.start);
-      assert.isDeepEqual([2,0], sel.end);
-    },
+    //   this.doc.selection.move('right');
 
-    "Move cursor back to prev paragraph", function() {
-      this.doc.selection.move('left');
-      var sel = this.doc.selection;
-      assert.isDeepEqual([1,40], sel.start);
-      assert.isDeepEqual([1,40], sel.end);
-    },
+    //   var range = this.doc.selection.range();
+    //   assert.isDeepEqual([2,0], range.start);
+    //   assert.isDeepEqual([2,0], range.end);
+    // },
 
-    "Collapse cursor after multi-char selection", function() {
-      this.doc.selection.set({
-        start: [1, 18],
-        end: [1, 22]
-      });
-      this.doc.selection.move('right');
+    // // TODO: like this, it is not a surface test
+    // "Move cursor back to prev paragraph", function() {
+    //   this.doc.selection.set([2, 0]);
 
-      var sel = this.doc.selection;
-      assert.isDeepEqual([1,22], sel.start);
-      assert.isDeepEqual([1,22], sel.end);
-    },
+    //   this.doc.selection.move('left');
 
-    "Collapse cursor before multi-char selection", function() {
-      var sel = this.doc.selection;
-      sel.set({
-        start: [1, 18],
-        end: [1, 24]
-      });
-      sel.move('left');
-      assert.isDeepEqual([1,18], sel.start);
-      assert.isDeepEqual([1,18], sel.end);
-    },
+    //   var range = this.doc.selection.range();
+    //   assert.isDeepEqual([1,40], range.start);
+    //   assert.isDeepEqual([1,40], range.end);
+    // },
+
+    // // TODO: like this, it is not a surface test
+    // "Collapse cursor after multi-char selection", function() {
+    //   this.doc.selection.set({
+    //     start: [1, 18],
+    //     end: [1, 22]
+    //   });
+
+    //   this.doc.selection.move('right');
+
+    //   var range = this.doc.selection.range();
+    //   assert.isDeepEqual([1,22], range.start);
+    //   assert.isDeepEqual([1,22], range.end);
+    // },
+
+    // // TODO: like this, it is not a surface test
+    // "Collapse cursor before multi-char selection", function() {
+    //   this.doc.selection.set({
+    //     start: [1, 18],
+    //     end: [1, 24]
+    //   });
+
+    //   this.doc.selection.move('left');
+
+    //   var range = this.doc.selection.range();
+    //   assert.isDeepEqual([1,18], range.start);
+    //   assert.isDeepEqual([1,18], range.end);
+    // },
 
     "Merge with previous text node", function() {
       var sel = this.doc.selection;
@@ -188,8 +208,7 @@ var BasicEditing = function() {
 
       this.doc.delete();
 
-      assert.isDeepEqual([0,33], sel.start);
-      assert.isDeepEqual([0,33], sel.end);
+      this.verifyTextNodeContent("text_1");
     },
 
     // Think pressing enter
@@ -272,7 +291,7 @@ var BasicEditing = function() {
       // var view = this.doc.clipboard.getContent().get('content').nodes;
       // assert.isEqual(1, view.length);
     },
-
+*/
     // "Copy selected content", function() {
     //   console.log("TEXT", this.doc.selection.getText());
     //   this.doc.cut();

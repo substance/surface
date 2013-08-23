@@ -11,8 +11,7 @@ var Commander = require("substance-commander");
 var Surface = function(doc, options) {
 
   options = _.extend({
-    editable: true,
-    view: "content"
+    editable: true
   }, options);
 
   View.call(this);
@@ -144,11 +143,8 @@ Surface.Prototype = function() {
   var _findNodeElement = function(node) {
     var current = node;
     while(current !== undefined) {
-      if ($(current).is("div.content-node")) {
-        var id = current.getAttribute("id");
-        if (this.nodes[id]) {
-          return current;
-        }
+      if ($(current).is(".content-node")) {
+        return current;
       }
       current = current.parentElement;
     }
@@ -324,11 +320,11 @@ Surface.Prototype = function() {
 
     var range = this.doc.selection.range();
     var startNode = this.doc.getNodeFromPosition(range.start[0]);
-    var startNodeView = this.nodes[startNode.id];
+    var startNodeView = this.renderer.nodes[startNode.id];
     var wStartPos = startNodeView.getDOMPosition(range.start[1]);
 
     var endNode = this.doc.getNodeFromPosition(range.end[0]);
-    var endNodeView = this.nodes[endNode.id];
+    var endNodeView = this.renderer.nodes[endNode.id];
     var wEndPos = endNodeView.getDOMPosition(range.end[1]);
 
     var wRange = document.createRange();
@@ -522,8 +518,8 @@ Surface.Prototype = function() {
       el = children[diff.pos];
       container.removeChild(el);
       insertOrAppend(container, diff.target, el);
-    }
-    else {
+    } else if (diff.type === "NOP") {
+    } else {
       throw new Error("Illegal state.");
     }
   };

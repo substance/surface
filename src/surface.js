@@ -468,8 +468,6 @@ Surface.Prototype = function() {
     _.each(this.nodes, function(n) {
       n.dispose();
     }, this);
-
-    this.stopListening();
   };
 
   function insertOrAppend(container, pos, el) {

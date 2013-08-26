@@ -241,7 +241,7 @@ Surface.Prototype = function() {
   // ---------------
 
   this.updateSelection = function(/*e*/) {
-    console.log("Surface.updateSelection()");
+    // console.log("Surface.updateSelection()");
     var wSel = window.getSelection();
 
     // HACK: sometimes it happens that the selection anchor node is undefined.

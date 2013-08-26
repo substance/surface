@@ -176,7 +176,7 @@ Surface.Prototype = function() {
     _.each(groups, function(group, nodeId) {
       var nodeView = this.nodes[nodeId];
       if (nodeView === undefined) {
-        console.log("There are annotations for node: ", nodeId);
+        // console.log("There are annotations for node: ", nodeId);
         return;
       }
       if (nodeView.renderAnnotations === undefined) {

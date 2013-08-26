@@ -28,7 +28,6 @@ var Surface = function(doc, options) {
   this.listenTo(this.doc.selection,  "selection:changed", this.renderSelection);
   this.listenTo(this.doc.__document, "property:updated", this.onUpdateView);
   this.listenTo(this.doc.__document, "graph:reset", this.reset);
-  this.listenTo(this.doc.annotator,  "annotation:changed", this.updateAnnotation);
 
   // Start building the initial stuff
   this.build();
@@ -151,68 +150,6 @@ Surface.Prototype = function() {
     return null;
   };
 
-  // Renders all registered annotations
-  // ---------------
-  //
-  // TODO: find a way to render a delta, instead of everything
-
-  this.renderAnnotations = function() {
-    //debugger;
-
-    var annotations = this.doc.getAnnotations();
-    var groups = {};
-
-    // group the annotations by node id
-    _.each(annotations, function(a){
-      var nodeId = a.path[0];
-      groups[nodeId] = groups[nodeId] || [];
-      groups[nodeId].push(a);
-    });
-
-    _.each(groups, function(group, nodeId) {
-      var nodeView = this.nodes[nodeId];
-      if (nodeView === undefined) {
-        console.log("There are annotations for node: ", nodeId);
-        return;
-      }
-      if (nodeView.renderAnnotations === undefined) {
-        console.log("NodeView does not support annotations: ", nodeView);
-        return;
-      }
-      nodeView.renderAnnotations(group);
-    }, this);
-  };
-
-  // Updates a given annotation
-  // --------
-  //
-
-  this.updateAnnotation = function(changeType, annotation) {
-    console.log("Updating annotation: ", annotation);
-
-    // TODO: make this incrementally....
-    // currently everthing must be rerendered
-    var nodeId = annotation.path[0];
-    var nodeView = this.nodes[nodeId];
-
-    if (nodeView === undefined) {
-      console.log("No node view for annotated node: ", nodeId);
-      return;
-    }
-
-    var annotations = this.doc.getAnnotations({node: nodeId});
-
-    if (nodeView.renderAnnotations === undefined) {
-      console.log("NodeView does not support annotations: ", nodeView);
-      return;
-    }
-
-    nodeView.renderAnnotations(annotations);
-
-    // HACK: after the annotations have been rendered, the DOM selection is corrupted
-    this.renderSelection();
-  };
-
   this.makeEditable = function(el) {
     var that = this;
 
@@ -333,55 +270,7 @@ Surface.Prototype = function() {
     wSel.removeAllRanges();
     wSel.addRange(wRange);
 
-    // if (this.doc.selection.isReverse()) {
-    //   this.positionCursor(wSel, wStartPos);
-    // } else {
-    //   this.positionCursor(wSel, wEndPos);
-    // }
   };
-
-  // Position cursor
-  // --------
-  //
-
-  this.positionCursor = function(wSel, range) {
-
-    var rect = range.getClientRects()[0];
-
-    var cursorPos = {};
-    // HACK: it still happens that the provided range does not have a client rectangle (?!)
-    // In this case we try to take another useful rectangle.
-    if (rect === undefined) {
-      Surface.Hacks.undefinedRectHack.call(this, wSel, range, cursorPos);
-    } else {
-      cursorPos = {
-        top: rect.top,
-        left: rect.left,
-        height: rect.height
-      };
-    }
-
-    // HACK: having whitespaces pre-wrapped, the cursor shows add the end of line
-    // and not at the begin of line
-    // This has a lot to do how the DOM Ranges work, or... do not work.
-    // E.g., creating a Range spanning over the character in a new line will
-    // not produce a rectangle, but returns that at the end of the previous line (?!)
-    // We address this glitch here:
-    if (this._needEndOfLineHack) {
-      Surface.Hacks.endOfLineHack.call(this, range, cursorPos);
-    }
-
-    // make the position relative to the surface
-    var surfaceOffset = this.el.getClientRects()[0];
-    cursorPos.top -= surfaceOffset.top;
-    cursorPos.left -= surfaceOffset.left;
-
-    // removing the cursor to re-trigger begin of CSS animation (~blinking).
-    this.$cursor.remove();
-    this.$cursor.css(cursorPos).show();
-    this.$el.append(this.$cursor);
-  };
-
 
   // Setup
   // --------
@@ -438,8 +327,6 @@ Surface.Prototype = function() {
 
     nodes.appendChild(this.renderer.render());
 
-    this.renderAnnotations();
-
     // TODO: fixme
     this.$('input.image-files').hide();
     this.$cursor = this.$('.cursor');
@@ -469,6 +356,8 @@ Surface.Prototype = function() {
       n.dispose();
     }, this);
   };
+
+  // TODO: we could factor this out into something like a ContainerView?
 
   function insertOrAppend(container, pos, el) {
     var childs = container.childNodes;
@@ -521,7 +410,6 @@ Surface.Prototype = function() {
       throw new Error("Illegal state.");
     }
   };
-
 };
 
 _.extend(Surface.Prototype, util.Events.Listener);

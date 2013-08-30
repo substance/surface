@@ -304,4 +304,4 @@ var BasicEditing = function() {
 
 BasicEditing.prototype = SurfaceTest.prototype;
 
-registerTest(['Surface', 'Basic Editing'], new BasicEditing());
+registerTest(['Substance.Surface', 'Basic Editing'], new BasicEditing());

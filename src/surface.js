@@ -318,7 +318,7 @@ Surface.Prototype = function() {
     this.el.appendChild(nodes);
     this.el.appendChild(cursor);
 
-    console.log("Surface.render()", "this.doc.getNodes()", nodes);
+    // console.log("Surface.render()", "this.doc.getNodes()", nodes);
 
     // Actual content goes here
     // --------

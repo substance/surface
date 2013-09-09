@@ -33,6 +33,8 @@ var Surface = function(doc, options) {
   this.build();
 
   this.$el.addClass('surface');
+
+  // Shouldn't this be done outside?
   this.$el.addClass(this.doc.view);
 
   // The editable surface responds to selection changes

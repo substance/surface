@@ -16,8 +16,8 @@
   position: relative;
 }
 
-.content-node {
-  margin: 0 60px;
+.surface .nodes > .content-node {
+  /*margin: 0 60px;*/
 }
 
 

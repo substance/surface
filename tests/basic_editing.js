@@ -96,7 +96,7 @@ var BasicEditing = function() {
       // TODO: check surface
     },
 
-    "Select last three chars of a textnode", function() {
+    "Select last three chars of a textnode", function() {
       this.doc.selection.set({
         start: [0, 31],
         end: [0, 34]

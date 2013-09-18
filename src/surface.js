@@ -19,6 +19,12 @@ var Surface = function(doc, options) {
 
   this.options = options;
 
+  if (this.options.renderer) {
+    this.renderer = this.options.renderer;
+  } else {
+    this.renderer = new this.doc.__document.constructor.Renderer(doc);
+  }
+  
   // Incoming events
   this.doc = doc;
 
@@ -279,10 +285,10 @@ Surface.Prototype = function() {
   //
 
   this.build = function() {
-    var Renderer = this.options.renderer || this.doc.__document.constructor.Renderer;
-
+    // var Renderer = this.options.renderer || this.doc.__document.constructor.Renderer;
+    // var renderer = this.options.renderer:
     // Create a Renderer instance, which implicitly constructs all content node views.
-    this.renderer = new Renderer(this.doc);
+    // this.renderer = new Renderer(this.doc);
 
     // Add some backward compatibility
     this.nodes = this.renderer.nodes;

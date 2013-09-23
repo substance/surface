@@ -22,9 +22,9 @@ var Surface = function(doc, options) {
   if (this.options.renderer) {
     this.renderer = this.options.renderer;
   } else {
-    this.renderer = new this.doc.__document.constructor.Renderer(doc);
+    this.renderer = new doc.__document.constructor.Renderer(doc);
   }
-  
+
   // Incoming events
   this.doc = doc;
 

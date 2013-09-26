@@ -13,7 +13,8 @@
     "underscore": "",
     "substance-util": "",
     "substance-application": "",
-    "substance-operator": ""
+    "substance-operator": "",
+    "substance-commander": ""
   },
   "devDependencies": {
     "substance-test": "",

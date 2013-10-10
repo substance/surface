@@ -1,10 +1,11 @@
 {
   "name": "substance-surface",
-  "description": "An extensible low-level interface for semantic rich text editing.",
+  "description": "An extensible low-level interface for semantic rich text viewing and editing.",
   "url": "http://github.com/substance/surface/",
   "keywords": [
-    "text editor",
-    "browser"
+    "document renderer",
+    "selection",
+    "cursor"
   ],
   "author": "Michael Aufreiter",
   "contributors": [
@@ -16,14 +17,14 @@
   },
   "dependencies": {
     "underscore": "1.5.x",
-    "substance-util": "git+https://github.com/substance/util.git#0.2.x",
-    "substance-application": "git+https://github.com/substance/application.git#0.1.x",
-    "substance-operator": "git+https://github.com/substance/operator.git#0.2.x",
-    "substance-commander": "git+https://github.com/substance/commander.git#0.1.x"
+    "substance-util": "master",
+    "substance-application": "master",
+    "substance-operator": "master",
+    "substance-commander": "master"
   },
   "devDependencies": {
-    "substance-test": "git+https://github.com/substance/test.git#0.2.x",
-    "substance-document": "git+https://github.com/substance/document.git#0.5.x"
+    "substance-test": "0.2.x",
+    "substance-document": "master"
   },
   "version": "0.3.0",
   "engines": {

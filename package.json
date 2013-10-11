@@ -1,10 +1,11 @@
 {
   "name": "substance-surface",
-  "description": "An extensible low-level interface for semantic rich text editing.",
+  "description": "An extensible low-level interface for semantic rich text viewing and editing.",
   "url": "http://github.com/substance/surface/",
   "keywords": [
-    "text editor",
-    "browser"
+    "document renderer",
+    "selection",
+    "cursor"
   ],
   "author": "Michael Aufreiter",
   "contributors": [

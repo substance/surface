@@ -17,14 +17,14 @@
   },
   "dependencies": {
     "underscore": "1.5.x",
-    "substance-util": "0.2.0",
-    "substance-application": "0.1.0",
-    "substance-operator": "0.2.0",
-    "substance-commander": "0.1.0"
+    "substance-util": "git+https://github.com/substance/util.git#0.3.x",
+    "substance-application": "git+https://github.com/substance/application.git#0.2.x",
+    "substance-operator": "git+https://github.com/substance/operator.git#0.3.x",
+    "substance-commander": "git+https://github.com/substance/commander.git#0.2.x"
   },
   "devDependencies": {
-    "substance-test": "0.2.0",
-    "substance-document": "0.5.0"
+    "substance-test": "git+https://github.com/substance/test.git#0.3.x",
+    "substance-document": "git+https://github.com/substance/document.git#0.6.x"
   },
   "version": "0.3.0",
   "engines": {

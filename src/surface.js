@@ -7,10 +7,8 @@ var util = require("substance-util");
 // Substance.Surface
 // ==========================================================================
 
-var Surface = function(docCtrl, renderer, options) {
+var Surface = function(docCtrl, renderer) {
   View.call(this);
-
-  options = options || {};
 
   // Rename docCtrl to surfaceCtrl ?
   this.docCtrl = docCtrl;
@@ -25,7 +23,6 @@ var Surface = function(docCtrl, renderer, options) {
 
   this.listenTo(this.document, "property:updated", this.onUpdateView);
   this.listenTo(this.document, "graph:reset", this.reset);
-
 };
 
 

@@ -1,6 +1,6 @@
 {
   "name"          : "substance-surface",
-  "description"   : "An extensible low-level interface for semantic rich text viewing and editing.",
+  "description"   : "An extensible low-level interface for displaying Substance documents.",
   "url"           : "http://github.com/substance/surface/",
   "keywords"      : ["document renderer", "selection", "cursor"],
   "author"        : "Michael Aufreiter",
@@ -13,12 +13,11 @@
     "underscore": "",
     "substance-util": "",
     "substance-application": "",
-    "substance-operator": "",
-    "substance-commander": ""
+    "substance-operator": ""
   },
   "devDependencies": {
     "substance-test": "",
     "substance-document": ""
   },
-  "version"       : "0.3.0"
+  "version"       : "0.4.0"
 }

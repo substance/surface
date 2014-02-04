@@ -3,143 +3,29 @@
 var _ = require("underscore");
 var View = require("substance-application").View;
 var util = require("substance-util");
-var Commander = require("substance-commander");
 
 // Substance.Surface
 // ==========================================================================
 
-var Surface = function(doc, options) {
-
-  options = _.extend({
-    editable: true
-  }, options);
-
+var Surface = function(docCtrl, renderer, options) {
   View.call(this);
-  var that = this;
 
-  this.options = options;
+  options = options || {};
 
-  if (this.options.renderer) {
-    this.renderer = this.options.renderer;
-  } else {
-    this.renderer = new doc.__document.constructor.Renderer(doc);
-  }
-
-  // Incoming events
-  this.doc = doc;
+  // Rename docCtrl to surfaceCtrl ?
+  this.docCtrl = docCtrl;
+  this.renderer = renderer;
+  this.document = docCtrl.session.document;
 
   // Pull out the registered nodetypes on the written article
-  this.nodeTypes = doc.__document.nodeTypes;
-
-  this.listenTo(this.doc.selection,  "selection:changed", this.renderSelection);
-  this.listenTo(this.doc.__document, "property:updated", this.onUpdateView);
-  this.listenTo(this.doc.__document, "graph:reset", this.reset);
-
-  // Start building the initial stuff
-  this.build();
+  this.nodeTypes = this.document.nodeTypes;
+  this.nodeViews = this.renderer.nodeViews;
 
   this.$el.addClass('surface');
 
-  // Shouldn't this be done outside?
-  this.$el.addClass(this.doc.view);
+  this.listenTo(this.document, "property:updated", this.onUpdateView);
+  this.listenTo(this.document, "graph:reset", this.reset);
 
-  // The editable surface responds to selection changes
-
-  if (options.editable) {
-
-    this.el.setAttribute("contenteditable", "true");
-    this.el.spellcheck = false;
-
-    this.$el.mouseup(function(e) {
-      this.ignoreNextSelection = true;
-      this.updateSelection(e);
-    }.bind(this));
-
-    this.$el.delegate('img', 'click', function(e) {
-      var $el = $(e.currentTarget).parent().parent().parent();
-      var nodeId = $el.attr('id');
-      that.doc.selection.selectNode(nodeId);
-      return false;
-    });
-
-    this._dirt = [];
-
-    this._onKeyDown = function() {
-      this._dirtPossible = true;
-    }.bind(this);
-
-    this._onTextInput = function(e) {
-      //console.log("textinput", e);
-      this._dirtPossible = false;
-      while (this._dirt.length > 0) {
-        var dirt = this._dirt.shift();
-        dirt[0].textContent = dirt[1];
-      }
-      this.doc.write(e.data);
-      e.preventDefault();
-    }.bind(this);
-
-    var _manipulate = function(f, dontPrevent) {
-      return function(e) {
-        that._dirtPossible = false;
-        setTimeout(f, 0);
-        if (dontPrevent !== true) {
-          e.preventDefault();
-        }
-      };
-    };
-
-    // TODO: many combinations which would probably be easy to handle
-    // using the native event...
-    this.keyboard = new Commander.Mousetrap();
-    this.keyboard.bind([
-        "up", "down", "left", "right",
-        "shift+up", "shift+down", "shift+left", "shift+right",
-        "ctrl+up", "ctrl+down", "ctrl+left", "ctrl+right",
-        "ctrl+shift+up", "ctrl+shift+down", "ctrl+shift+left", "ctrl+shift+right",
-        "alt+up", "alt+down", "alt+left", "alt+right"
-      ], function() {
-      // call this after the movement has been done by the contenteditable
-      setTimeout(function() {
-        that.ignoreNextSelection = true;
-        that.updateSelection();
-      }, 0);
-    }, "keydown");
-
-    this.keyboard.bind(["backspace"], _manipulate(function() {
-      that.doc.delete("left");
-    }), "keydown");
-
-    this.keyboard.bind(["del"], _manipulate(function() {
-      that.doc.delete("right");
-    }), "keydown");
-
-    this.keyboard.bind(["enter"], _manipulate(function() {
-      that.doc.modifyNode();
-    }), "keydown");
-
-    this.keyboard.bind(["shift+enter"], _manipulate(function() {
-      that.doc.write("\n");
-    }), "keydown");
-
-    this.keyboard.bind(["space"], _manipulate(function() {
-      that.doc.write(" ");
-    }), "keydown");
-
-    this.keyboard.bind(["tab"], _manipulate(function() {
-      that.doc.write("  ");
-    }), "keydown");
-
-    this.keyboard.bind(["ctrl+z"], _manipulate(function() {
-      that.doc.undo();
-    }), "keydown");
-
-    this.keyboard.bind(["ctrl+shift+z"], _manipulate(function() {
-      that.doc.redo();
-    }), "keydown");
-
-    this.makeEditable(this.el);
-  }
 };
 
 
@@ -147,68 +33,98 @@ Surface.Prototype = function() {
 
   // Private helpers
   // ---------------
-  var _findNodeElement = function(node) {
-    var current = node;
+
+  var _extractPath = function(el) {
+    var path = [];
+    var current = el;
     while(current !== undefined) {
-      if ($(current).is(".content-node")) {
-        return current;
+
+      // if available extract a path fragment
+      if (current.getAttribute) {
+        // if there is a path attibute we collect it
+        var p = current.getAttribute("data-path");
+        if (p) path.unshift(p);
       }
+
+      // node-views
+      if ($(current).is(".content-node")) {
+        var id = current.getAttribute("id");
+        if (!id) {
+          throw new Error("Every element with class 'content-node' must have an 'id' attribute.");
+        }
+        path.unshift(id);
+
+        // STOP here
+        return path;
+      }
+
       current = current.parentElement;
     }
+
     return null;
   };
 
-  this.makeEditable = function(el) {
-    var that = this;
+  var _mapDOMCoordinates = function(el, offset) {
+    var pos, charPos;
 
-    el.addEventListener("keydown", this._onKeyDown);
+    var container = this.docCtrl.container;
 
-    // TODO: cleanup... Firefix needs a different event...
-    el.addEventListener("textInput", this._onTextInput, true);
-    el.addEventListener("input", this._onTextInput, true);
+    // extract a path by looking for ".content-node" and ".node-property"
+    var elementPath = _extractPath(el);
 
-    this._dirt = [];
-    this._observer = new MutationObserver(function(mutations) {
-      mutations.forEach(function(mutation) {
-        if (that._dirtPossible) {
-          that._dirt.push([mutation.target, mutation.oldValue]);
-        }
-      });
-    });
-    // configuration of the observer:
-    var config = { subtree: true, characterData: true, characterDataOldValue: true };
-    this._observer.observe(el, config);
+    if (!elementPath) {
+      throw new Error("Could not find node.");
+    }
 
-    this.keyboard.connect(el);
+    // get the position from the container
+    var component = container.lookup(elementPath);
+    if (!component) return null;
+
+    // TODO rethink when it is a good time to attach the view to the node surface
+    // FIXME: here we have a problem now. The TextSurface depends on the TextView
+    // which can not be retrieved easily.
+    if (!component.surface.hasView()) {
+      // HACK attach only top-level surfaces and leave propagation to its implementation
+      // This needs all be rethought and improved...
+      // Splitting node view and node surface does not feel right
+      // Note: node surface = headless node view, but knowing all about the internal structure
+      var nodeId = component.path[0];
+      var topLevelSurface = component.surface.surfaceProvider.getNodeSurface(nodeId);
+      var topLevelView = this.nodeViews[nodeId];
+      topLevelSurface.attachView(topLevelView);
+    }
+    if (!component.surface.hasView()) {
+      throw new Error("NodeView.attachView() must propagate down to child views.");
+    }
+
+    pos = component.pos;
+    charPos = component.surface.getCharPosition(el, offset);
+
+    return [pos, charPos];
   };
 
   // Read out current DOM selection and update selection in the model
   // ---------------
 
   this.updateSelection = function(/*e*/) {
-    // console.log("Surface.updateSelection()");
     var wSel = window.getSelection();
 
     // HACK: sometimes it happens that the selection anchor node is undefined.
     // Try to understand and fix someday.
     if (wSel.anchorNode === null) {
+      console.error("Ooops. Please try to fix this.");
       return;
     }
 
     // Set selection to the cursor if clicked on the cursor.
     if ($(wSel.anchorNode.parentElement).is(".cursor")) {
-      this.doc.selection.collapse("cursor");
+      this.docCtrl.selection.collapse("cursor");
       return;
     }
 
     var wRange = wSel.getRangeAt(0);
     var wStartPos;
     var wEndPos;
-
-    // Preparing information for EOL-HACK (see below).
-    // The hack only needs to be applied of the mouse event is in a different 'line'
-    // than the DOM Range provided by the browser
-    //Surface.Hacks.prepareEndOfLineHack.call(this, e, wRange);
 
     // Note: there are three different cases:
     // 1. selection started at startContainer (regular)
@@ -225,22 +141,30 @@ Surface.Prototype = function() {
       wEndPos = tmp;
     }
 
-    var startNode = _findNodeElement.call(this, wStartPos[0]);
-    var endNode = _findNodeElement.call(this, wEndPos[0]);
+    // Note: we clear the selection whenever we can not map the window selelection
+    // can not be mapped to model coordinates.
 
-    var startNodeId = startNode.getAttribute("id");
-    var startNodePos = this.doc.getPosition(startNodeId) ;
-    var startCharPos = this.nodes[startNodeId].getCharPosition(wStartPos[0], wStartPos[1]);
+    var startPos = _mapDOMCoordinates.call(this, wStartPos[0], wStartPos[1]);
+    if (!startPos) {
+      wSel.removeAllRanges();
+      this.docCtrl.selection.clear();
+      return;
+    }
 
-    var endNodeId = endNode.getAttribute("id");
-    var endNodePos = this.doc.getPosition(endNodeId);
-    var endCharPos = this.nodes[endNodeId].getCharPosition(wEndPos[0], wEndPos[1]);
+    var endPos;
+    if (wRange.collapsed) {
+      endPos = startPos;
+    } else {
+      endPos = _mapDOMCoordinates.call(this, wEndPos[0], wEndPos[1]);
+      if (!endPos) {
+        wSel.removeAllRanges();
+        this.docCtrl.selection.clear();
+        return;
+      }
+    }
 
-    // the selection range in Document.Selection coordinates
-    var startPos = [startNodePos, startCharPos];
-    var endPos = [endNodePos, endCharPos];
-
-    this.doc.selection.set({start: startPos, end: endPos});
+    // console.log("Surface.updateSelection()", startPos, endPos);
+    this.docCtrl.selection.set({start: startPos, end: endPos});
   };
 
 
@@ -248,50 +172,41 @@ Surface.Prototype = function() {
   // --------
   //
 
+  var _mapModelCoordinates = function(pos) {
+    var container = this.docCtrl.container;
+    var component = container.getComponent(pos[0]);
+    // TODO rethink when it is a good time to attach the view to the node surface
+    if (!component.surface.hasView()) {
+      var view = this.nodeViews[component.node.id];
+      component.surface.attachView(view);
+    }
+    var wCoor = component.surface.getDOMPosition(pos[1]);
+    return wCoor;
+  };
+
   this.renderSelection = function() {
+    var sel = this.docCtrl.selection;
 
-    if (this.ignoreNextSelection === true) {
-      this.ignoreNextSelection = false;
+    if (sel.isNull()) {
       return;
     }
-
-    if (this.doc.selection.isNull()) {
-      this.$cursor.hide();
-      return;
-    }
-
-    // Hide native selection in favor of our custom one
-    var wSel = window.getSelection();
-
-    var range = this.doc.selection.range();
-    var startNode = this.doc.getNodeFromPosition(range.start[0]);
-    var startNodeView = this.renderer.nodes[startNode.id];
-    var wStartPos = startNodeView.getDOMPosition(range.start[1]);
-
-    var endNode = this.doc.getNodeFromPosition(range.end[0]);
-    var endNodeView = this.renderer.nodes[endNode.id];
-    var wEndPos = endNodeView.getDOMPosition(range.end[1]);
 
     var wRange = document.createRange();
+
+    var wStartPos = _mapModelCoordinates.call(this, sel.start);
     wRange.setStart(wStartPos.startContainer, wStartPos.startOffset);
-    wRange.setEnd(wEndPos.endContainer, wEndPos.endOffset);
+
+    // TODO: is there a better way to manipulate the current selection?
+    var wSel = window.getSelection();
     wSel.removeAllRanges();
     wSel.addRange(wRange);
 
-  };
-
-  // Setup
-  // --------
-  //
-
-  this.build = function() {
-    // var Renderer = this.options.renderer || this.doc.__document.constructor.Renderer;
-    // var renderer = this.options.renderer:
-    // Create a Renderer instance, which implicitly constructs all content node views.
-    // this.renderer = new Renderer(this.doc);
-
-    // Add some backward compatibility
-    this.nodes = this.renderer.nodes;
+    // Move the caret to the end position
+    // Note: this is the only way to get reversed selections.
+    if (!sel.isCollapsed()) {
+      var wEndPos = _mapModelCoordinates.call(this, [sel.cursor.pos, sel.cursor.charPos]);
+      wSel.extend(wEndPos.endContainer, wEndPos.endOffset);
+    }
   };
 
   // Render it
@@ -326,8 +241,6 @@ Surface.Prototype = function() {
     this.el.appendChild(nodes);
     this.el.appendChild(cursor);
 
-    // console.log("Surface.render()", "this.doc.getNodes()", nodes);
-
     // Actual content goes here
     // --------
     //
@@ -347,10 +260,9 @@ Surface.Prototype = function() {
   };
 
   this.reset = function() {
-    _.each(this.nodes, function(nodeView) {
+    _.each(this.nodeViews, function(nodeView) {
       nodeView.dispose();
     });
-    this.build();
     this.render();
   };
 
@@ -360,9 +272,16 @@ Surface.Prototype = function() {
 
   this.dispose = function() {
     this.stopListening();
-    _.each(this.nodes, function(n) {
+    _.each(this.nodeViews, function(n) {
       n.dispose();
     }, this);
+    if (this.keyboard) this.keyboard.disconnect(this.el);
+  };
+
+  // HACK: used by outline
+  // TODO: meditate on the Surface's API
+  this.getContainer = function() {
+    return this.docCtrl.container;
   };
 
   // TODO: we could factor this out into something like a ContainerView?
@@ -378,7 +297,7 @@ Surface.Prototype = function() {
   }
 
   this.onUpdateView = function(path, diff) {
-    if (path.length !== 2 || path[0] !== "content" || path[1] !== "nodes") return;
+    if (path.length !== 2 || path[0] !== this.docCtrl.session.container.name || path[1] !== "nodes") return;
 
     var nodeId, node;
     var container = this._nodesEl;
@@ -388,12 +307,12 @@ Surface.Prototype = function() {
     if (diff.isInsert()) {
       // Create a view and insert render it into the nodes container element.
       nodeId = diff.val;
-      node = this.doc.get(nodeId);
+      node = this.document.get(nodeId);
       // TODO: this will hopefully be solved in a clean way
       // when we have done the 'renderer' refactorings
       if (this.nodeTypes[node.type]) {
         var nodeView = this.renderer.createView(node);
-        this.nodes[nodeId] = nodeView;
+        this.nodeViews[nodeId] = nodeView;
         el = nodeView.render().el;
         insertOrAppend(container, diff.pos, el);
       }
@@ -401,10 +320,10 @@ Surface.Prototype = function() {
     else if (diff.isDelete()) {
       // Dispose the view and remove its element from the nodes container
       nodeId = diff.val;
-      if (this.nodes[nodeId]) {
-        this.nodes[nodeId].dispose();
+      if (this.nodeViews[nodeId]) {
+        this.nodeViews[nodeId].dispose();
       }
-      delete this.nodes[nodeId];
+      delete this.nodeViews[nodeId];
       children = container.children;
       container.removeChild(children[diff.pos]);
     }
@@ -418,11 +337,13 @@ Surface.Prototype = function() {
       throw new Error("Illegal state.");
     }
   };
+
 };
 
 _.extend(Surface.Prototype, util.Events.Listener);
 
 Surface.Prototype.prototype = View.prototype;
 Surface.prototype = new Surface.Prototype();
+
 
 module.exports = Surface;

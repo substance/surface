@@ -34,10 +34,16 @@ Surface.Prototype = function() {
   var _extractPath = function(el) {
     var path = [];
     var current = el;
+
     while(current !== undefined) {
 
       // if available extract a path fragment
       if (current.getAttribute) {
+        // Stop when we find an element which has been made read-only
+        if (current.getAttribute("contenteditable") === "false") {
+          return null;
+        }
+
         // if there is a path attibute we collect it
         var p = current.getAttribute("data-path");
         if (p) path.unshift(p);
@@ -70,7 +76,7 @@ Surface.Prototype = function() {
     var elementPath = _extractPath(el);
 
     if (!elementPath) {
-      throw new Error("Could not find node.");
+      return null;
     }
 
     // get the position from the container

@@ -35,7 +35,7 @@ Surface.Prototype = function() {
     var path = [];
     var current = el;
 
-    while(current !== undefined) {
+    while(current) {
 
       // if available extract a path fragment
       if (current.getAttribute) {

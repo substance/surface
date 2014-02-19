@@ -87,14 +87,7 @@ Surface.Prototype = function() {
     // FIXME: here we have a problem now. The TextSurface depends on the TextView
     // which can not be retrieved easily.
     if (!component.surface.hasView()) {
-      // HACK attach only top-level surfaces and leave propagation to its implementation
-      // This needs all be rethought and improved...
-      // Splitting node view and node surface does not feel right
-      // Note: node surface = headless node view, but knowing all about the internal structure
-      var nodeId = component.path[0];
-      var topLevelSurface = component.surface.surfaceProvider.getNodeSurface(nodeId);
-      var topLevelView = this.nodeViews[nodeId];
-      topLevelSurface.attachView(topLevelView);
+      this._attachViewToNodeSurface(component);
     }
     if (!component.surface.hasView()) {
       throw new Error("NodeView.attachView() must propagate down to child views.");
@@ -180,11 +173,17 @@ Surface.Prototype = function() {
     var component = container.getComponent(pos[0]);
     // TODO rethink when it is a good time to attach the view to the node surface
     if (!component.surface.hasView()) {
-      var view = this.nodeViews[component.node.id];
-      component.surface.attachView(view);
+      this._attachViewToNodeSurface(component);
     }
     var wCoor = component.surface.getDOMPosition(pos[1]);
     return wCoor;
+  };
+
+  this._attachViewToNodeSurface = function(component) {
+    var nodeId = component.path[0];
+    var topLevelSurface = component.surface.surfaceProvider.getNodeSurface(nodeId);
+    var topLevelView = this.nodeViews[nodeId];
+    topLevelSurface.attachView(topLevelView);
   };
 
   this.renderSelection = function() {

@@ -108,7 +108,10 @@ Surface.Prototype = function() {
     // HACK: sometimes it happens that the selection anchor node is undefined.
     // Try to understand and fix someday.
     if (wSel.anchorNode === null) {
-      console.error("Ooops. Please try to fix this.");
+      // invalid selection.
+      // This happens if you click something strange
+      // Decided to take the user serious and invalidate the selection
+      this.docCtrl.selection.clear();
       return;
     }
 

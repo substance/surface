@@ -190,27 +190,33 @@ Surface.Prototype = function() {
   };
 
   this.renderSelection = function() {
-    var sel = this.docCtrl.selection;
+    try {
+      var sel = this.docCtrl.selection;
 
-    if (sel.isNull()) {
-      return;
-    }
+      if (sel.isNull()) {
+        return;
+      }
 
-    var wRange = document.createRange();
+      var wRange = document.createRange();
 
-    var wStartPos = _mapModelCoordinates.call(this, sel.start);
-    wRange.setStart(wStartPos.startContainer, wStartPos.startOffset);
+      var wStartPos = _mapModelCoordinates.call(this, sel.start);
+      wRange.setStart(wStartPos.startContainer, wStartPos.startOffset);
 
-    // TODO: is there a better way to manipulate the current selection?
-    var wSel = window.getSelection();
-    wSel.removeAllRanges();
-    wSel.addRange(wRange);
+      // TODO: is there a better way to manipulate the current selection?
+      var wSel = window.getSelection();
+      wSel.removeAllRanges();
+      wSel.addRange(wRange);
 
-    // Move the caret to the end position
-    // Note: this is the only way to get reversed selections.
-    if (!sel.isCollapsed()) {
-      var wEndPos = _mapModelCoordinates.call(this, [sel.cursor.pos, sel.cursor.charPos]);
-      wSel.extend(wEndPos.endContainer, wEndPos.endOffset);
+      // Move the caret to the end position
+      // Note: this is the only way to get reversed selections.
+      if (!sel.isCollapsed()) {
+        var wEndPos = _mapModelCoordinates.call(this, [sel.cursor.pos, sel.cursor.charPos]);
+        wSel.extend(wEndPos.endContainer, wEndPos.endOffset);
+      }
+    } catch (error) {
+      // On errors clear the selection and report
+      this.docCtrl.selection.clear();
+      this.docCtrl.trigger("error", error);
     }
   };
 

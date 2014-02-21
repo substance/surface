@@ -4,6 +4,10 @@ var _ = require("underscore");
 var View = require("substance-application").View;
 var util = require("substance-util");
 
+// Note: Surface errors have codes between 500-599
+var SurfaceError = util.errors.define("SurfaceError", 500);
+var SelectionError = util.errors.define("SelectionError", 501, SurfaceError);
+
 // Substance.Surface
 // ==========================================================================
 
@@ -103,67 +107,75 @@ Surface.Prototype = function() {
   // ---------------
 
   this.updateSelection = function(/*e*/) {
-    var wSel = window.getSelection();
+    try {
+      var wSel = window.getSelection();
 
-    // HACK: sometimes it happens that the selection anchor node is undefined.
-    // Try to understand and fix someday.
-    if (wSel.anchorNode === null) {
-      // invalid selection.
-      // This happens if you click something strange
-      // Decided to take the user serious and invalidate the selection
-      this.docCtrl.selection.clear();
-      return;
-    }
+      // HACK: sometimes it happens that the selection anchor node is undefined.
+      // Try to understand and fix someday.
+      if (wSel.anchorNode === null) {
+        // invalid selection.
+        // This happens if you click something strange
+        // Decided to take the user serious and invalidate the selection
+        this.docCtrl.selection.clear();
+        return;
+      }
 
-    // Set selection to the cursor if clicked on the cursor.
-    if ($(wSel.anchorNode.parentElement).is(".cursor")) {
-      this.docCtrl.selection.collapse("cursor");
-      return;
-    }
+      // Set selection to the cursor if clicked on the cursor.
+      if ($(wSel.anchorNode.parentElement).is(".cursor")) {
+        this.docCtrl.selection.collapse("cursor");
+        return;
+      }
 
-    var wRange = wSel.getRangeAt(0);
-    var wStartPos;
-    var wEndPos;
+      var wRange = wSel.getRangeAt(0);
+      var wStartPos;
+      var wEndPos;
 
-    // Note: there are three different cases:
-    // 1. selection started at startContainer (regular)
-    // 2. selection started at endContainer (reverse)
-    // 3. selection done via double click (anchor in different to range boundaries)
-    // In cases 1. + 3. the range is used as given, in case 2. reversed.
+      // Note: there are three different cases:
+      // 1. selection started at startContainer (regular)
+      // 2. selection started at endContainer (reverse)
+      // 3. selection done via double click (anchor in different to range boundaries)
+      // In cases 1. + 3. the range is used as given, in case 2. reversed.
 
-    wStartPos = [wRange.startContainer, wRange.startOffset];
-    wEndPos = [wRange.endContainer, wRange.endOffset];
+      wStartPos = [wRange.startContainer, wRange.startOffset];
+      wEndPos = [wRange.endContainer, wRange.endOffset];
 
-    if (wRange.endContainer === wSel.anchorNode && wRange.endOffset === wSel.anchorOffset) {
-      var tmp = wStartPos;
-      wStartPos = wEndPos;
-      wEndPos = tmp;
-    }
+      if (wRange.endContainer === wSel.anchorNode && wRange.endOffset === wSel.anchorOffset) {
+        var tmp = wStartPos;
+        wStartPos = wEndPos;
+        wEndPos = tmp;
+      }
 
-    // Note: we clear the selection whenever we can not map the window selelection
-    // can not be mapped to model coordinates.
+      // Note: we clear the selection whenever we can not map the window selelection
+      // can not be mapped to model coordinates.
 
-    var startPos = _mapDOMCoordinates.call(this, wStartPos[0], wStartPos[1]);
-    if (!startPos) {
-      wSel.removeAllRanges();
-      this.docCtrl.selection.clear();
-      return;
-    }
-
-    var endPos;
-    if (wRange.collapsed) {
-      endPos = startPos;
-    } else {
-      endPos = _mapDOMCoordinates.call(this, wEndPos[0], wEndPos[1]);
-      if (!endPos) {
+      var startPos = _mapDOMCoordinates.call(this, wStartPos[0], wStartPos[1]);
+      if (!startPos) {
         wSel.removeAllRanges();
         this.docCtrl.selection.clear();
         return;
       }
-    }
 
-    // console.log("Surface.updateSelection()", startPos, endPos);
-    this.docCtrl.selection.set({start: startPos, end: endPos});
+      var endPos;
+      if (wRange.collapsed) {
+        endPos = startPos;
+      } else {
+        endPos = _mapDOMCoordinates.call(this, wEndPos[0], wEndPos[1]);
+        if (!endPos) {
+          wSel.removeAllRanges();
+          this.docCtrl.selection.clear();
+          return;
+        }
+      }
+
+      // console.log("Surface.updateSelection()", startPos, endPos);
+      this.docCtrl.selection.set({start: startPos, end: endPos});
+    } catch (error) {
+      // On errors clear the selection and report
+      error = new SelectionError("Could not map to model cordinates.", error);
+
+      this.docCtrl.selection.clear();
+      this.docCtrl.trigger("error", error);
+    }
   };
 
 
@@ -215,6 +227,8 @@ Surface.Prototype = function() {
       }
     } catch (error) {
       // On errors clear the selection and report
+      error = new SelectionError("Could not map to DOM cordinates.", error);
+
       this.docCtrl.selection.clear();
       this.docCtrl.trigger("error", error);
     }

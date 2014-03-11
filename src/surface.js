@@ -1,6 +1,8 @@
 "use strict";
 
 var _ = require("underscore");
+var $ = window.$;
+
 var View = require("substance-application").View;
 var util = require("substance-util");
 
@@ -171,10 +173,10 @@ Surface.Prototype = function() {
       this.docCtrl.selection.set({start: startPos, end: endPos});
     } catch (error) {
       // On errors clear the selection and report
-      error = new SelectionError("Could not map to model cordinates.", error);
+      var err = new SelectionError("Could not map to model cordinates.", error);
 
       this.docCtrl.selection.clear();
-      this.docCtrl.trigger("error", error);
+      this.docCtrl.trigger("error", err);
     }
   };
 
@@ -209,7 +211,7 @@ Surface.Prototype = function() {
         return;
       }
 
-      var wRange = document.createRange();
+      var wRange = window.document.createRange();
 
       var wStartPos = _mapModelCoordinates.call(this, sel.start);
       wRange.setStart(wStartPos.startContainer, wStartPos.startOffset);
@@ -227,10 +229,10 @@ Surface.Prototype = function() {
       }
     } catch (error) {
       // On errors clear the selection and report
-      error = new SelectionError("Could not map to DOM cordinates.", error);
+      var err = new SelectionError("Could not map to DOM cordinates.", error);
 
       this.docCtrl.selection.clear();
-      this.docCtrl.trigger("error", error);
+      this.docCtrl.trigger("error", err);
     }
   };
 
@@ -247,18 +249,18 @@ Surface.Prototype = function() {
 
   this.render = function() {
 
-    var fileInput = document.createElement('input');
+    var fileInput = window.document.createElement('input');
     fileInput.className = "image-files";
     fileInput.setAttribute("type", "file");
 
     fileInput.setAttribute("name", "files[]");
 
-    var controls = document.createElement('div');
+    var controls = window.document.createElement('div');
     controls.className = "controls";
-    var nodes = document.createElement('div');
+    var nodes = window.document.createElement('div');
     nodes.className = "nodes";
 
-    var cursor = document.createElement('div');
+    var cursor = window.document.createElement('div');
     cursor.className = "cursor";
 
     this.el.appendChild(fileInput);

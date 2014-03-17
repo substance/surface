@@ -1,7 +1,7 @@
 "use strict";
 
 var _ = require("underscore");
-var $ = window.$;
+var $ = require("jquery");
 
 var View = require("substance-application").View;
 var util = require("substance-util");

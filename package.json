@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "underscore": "1.5.x",
+    "jquery": "2.1.x",
     "substance-util": "git+https://github.com/substance/util.git#master",
     "substance-application": "git+https://github.com/substance/application.git#master",
     "substance-operator": "git+https://github.com/substance/operator.git#master"

@@ -249,12 +249,6 @@ Surface.Prototype = function() {
 
   this.render = function() {
 
-    var fileInput = window.document.createElement('input');
-    fileInput.className = "image-files";
-    fileInput.setAttribute("type", "file");
-
-    fileInput.setAttribute("name", "files[]");
-
     var controls = window.document.createElement('div');
     controls.className = "controls";
     var nodes = window.document.createElement('div');
@@ -263,7 +257,6 @@ Surface.Prototype = function() {
     var cursor = window.document.createElement('div');
     cursor.className = "cursor";
 
-    this.el.appendChild(fileInput);
     this.el.appendChild(controls);
     this.el.appendChild(nodes);
     this.el.appendChild(cursor);

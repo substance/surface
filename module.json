@@ -11,7 +11,6 @@
   },
   "dependencies": {
     "underscore": "",
-    "jquery": "",
     "substance-util": "",
     "substance-application": "",
     "substance-operator": ""

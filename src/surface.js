@@ -220,6 +220,16 @@ Surface.Prototype = function() {
       var wSel = window.getSelection();
       wSel.removeAllRanges();
       wSel.addRange(wRange);
+  
+      // Not exactly beautiful but ensures the cursor is always stays in view
+      // E.g. when hitting enter on the lower document bound
+      if (sel.isCollapsed) {
+        window.sel = sel;
+        var el = wStartPos.startContainer;
+        // Look up parent node if startContainer is a text node
+        if (!el.scrollIntoViewIfNeeded) el = el.parentNode;
+        el.scrollIntoViewIfNeeded();
+      }
 
       // Move the caret to the end position
       // Note: this is the only way to get reversed selections.

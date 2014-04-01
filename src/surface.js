@@ -232,7 +232,13 @@ Surface.Prototype = function() {
         _.delay(function() {
           // Look up parent node if startContainer is a text node
           var topCorrection = $(that.el).offset().top;
-          var bounds = window.getSelection().getRangeAt(0).getClientRects()[0];
+
+          var sel = window.getSelection();
+          if (!sel) return;
+          var range = sel.getRangeAt(0);
+          if (!range) return;
+          var bounds = range.getClientRects()[0];
+          if (!bounds) return; // Skip
 
           var topOffset = bounds.top - topCorrection;
           var surfaceHeight = $(that.el).height();

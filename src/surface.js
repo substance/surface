@@ -173,8 +173,10 @@ Surface.Prototype = function() {
       this.docCtrl.selection.set({start: startPos, end: endPos});
     } catch (error) {
       // On errors clear the selection and report
-      var err = new SelectionError("Could not map to model cordinates.", error);
+      util.printStackTrace(error);
+      console.error(error);
 
+      var err = new SelectionError("Could not map to model cordinates.", error);
       this.docCtrl.selection.clear();
       this.docCtrl.trigger("error", err);
     }
@@ -197,7 +199,7 @@ Surface.Prototype = function() {
   };
 
   this._attachViewToNodeSurface = function(component) {
-    var nodeId = component.path[0];
+    var nodeId = component.root.id;
     var topLevelSurface = component.surface.surfaceProvider.getNodeSurface(nodeId);
     var topLevelView = this.nodeViews[nodeId];
     topLevelSurface.attachView(topLevelView);
@@ -219,14 +221,14 @@ Surface.Prototype = function() {
       var wSel = window.getSelection();
       wSel.removeAllRanges();
       wSel.addRange(wRange);
-  
+
       // Not exactly beautiful but ensures the cursor is always stays in view
       // E.g. when hitting enter on the lower document bound
       if (sel.isCollapsed()) {
-        window.sel = sel;
-        var el = wStartPos.startContainer;
-
         var that = this;
+
+        //TODO: remove this
+        window.sel = sel;
 
         // Wait for next DOM iteration
         _.delay(function() {
@@ -246,14 +248,15 @@ Surface.Prototype = function() {
           var scrollTop = $(that.el).scrollTop();
           var lineHeight = 50;
 
+          var targetScroll;
           if (topOffset>surfaceHeight) {
-            var targetScroll = scrollTop + topOffset - surfaceHeight + lineHeight;
+            targetScroll = scrollTop + topOffset - surfaceHeight + lineHeight;
             $(that.el).scrollTop(targetScroll);
           } else if (topOffset < 0) {
-            var targetScroll = scrollTop + topOffset - 3*lineHeight;
+            targetScroll = scrollTop + topOffset - 3*lineHeight;
             $(that.el).scrollTop(targetScroll);
           }
-          
+
         }, 0);
       }
 

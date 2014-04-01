@@ -212,7 +212,6 @@ Surface.Prototype = function() {
       }
 
       var wRange = window.document.createRange();
-
       var wStartPos = _mapModelCoordinates.call(this, sel.start);
       wRange.setStart(wStartPos.startContainer, wStartPos.startOffset);
 
@@ -223,12 +222,33 @@ Surface.Prototype = function() {
   
       // Not exactly beautiful but ensures the cursor is always stays in view
       // E.g. when hitting enter on the lower document bound
-      if (sel.isCollapsed) {
+      if (sel.isCollapsed()) {
         window.sel = sel;
         var el = wStartPos.startContainer;
-        // Look up parent node if startContainer is a text node
-        if (!el.scrollIntoViewIfNeeded) el = el.parentNode;
-        el.scrollIntoViewIfNeeded();
+
+        var that = this;
+
+        // Wait for next DOM iteration
+        _.delay(function() {
+          // Look up parent node if startContainer is a text node
+          var topCorrection = $(that.el).offset().top;
+          var bounds = window.getSelection().getRangeAt(0).getClientRects()[0];
+
+          var topOffset = bounds.top - topCorrection;
+          var surfaceHeight = $(that.el).height();
+
+          var scrollTop = $(that.el).scrollTop();
+          var lineHeight = 50;
+
+          if (topOffset>surfaceHeight) {
+            var targetScroll = scrollTop + topOffset - surfaceHeight + lineHeight;
+            $(that.el).scrollTop(targetScroll);
+          } else if (topOffset < 0) {
+            var targetScroll = scrollTop + topOffset - 3*lineHeight;
+            $(that.el).scrollTop(targetScroll);
+          }
+          
+        }, 0);
       }
 
       // Move the caret to the end position

@@ -207,6 +207,7 @@ Surface.Prototype = function() {
 
   this.renderSelection = function() {
     try {
+
       var sel = this.docCtrl.selection;
 
       if (sel.isNull()) {
@@ -222,56 +223,67 @@ Surface.Prototype = function() {
       wSel.removeAllRanges();
       wSel.addRange(wRange);
 
-      // Not exactly beautiful but ensures the cursor is always stays in view
-      // E.g. when hitting enter on the lower document bound
-      if (sel.isCollapsed()) {
-        var that = this;
-
-        //TODO: remove this
-        window.sel = sel;
-
-        // Wait for next DOM iteration
-        _.delay(function() {
-          // Look up parent node if startContainer is a text node
-          var topCorrection = $(that.el).offset().top;
-
-          var sel = window.getSelection();
-          if (!sel) return;
-          var range = sel.getRangeAt(0);
-          if (!range) return;
-          var bounds = range.getClientRects()[0];
-          if (!bounds) return; // Skip
-
-          var topOffset = bounds.top - topCorrection;
-          var surfaceHeight = $(that.el).height();
-
-          var scrollTop = $(that.el).scrollTop();
-          var lineHeight = 50;
-
-          var targetScroll;
-          if (topOffset>surfaceHeight) {
-            targetScroll = scrollTop + topOffset - surfaceHeight + lineHeight;
-            $(that.el).scrollTop(targetScroll);
-          } else if (topOffset < 0) {
-            targetScroll = scrollTop + topOffset - 3*lineHeight;
-            $(that.el).scrollTop(targetScroll);
-          }
-
-        }, 0);
-      }
-
       // Move the caret to the end position
       // Note: this is the only way to get reversed selections.
       if (!sel.isCollapsed()) {
         var wEndPos = _mapModelCoordinates.call(this, [sel.cursor.pos, sel.cursor.charPos]);
         wSel.extend(wEndPos.endContainer, wEndPos.endOffset);
       }
+
+      this.scrollToCursor();
+
     } catch (error) {
       // On errors clear the selection and report
       var err = new SelectionError("Could not map to DOM cordinates.", error);
 
       this.docCtrl.selection.clear();
       this.docCtrl.trigger("error", err);
+    }
+  };
+
+  this.scrollToCursor = function() {
+    var sel = this.docCtrl.selection;
+
+    // Not exactly beautiful but ensures the cursor is always stays in view
+    // E.g. when hitting enter on the lower document bound
+    if (sel.isCollapsed()) {
+      var that = this;
+
+      // Wait for next DOM iteration
+      _.delay(function() {
+        // Look up parent node if startContainer is a text node
+        var topCorrection = $(that.el).offset().top;
+
+        var wSel = window.getSelection();
+        var range = wSel.getRangeAt(0);
+        var bounds = range.getClientRects()[0];
+
+        if (!bounds) {
+          // This happens when the cursor is in an empty node
+          // However, that is not a problem as we can use the container then
+          bounds = $(range.startContainer).offset()
+        }
+
+        var topOffset = bounds.top - topCorrection;
+        var surfaceHeight = $(that.el).height();
+
+        var scrollTop = $(that.el).scrollTop();
+        var lineHeight = 50;
+
+        var targetScroll;
+        if (topOffset>surfaceHeight) {
+          targetScroll = scrollTop + topOffset - surfaceHeight + lineHeight;
+          $(that.el).scrollTop(targetScroll);
+          // console.log("Scrolling to", targetScroll);
+        } else if (topOffset < 0) {
+          targetScroll = scrollTop + topOffset - 3*lineHeight;
+          $(that.el).scrollTop(targetScroll);
+          // console.log("Scrolling to", targetScroll);
+        } else {
+          // console.log("Not scrolling ...", topOffset, surfaceHeight);
+        }
+
+      }, 0);
     }
   };
 

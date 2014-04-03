@@ -250,7 +250,7 @@ Surface.Prototype = function() {
       var that = this;
 
       // Wait for next DOM iteration
-      _.delay(function() {
+      window.setTimeout(function() {
         // Look up parent node if startContainer is a text node
         var topCorrection = $(that.el).offset().top;
 

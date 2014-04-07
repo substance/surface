@@ -34,6 +34,8 @@ var Surface = function(docCtrl, renderer) {
 
 Surface.Prototype = function() {
 
+  var _selectionOptions = { "source": "surface" };
+
   // Private helpers
   // ---------------
 
@@ -118,13 +120,13 @@ Surface.Prototype = function() {
         // invalid selection.
         // This happens if you click something strange
         // Decided to take the user serious and invalidate the selection
-        this.docCtrl.selection.clear();
+        this.clearModelSelection();
         return;
       }
 
       // Set selection to the cursor if clicked on the cursor.
       if ($(wSel.anchorNode.parentElement).is(".cursor")) {
-        this.docCtrl.selection.collapse("cursor");
+        this.docCtrl.selection.collapse("cursor", _selectionOptions);
         return;
       }
 
@@ -153,7 +155,7 @@ Surface.Prototype = function() {
       var startPos = _mapDOMCoordinates.call(this, wStartPos[0], wStartPos[1]);
       if (!startPos) {
         wSel.removeAllRanges();
-        this.docCtrl.selection.clear();
+        this.clearModelSelection();
         return;
       }
 
@@ -164,20 +166,21 @@ Surface.Prototype = function() {
         endPos = _mapDOMCoordinates.call(this, wEndPos[0], wEndPos[1]);
         if (!endPos) {
           wSel.removeAllRanges();
-          this.docCtrl.selection.clear();
+          this.clearModelSelection();
           return;
         }
       }
 
       // console.log("Surface.updateSelection()", startPos, endPos);
-      this.docCtrl.selection.set({start: startPos, end: endPos});
+      this.docCtrl.selection.set({start: startPos, end: endPos}, _selectionOptions);
+
     } catch (error) {
       // On errors clear the selection and report
       util.printStackTrace(error);
       console.error(error);
 
       var err = new SelectionError("Could not map to model cordinates.", error);
-      this.docCtrl.selection.clear();
+      this.clearModelSelection();
       this.docCtrl.trigger("error", err);
     }
   };
@@ -205,8 +208,11 @@ Surface.Prototype = function() {
     topLevelSurface.attachView(topLevelView);
   };
 
-  this.renderSelection = function() {
+  this.renderSelection = function(range, options) {
     try {
+      if (options && (options["source"] === "surface" || options["silent"] === true)){
+        return;
+      }
 
       var sel = this.docCtrl.selection;
 
@@ -236,10 +242,15 @@ Surface.Prototype = function() {
       // On errors clear the selection and report
       var err = new SelectionError("Could not map to DOM cordinates.", error);
 
-      this.docCtrl.selection.clear();
+      this.clearModelSelection();
       this.docCtrl.trigger("error", err);
     }
   };
+
+  this.clearModelSelection = function() {
+    // leave a mark that the surface will not handle the returning selection update
+    this.docCtrl.selection.clear(_selectionOptions);
+  }
 
   this.scrollToCursor = function() {
     var sel = this.docCtrl.selection;
@@ -261,7 +272,7 @@ Surface.Prototype = function() {
         if (!bounds) {
           // This happens when the cursor is in an empty node
           // However, that is not a problem as we can use the container then
-          bounds = $(range.startContainer).offset()
+          bounds = $(range.startContainer).offset();
         }
 
         var topOffset = bounds.top - topCorrection;

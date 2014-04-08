@@ -215,6 +215,8 @@ Surface.Prototype = function() {
       }
 
       var sel = this.docCtrl.selection;
+      var wSel = window.getSelection();
+      wSel.removeAllRanges();
 
       if (sel.isNull()) {
         return;
@@ -225,8 +227,6 @@ Surface.Prototype = function() {
       wRange.setStart(wStartPos.startContainer, wStartPos.startOffset);
 
       // TODO: is there a better way to manipulate the current selection?
-      var wSel = window.getSelection();
-      wSel.removeAllRanges();
       wSel.addRange(wRange);
 
       // Move the caret to the end position

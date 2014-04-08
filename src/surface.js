@@ -427,5 +427,12 @@ _.extend(Surface.Prototype, util.Events.Listener);
 Surface.Prototype.prototype = View.prototype;
 Surface.prototype = new Surface.Prototype();
 
+Object.defineProperties(Surface.prototype, {
+  "name": {
+    get: function() {
+      return this.docCtrl.session.container.name;
+    }
+  }
+});
 
 module.exports = Surface;

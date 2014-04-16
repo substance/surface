@@ -266,6 +266,12 @@ Surface.Prototype = function() {
         var topCorrection = $(that.el).offset().top;
 
         var wSel = window.getSelection();
+
+        // avoid errors due to non existing DOM selection.
+        if (wSel.rangeCount === 0 ) {
+          return;
+        }
+
         var range = wSel.getRangeAt(0);
         var bounds = range.getClientRects()[0];
 

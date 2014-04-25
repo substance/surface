@@ -222,6 +222,9 @@ Surface.Prototype = function() {
   this._emitFocusAndBlur = function(is_collapsed, pos) {
     if (is_collapsed) {
       var component = this.docCtrl.container.getComponent(pos);
+      if (!component.surface.hasView()) {
+        this._attachViewToNodeSurface(component);
+      }
       var nodeView = component.surface.view;
       if (nodeView !== this.__lastFocussedView) {
         if (this.__lastFocussedView) this.__lastFocussedView.onBlur();
@@ -237,16 +240,27 @@ Surface.Prototype = function() {
   this.renderSelection = function(range, options) {
     try {
 
+      var sel = this.docCtrl.selection;
+      if (sel.isCollapsed()) {
+        var cursorPos = sel.getCursorPosition();
+        try {
+          this._emitFocusAndBlur(true, cursorPos[0]);
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        this._emitFocusAndBlur(false);
+      }
+
       if (options && (options["source"] === "surface" || options["silent"] === true)){
+        this.scrollToCursor();
         return;
       }
 
-      var sel = this.docCtrl.selection;
       var wSel = window.getSelection();
       wSel.removeAllRanges();
 
       if (sel.isNull()) {
-        this._emitFocusAndBlur(false);
         return;
       }
 
@@ -262,12 +276,6 @@ Surface.Prototype = function() {
       if (!sel.isCollapsed()) {
         var wEndPos = _mapModelCoordinates.call(this, [sel.cursor.pos, sel.cursor.charPos]);
         wSel.extend(wEndPos.endContainer, wEndPos.endOffset);
-      }
-
-      try {
-        this._emitFocusAndBlur(sel.isCollapsed(), sel.cursor.pos);
-      } catch (err) {
-        console.error(err);
       }
 
       this.scrollToCursor();
@@ -333,8 +341,9 @@ Surface.Prototype = function() {
         } else {
           // console.log("Not scrolling ...", topOffset, surfaceHeight);
         }
-
-      }, 0);
+      // NOTE: 0 millis was not enough sometimes. However, 5 millis is probably not the solution
+      // E.g., after inserting an image, it would be necessary to wait for it being loaded...
+      }, 5);
     }
   };
 

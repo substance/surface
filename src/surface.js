@@ -29,6 +29,8 @@ var Surface = function(docCtrl, renderer) {
 
   this.listenTo(this.document, "property:updated", this.onUpdateView);
   this.listenTo(this.document, "graph:reset", this.reset);
+
+  this.__lastFocussed = null;
 };
 
 
@@ -149,8 +151,8 @@ Surface.Prototype = function() {
         wEndPos = tmp;
       }
 
-      // Note: we clear the selection whenever we can not map the window selelection
-      // can not be mapped to model coordinates.
+      // Note: we clear the selection whenever we can not map the window selection
+      // to model coordinates.
 
       var startPos = _mapDOMCoordinates.call(this, wStartPos[0], wStartPos[1]);
       if (!startPos) {
@@ -169,6 +171,12 @@ Surface.Prototype = function() {
           this.clearModelSelection();
           return;
         }
+      }
+
+      try {
+        this._emitFocusAndBlur(startPos[0] === endPos[0], startPos[0]);
+      } catch (err) {
+        console.error(err);
       }
 
       // console.log("Surface.updateSelection()", startPos, endPos);
@@ -208,13 +216,47 @@ Surface.Prototype = function() {
     topLevelSurface.attachView(topLevelView);
   };
 
+  // HACK: putting this in renderSelection before the cycle guard
+  // did lead to some strange infinite recursion
+  // so this method is used from both places updateSelection and renderSelection
+  this._emitFocusAndBlur = function(is_collapsed, pos) {
+    if (is_collapsed) {
+      var component = this.docCtrl.container.getComponent(pos);
+      if (!component.surface.hasView()) {
+        this._attachViewToNodeSurface(component);
+      }
+      var nodeView = component.surface.view;
+      if (nodeView !== this.__lastFocussedView) {
+        if (this.__lastFocussedView) this.__lastFocussedView.onBlur();
+        nodeView.onFocus();
+        this.__lastFocussedView = nodeView;
+      }
+    } else if (this.__lastFocussedView) {
+      this.__lastFocussedView.onBlur();
+      this.__lastFocussedView = null;
+    }
+  };
+
   this.renderSelection = function(range, options) {
     try {
+
+      var sel = this.docCtrl.selection;
+      if (sel.isCollapsed()) {
+        var cursorPos = sel.getCursorPosition();
+        try {
+          this._emitFocusAndBlur(true, cursorPos[0]);
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        this._emitFocusAndBlur(false);
+      }
+
       if (options && (options["source"] === "surface" || options["silent"] === true)){
+        this.scrollToCursor();
         return;
       }
 
-      var sel = this.docCtrl.selection;
       var wSel = window.getSelection();
       wSel.removeAllRanges();
 
@@ -250,7 +292,7 @@ Surface.Prototype = function() {
   this.clearModelSelection = function() {
     // leave a mark that the surface will not handle the returning selection update
     this.docCtrl.selection.clear(_selectionOptions);
-  }
+  };
 
   this.scrollToCursor = function() {
     var sel = this.docCtrl.selection;
@@ -299,8 +341,9 @@ Surface.Prototype = function() {
         } else {
           // console.log("Not scrolling ...", topOffset, surfaceHeight);
         }
-
-      }, 0);
+      // NOTE: 0 millis was not enough sometimes. However, 5 millis is probably not the solution
+      // E.g., after inserting an image, it would be necessary to wait for it being loaded...
+      }, 5);
     }
   };
 

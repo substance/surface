@@ -476,6 +476,10 @@ Surface.Prototype = function() {
     }
   };
 
+  this.getNodeView = function(nodeId) {
+    return this.renderer.getView(nodeId);
+  };
+
 };
 
 _.extend(Surface.Prototype, util.Events.Listener);

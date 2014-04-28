@@ -113,6 +113,8 @@ Surface.Prototype = function() {
   // ---------------
 
   this.updateSelection = function(/*e*/) {
+    // console.log("Surface.updateSelection()", this.docCtrl.container.name);
+
     try {
       var wSel = window.getSelection();
 
@@ -238,18 +240,20 @@ Surface.Prototype = function() {
   };
 
   this.renderSelection = function(range, options) {
+    // console.log("Surface.renderSelection()", this.docCtrl.container.name);
+
     try {
 
       var sel = this.docCtrl.selection;
       if (sel.isCollapsed()) {
         var cursorPos = sel.getCursorPosition();
         try {
-          this._emitFocusAndBlur(true, cursorPos[0]);
+          this._emitFocusAndBlur("is-collapsed", cursorPos[0]);
         } catch (err) {
           console.error(err);
         }
       } else {
-        this._emitFocusAndBlur(false);
+        this._emitFocusAndBlur();
       }
 
       if (options && (options["source"] === "surface" || options["silent"] === true)){
@@ -258,6 +262,7 @@ Surface.Prototype = function() {
       }
 
       var wSel = window.getSelection();
+      // console.log("Clearing window selection.");
       wSel.removeAllRanges();
 
       if (sel.isNull()) {
@@ -269,6 +274,7 @@ Surface.Prototype = function() {
       wRange.setStart(wStartPos.startContainer, wStartPos.startOffset);
 
       // TODO: is there a better way to manipulate the current selection?
+      // console.log("Setting window selection.");
       wSel.addRange(wRange);
 
       // Move the caret to the end position
@@ -439,9 +445,10 @@ Surface.Prototype = function() {
       // Create a view and insert render it into the nodes container element.
       nodeId = diff.val;
       node = this.document.get(nodeId);
-      // TODO: this will hopefully be solved in a clean way
-      // when we have done the 'renderer' refactorings
+
       if (this.nodeTypes[node.type]) {
+        // TODO: createView is misleading as returns a cached instance
+        // or creates a new one
         var nodeView = this.renderer.createView(node);
         this.nodeViews[nodeId] = nodeView;
         el = nodeView.render().el;

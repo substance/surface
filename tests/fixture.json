@@ -1,0 +1,41 @@
+{
+  "nodes": {
+    "h1": {
+      "id": "h1",
+      "type": "heading",
+      "content": "Part 1",
+      "level": 1
+    },
+    "t1": {
+      "id": "t1",
+      "type": "text",
+      "content": "The quick brown fox jumps over the lazy dog."
+    },
+    "t2": {
+      "id": "t2",
+      "type": "text",
+      "content": "Pack my box with five dozen liquor jugs."
+    },
+    "h2": {
+      "id": "h2",
+      "type": "heading",
+      "content": "Part 2",
+      "level": 1
+    },
+    "t3": {
+      "id": "t3",
+      "type": "text",
+      "content": "Fix problem quickly with galvanized jets."
+    },
+    "t4": {
+      "id": "t4",
+      "type": "text",
+      "content": "Heavy boxes perform quick waltzes and jigs."
+    },
+    "content": {
+      "id": "content",
+      "type": "view",
+      "nodes": ["h1", "t1", "t2", "h2", "t3", "t4"]
+    }
+  }
+}

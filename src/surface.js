@@ -366,17 +366,17 @@ Surface.Prototype = function() {
 
   this.render = function() {
 
-    var controls = window.document.createElement('div');
-    controls.className = "controls";
+    // var controls = window.document.createElement('div');
+    // controls.className = "controls";
     var nodes = window.document.createElement('div');
     nodes.className = "nodes";
 
-    var cursor = window.document.createElement('div');
-    cursor.className = "cursor";
+    // var cursor = window.document.createElement('div');
+    // cursor.className = "cursor";
 
-    this.el.appendChild(controls);
+    // this.el.appendChild(controls);
     this.el.appendChild(nodes);
-    this.el.appendChild(cursor);
+    // this.el.appendChild(cursor);
 
     // Actual content goes here
     // --------

@@ -397,23 +397,30 @@ EditorController.Prototype = function() {
     }
 
     var session = this.startTransaction();
+
+    if (this._changeType(session, newType, data)) {
+      session.save();
+      this.session.selection.set(session.selection);
+
+      this._afterEdit();
+    }
+  };
+
+  this._changeType = function(session, newType, data) {
+
     var pos = session.selection.start[0];
     var component = session.container.getComponent(pos);
     var node = component.root;
     var editor = _getEditor(this, node);
 
     if (!editor.canChangeType(session, node, newType)) {
-      return;
+      return false;
     }
 
     editor.changeType(session, node, component, newType, data);
-
     this.ensureLastNode(session);
-    session.save();
 
-    this.session.selection.set(selection);
-
-    this._afterEdit();
+    return true;
   };
 
   this.select = function(mode) {

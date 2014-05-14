@@ -158,6 +158,7 @@ Surface.Prototype = function() {
 
       var startPos = _mapDOMCoordinates.call(this, wStartPos[0], wStartPos[1]);
       if (!startPos) {
+        // console.log("Surface.updateSelection(): no valid start position. Clearing the selection");
         wSel.removeAllRanges();
         this.clearModelSelection();
         return;
@@ -169,6 +170,7 @@ Surface.Prototype = function() {
       } else {
         endPos = _mapDOMCoordinates.call(this, wEndPos[0], wEndPos[1]);
         if (!endPos) {
+          // console.log("Surface.updateSelection(): no valid end position. Clearing the selection");
           wSel.removeAllRanges();
           this.clearModelSelection();
           return;
@@ -186,8 +188,8 @@ Surface.Prototype = function() {
 
     } catch (error) {
       // On errors clear the selection and report
-      util.printStackTrace(error);
       console.error(error);
+      util.printStackTrace(error);
 
       var err = new SelectionError("Could not map to model cordinates.", error);
       this.clearModelSelection();
@@ -287,6 +289,9 @@ Surface.Prototype = function() {
       this.scrollToCursor();
 
     } catch (error) {
+      console.error(error);
+      util.printStackTrace(error);
+
       // On errors clear the selection and report
       var err = new SelectionError("Could not map to DOM cordinates.", error);
 

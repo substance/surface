@@ -48,7 +48,7 @@ EditorController.Prototype = function() {
       throw new EditingError("Can not write, the current position is not valid.");
     }
 
-    var session = this.session.startSimulation();
+    var session = this.startTransaction();
 
     if (_write(this, session, text)) {
       session.save();
@@ -62,7 +62,7 @@ EditorController.Prototype = function() {
   //
 
   this.delete = function(direction) {
-    var session = this.session.startSimulation();
+    var session = this.startTransaction();
     var sel = session.selection;
 
     // Note: ignoring an invalid selection
@@ -89,7 +89,7 @@ EditorController.Prototype = function() {
       console.error("Can not break, as no position has been selected.");
       return;
     }
-    var session = this.session.startSimulation();
+    var session = this.startTransaction();
 
     if (_breakNode(this, session)) {
       session.save();
@@ -119,7 +119,7 @@ EditorController.Prototype = function() {
       return;
     }
 
-    var session = this.session.startSimulation();
+    var session = this.startTransaction();
     var sel = session.selection;
 
     var cursor = sel.getCursor();
@@ -185,7 +185,7 @@ EditorController.Prototype = function() {
       return;
     }
 
-    var session = this.session.startSimulation();
+    var session = this.startTransaction();
     var doc = session.document;
     var container = session.container;
     var selection = session.selection;
@@ -296,7 +296,7 @@ EditorController.Prototype = function() {
       // nothing to do
       return;
     }
-    var session = this.session.startSimulation();
+    var session = this.startTransaction();
     this._annotate(session, type, data);
     session.save();
     this.session.selection.set(session.selection);
@@ -367,7 +367,7 @@ EditorController.Prototype = function() {
       throw new Error("Selection is null!");
     }
 
-    var session = this.session.startSimulation();
+    var session = this.startTransaction();
 
     var newNode = {
       id: type + "_" +util.uuid(),
@@ -396,7 +396,7 @@ EditorController.Prototype = function() {
       return;
     }
 
-    var session = this.session.startSimulation();
+    var session = this.startTransaction();
     var pos = session.selection.start[0];
     var component = session.container.getComponent(pos);
     var node = component.root;
@@ -439,6 +439,10 @@ EditorController.Prototype = function() {
 
   this.focus = function() {
     this.session.selection.set(this.session.selection);
+  };
+
+  this.startTransaction = function() {
+    return this.session.startSimulation();
   };
 
   var _insertNode = function(self, session, newNode) {

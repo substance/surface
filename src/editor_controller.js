@@ -50,7 +50,7 @@ EditorController.Prototype = function() {
 
     var session = this.startTransaction();
 
-    if (_write(this, session, text)) {
+    if (this._write(session, text)) {
       session.save();
       selection.set(session.selection);
       this._afterEdit();
@@ -208,7 +208,7 @@ EditorController.Prototype = function() {
     var beforePos = session.selection.cursor.pos;
     var beforeCharPos = session.selection.cursor.charPos;
     if (!_breakNode(this, session)) {
-      if (!_write(this, session, plainText)) {
+      if (!this._write(session, plainText)) {
         console.error("Can not paste at the given position.");
         return;
       } else {
@@ -584,8 +584,9 @@ EditorController.Prototype = function() {
     return self.editors[node.id];
   };
 
-  var _write = function(self, session, text) {
+  this._write = function(session, text) {
     var sel = session.selection;
+    var self = this;
 
     // if the selection is expanded then delete first
     // Note: this.__deleteSelection collapses the session cursor.

@@ -122,7 +122,11 @@ EditableSurface.Prototype = function() {
 
     keyboard.setDefaultHandler("keypress", function(e) {
       // console.log("EditableSurface keypress", e, keyboard.describeEvent(e));
-      editorCtrl.write(String.fromCharCode(e.which));
+      try {
+        editorCtrl.write(String.fromCharCode(e.which));
+      } catch (err) {
+        editorCtrl.trigger("error", err);
+      }
       e.preventDefault();
       e.stopPropagation();
     });

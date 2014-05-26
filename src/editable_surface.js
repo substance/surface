@@ -1,5 +1,6 @@
 "use strict";
 
+var util = require("substance-util");
 var Surface = require("./surface");
 var Keyboard = require("substance-commander").ChromeKeyboard;
 var MutationObserver = window.MutationObserver;
@@ -126,6 +127,7 @@ EditableSurface.Prototype = function() {
         editorCtrl.write(String.fromCharCode(e.which));
       } catch (err) {
         editorCtrl.trigger("error", err);
+        util.printStackTrace(err);
       }
       e.preventDefault();
       e.stopPropagation();

@@ -658,8 +658,8 @@ EditorController.Prototype = function() {
     // after deleting the cursor shall be
     // at the left bound of the selection
     var newPos = sel.range().start;
-
     var success;
+
     if (sel.hasMultipleNodes()) {
       success = _deleteMulti(self, session);
     } else {
@@ -668,11 +668,22 @@ EditorController.Prototype = function() {
       success = _deleteSingle(self, session, component);
     }
 
-    sel.set(newPos);
+    if (!success) {
+      return false;
+    }
 
     self.ensureLastNode(session);
 
-    return success;
+    // Edge case: if the tail of the document is selected and all nodes
+    // are selected fully, the old position does not exist afterwards
+    // and the updated last position must be selected
+    if (session.container.getLength() <= newPos[0]) {
+      sel.set(session.container.getLastCoor());
+    } else {
+      sel.set(newPos);
+    }
+
+    return true;
   };
 
   var _deleteSingle = function(self, session, component) {
@@ -690,7 +701,6 @@ EditorController.Prototype = function() {
     }
 
     editor.deleteContent(session, component, startChar, endChar);
-
     return true;
   };
 

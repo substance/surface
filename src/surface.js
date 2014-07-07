@@ -30,6 +30,9 @@ var Surface = function(docCtrl, renderer) {
   this.listenTo(this.document, "property:updated", this.onUpdateView);
   this.listenTo(this.document, "graph:reset", this.reset);
 
+  // bind a DOM blur handler so that we can fire a node blur event
+  this.$el.blur(this.onBlur.bind(this));
+
   this.__lastFocussed = null;
 };
 
@@ -236,6 +239,13 @@ Surface.Prototype = function() {
         this.__lastFocussedView = nodeView;
       }
     } else if (this.__lastFocussedView) {
+      this.__lastFocussedView.onBlur();
+      this.__lastFocussedView = null;
+    }
+  };
+
+  this.onBlur = function() {
+    if (this.__lastFocussedView) {
       this.__lastFocussedView.onBlur();
       this.__lastFocussedView = null;
     }

@@ -17,14 +17,14 @@
   },
   "dependencies": {
     "underscore": "1.5.x",
-    "substance-util": "git+https://github.com/substance/util.git#0.2.x",
-    "substance-application": "git+https://github.com/substance/application.git#0.1.x",
-    "substance-operator": "git+https://github.com/substance/operator.git#0.2.x",
-    "substance-commander": "git+https://github.com/substance/commander.git#0.1.x"
+    "substance-util": "git+https://github.com/substance/util.git#lens",
+    "substance-application": "git+https://github.com/substance/application.git#lens",
+    "substance-operator": "git+https://github.com/substance/operator.git#lens",
+    "substance-commander": "git+https://github.com/substance/commander.git#lens"
   },
   "devDependencies": {
-    "substance-test": "git+https://github.com/substance/test.git#0.2.x",
-    "substance-document": "git+https://github.com/substance/document.git#0.5.x"
+    "substance-test": "0.2.x",
+    "substance-document": "git+https://github.com/substance/document.git#lens"
   },
   "version": "0.3.0",
   "engines": {

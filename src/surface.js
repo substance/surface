@@ -24,7 +24,7 @@ var Surface = function(docCtrl, options) {
   if (this.options.viewFactory) {
     this.viewFactory = this.options.viewFactory;
   } else {
-    this.viewFactory = new this.document.constructor.DefaultViewFactory(doc);
+    this.viewFactory = new this.document.constructor.ViewFactory(doc);
   }
 
   // Pull out the registered nodetypes on the written article

@@ -8,7 +8,7 @@ var Commander = require("substance-commander");
 // Substance.Surface
 // ==========================================================================
 
-var Surface = function(doc, options) {
+var Surface = function(docCtrl, options) {
 
   options = _.extend({
     editable: true
@@ -18,22 +18,21 @@ var Surface = function(doc, options) {
   var that = this;
 
   this.options = options;
+  this.docCtrl = docCtrl;
+  this.document = docCtrl.getDocument();
 
-  if (this.options.renderer) {
-    this.renderer = this.options.renderer;
+  if (this.options.viewFactory) {
+    this.viewFactory = this.options.viewFactory;
   } else {
-    this.renderer = new doc.__document.constructor.Renderer(doc);
+    this.viewFactory = new this.document.constructor.DefaultViewFactory(doc);
   }
 
-  // Incoming events
-  this.doc = doc;
-
   // Pull out the registered nodetypes on the written article
-  this.nodeTypes = doc.__document.nodeTypes;
+  this.nodeTypes = this.document.nodeTypes;
 
-  this.listenTo(this.doc.selection,  "selection:changed", this.renderSelection);
-  this.listenTo(this.doc.__document, "property:updated", this.onUpdateView);
-  this.listenTo(this.doc.__document, "graph:reset", this.reset);
+  this.listenTo(this.docCtrl.selection,  "selection:changed", this.renderSelection);
+  this.listenTo(this.document, "property:updated", this.onUpdateView);
+  this.listenTo(this.document, "graph:reset", this.reset);
 
   // Start building the initial stuff
   this.build();
@@ -41,7 +40,7 @@ var Surface = function(doc, options) {
   this.$el.addClass('surface');
 
   // Shouldn't this be done outside?
-  this.$el.addClass(this.doc.view);
+  this.$el.addClass(this.docCtrl.view);
 
   // The editable surface responds to selection changes
 
@@ -57,7 +56,7 @@ var Surface = function(doc, options) {
 
     this.$el.delegate('img', 'click', function(e) {
       var $el = $(e.currentTarget).parent().parent().parent();
-      var nodeId = $el.attr('id');
+      var nodeId = el.dataset.id;
       that.doc.selection.selectNode(nodeId);
       return false;
     });
@@ -75,7 +74,7 @@ var Surface = function(doc, options) {
         var dirt = this._dirt.shift();
         dirt[0].textContent = dirt[1];
       }
-      this.doc.write(e.data);
+      this.docCtrl.write(e.data);
       e.preventDefault();
     }.bind(this);
 
@@ -197,7 +196,7 @@ Surface.Prototype = function() {
 
     // Set selection to the cursor if clicked on the cursor.
     if ($(wSel.anchorNode.parentElement).is(".cursor")) {
-      this.doc.selection.collapse("cursor");
+      this.docCtrl.selection.collapse("cursor");
       return;
     }
 
@@ -229,18 +228,18 @@ Surface.Prototype = function() {
     var endNode = _findNodeElement.call(this, wEndPos[0]);
 
     var startNodeId = startNode.getAttribute("id");
-    var startNodePos = this.doc.getPosition(startNodeId) ;
+    var startNodePos = this.docCtrl.getPosition(startNodeId) ;
     var startCharPos = this.nodes[startNodeId].getCharPosition(wStartPos[0], wStartPos[1]);
 
     var endNodeId = endNode.getAttribute("id");
-    var endNodePos = this.doc.getPosition(endNodeId);
+    var endNodePos = this.docCtrl.getPosition(endNodeId);
     var endCharPos = this.nodes[endNodeId].getCharPosition(wEndPos[0], wEndPos[1]);
 
     // the selection range in Document.Selection coordinates
     var startPos = [startNodePos, startCharPos];
     var endPos = [endNodePos, endCharPos];
 
-    this.doc.selection.set({start: startPos, end: endPos});
+    this.docCtrl.selection.set({start: startPos, end: endPos});
   };
 
 
@@ -255,7 +254,7 @@ Surface.Prototype = function() {
       return;
     }
 
-    if (this.doc.selection.isNull()) {
+    if (this.docCtrl.selection.isNull()) {
       this.$cursor.hide();
       return;
     }
@@ -263,13 +262,13 @@ Surface.Prototype = function() {
     // Hide native selection in favor of our custom one
     var wSel = window.getSelection();
 
-    var range = this.doc.selection.range();
-    var startNode = this.doc.getNodeFromPosition(range.start[0]);
-    var startNodeView = this.renderer.nodes[startNode.id];
+    var range = this.docCtrl.selection.range();
+    var startNode = this.docCtrl.getNodeFromPosition(range.start[0]);
+    var startNodeView = this.nodes[startNode.id];
     var wStartPos = startNodeView.getDOMPosition(range.start[1]);
 
-    var endNode = this.doc.getNodeFromPosition(range.end[0]);
-    var endNodeView = this.renderer.nodes[endNode.id];
+    var endNode = this.docCtrl.getNodeFromPosition(range.end[0]);
+    var endNodeView = this.nodes[endNode.id];
     var wEndPos = endNodeView.getDOMPosition(range.end[1]);
 
     var wRange = document.createRange();
@@ -285,14 +284,26 @@ Surface.Prototype = function() {
   //
 
   this.build = function() {
-    // var Renderer = this.options.renderer || this.doc.__document.constructor.Renderer;
-    // var renderer = this.options.renderer:
-    // Create a Renderer instance, which implicitly constructs all content node views.
-    // this.renderer = new Renderer(this.doc);
-
-    // Add some backward compatibility
-    this.nodes = this.renderer.nodes;
+    _.each(this.nodes, function(nodeView) {
+      nodeView.dispose();
+    });
+    this.nodes = {};
+    var frag = document.createDocumentFragment();
+    var docNodes = this.docCtrl.container.getTopLevelNodes();
+    _.each(docNodes, function(n) {
+      var view = this.renderNodeView(n);
+      this.nodes[n.id] = view;
+      frag.appendChild(view.el);
+    }, this);
+    return frag;
   };
+
+  this.renderNodeView = function(n) {
+    var view = this.viewFactory.createView(n);
+    view.render();
+    return view;
+  };
+
 
   // Render it
   // --------
@@ -326,14 +337,10 @@ Surface.Prototype = function() {
     this.el.appendChild(nodes);
     this.el.appendChild(cursor);
 
-    // console.log("Surface.render()", "this.doc.getNodes()", nodes);
-
     // Actual content goes here
     // --------
     //
-    // We get back a document fragment from the renderer
-
-    nodes.appendChild(this.renderer.render());
+    nodes.appendChild(this.build());
 
     // TODO: fixme
     this.$('input.image-files').hide();
@@ -388,7 +395,7 @@ Surface.Prototype = function() {
     if (diff.isInsert()) {
       // Create a view and insert render it into the nodes container element.
       nodeId = diff.val;
-      node = this.doc.get(nodeId);
+      node = this.docCtrl.get(nodeId);
       // TODO: this will hopefully be solved in a clean way
       // when we have done the 'renderer' refactorings
       if (this.nodeTypes[node.type]) {
@@ -417,6 +424,10 @@ Surface.Prototype = function() {
     } else {
       throw new Error("Illegal state.");
     }
+  };
+
+  this.findNodeView = function(nodeId) {
+    return this.el.querySelector('*[data-id='+nodeId+']');
   };
 };
 

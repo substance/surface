@@ -13,17 +13,16 @@ var SelectionError = util.errors.define("SelectionError", 501, SurfaceError);
 // Substance.Surface
 // ==========================================================================
 
-var Surface = function(docCtrl, renderer) {
+var Surface = function(docCtrl) {
   View.call(this);
 
   // Rename docCtrl to surfaceCtrl ?
   this.docCtrl = docCtrl;
-  this.renderer = renderer;
   this.document = docCtrl.session.document;
 
   // Pull out the registered nodetypes on the written article
   this.nodeTypes = this.document.nodeTypes;
-  this.nodeViews = this.renderer.nodeViews;
+  this.nodeViews = {};
 
   this.$el.addClass('surface');
 
@@ -393,12 +392,23 @@ Surface.Prototype = function() {
     this.el.appendChild(nodes);
     // this.el.appendChild(cursor);
 
-    // Actual content goes here
-    // --------
-    //
-    // We get back a document fragment from the renderer
+    // NOTE: Getting rid of the extra Renderer class
+    // TODO: rethink NodeView interface in general. E.g. for implementing Multi-Node-Annotations
+    // some views need to get hands on the document + container (currently -> DocumentSession)
+    _.each(this.nodeViews, function(nodeView) {
+      nodeView.dispose();
+    });
+    this.nodeViews = {};
+    var frag = window.document.createDocumentFragment();
+    var container = this.getContainer();
+    var nodeIds = container.nodes;
+    _.each(nodeIds, function(id) {
+      var node = this.document.get(id);
+      var view = this.createView(node);
+      frag.appendChild(view.render().el);
+    }, this);
 
-    nodes.appendChild(this.renderer.render());
+    nodes.appendChild(frag);
 
     // TODO: fixme
     this.$('input.image-files').hide();
@@ -410,6 +420,37 @@ Surface.Prototype = function() {
 
     return this;
   };
+
+  this.createView = function(node, overwrite) {
+    if (this.nodeViews[node.id] && !overwrite) {
+      return this.nodeViews[node.id];
+    } else if (this.nodeViews[node.id] && overwrite) {
+      this.nodeViews[node.id].dispose();
+    }
+
+    var NodeView = this.nodeTypes[node.type].View;
+    if (!NodeView) {
+      throw new Error('Node type "'+node.type+'" not supported');
+    }
+    // Note: passing the renderer to the node views
+    // to allow creation of nested views
+    var nodeView = new NodeView(node, this);
+    // we connect the listener here to avoid to pass the document itself into the nodeView
+    nodeView.listenTo(this.document, "operation:applied", nodeView.onGraphUpdate);
+
+    this.nodeViews[node.id] = nodeView;
+
+    return nodeView;
+  };
+
+  this.getView = function(nodeId) {
+    if (this.nodeViews[nodeId]) {
+      return this.nodeViews[nodeId];
+    }
+    var node = this.document.get(nodeId);
+    return this.createView(node);
+  };
+
 
   this.reset = function() {
     _.each(this.nodeViews, function(nodeView) {
@@ -464,7 +505,7 @@ Surface.Prototype = function() {
       if (this.nodeTypes[node.type]) {
         // TODO: createView is misleading as returns a cached instance
         // or creates a new one
-        var nodeView = this.renderer.createView(node);
+        var nodeView = this.createView(node);
         this.nodeViews[nodeId] = nodeView;
         el = nodeView.render().el;
         insertOrAppend(container, diff.pos, el);
@@ -492,7 +533,12 @@ Surface.Prototype = function() {
   };
 
   this.getNodeView = function(nodeId) {
-    return this.renderer.getView(nodeId);
+    return this.getView(nodeId);
+  };
+
+  // HACK: this is all experimental and needs a proper redesign.
+  this.getDocumentSession = function() {
+    return this.docCtrl.session;
   };
 
 };

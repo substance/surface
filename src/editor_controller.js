@@ -240,6 +240,7 @@ EditorController.Prototype = function() {
     // transfer nodes from content document
     // TODO: transfer annotations
     var nodeIds = content.get("content").nodes;
+    var annoIndex = content.indexes.annotations;
     for (var i = 0; i < nodeIds.length; i++) {
       var nodeId = nodeIds[i];
       var node = content.get(nodeId).toJSON();
@@ -249,6 +250,21 @@ EditorController.Prototype = function() {
       }
       doc.create(node);
       doc.show(container.name, node.id, insertPos++);
+
+      // EXPERIMENTAL also transfer annotations
+      // what about nodes that are referenced by annotations?
+      // TODO: we need to solve this properly in substance-next
+      var annos = annoIndex.get(nodeId);
+      for (var id in annos) {
+        var anno = annos[id];
+        if (node.id !== nodeId) {
+          anno.path[0] = node.id;
+        }
+        if (doc.get(anno.id)) {
+          anno.id = util.uuid(anno.type);
+        }
+        doc.create(anno.toJSON());
+      }
     }
     var last = container.getComponent(insertPos-1);
     selection.set([last.pos, last.length]);

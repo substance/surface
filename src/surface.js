@@ -318,7 +318,7 @@ Surface.Prototype = function() {
   this.scrollToCursor = function() {
     var sel = this.docCtrl.selection;
 
-    // Not exactly beautiful but ensures the cursor is always stays in view
+    // Not exactly beautiful but ensures the cursor stays in view
     // E.g. when hitting enter on the lower document bound
     if (sel.isCollapsed()) {
       var that = this;
@@ -327,7 +327,6 @@ Surface.Prototype = function() {
       window.setTimeout(function() {
         // Look up parent node if startContainer is a text node
         var topCorrection = $(that.el).offset().top;
-
         var wSel = window.getSelection();
 
         // avoid errors due to non existing DOM selection.
@@ -341,7 +340,10 @@ Surface.Prototype = function() {
         if (!bounds) {
           // This happens when the cursor is in an empty node
           // However, that is not a problem as we can use the container then
-          bounds = $(range.startContainer).offset();
+          var $content = $(range.startContainer).parents('.content');
+          // do not proceed if the cursor is not in a node view
+          if ($content.length === 0) return;
+          bounds = $content.offset();
         }
 
         var topOffset = bounds.top - topCorrection;

@@ -465,7 +465,7 @@ EditorController.Prototype = function() {
   };
 
   this.startTransaction = function() {
-    return this.session.startSimulation();
+    return this.session.startTransaction();
   };
 
   var _insertNode = function(self, session, newNode) {

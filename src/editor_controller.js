@@ -240,7 +240,7 @@ EditorController.Prototype = function() {
     // transfer nodes from content document
     // TODO: transfer annotations
     var nodeIds = content.get("content").nodes;
-    var annoIndex = content.indexes.annotations;
+    var annoIndex = content.getIndex('annotations');
     for (var i = 0; i < nodeIds.length; i++) {
       var nodeId = nodeIds[i];
       var node = content.get(nodeId).toJSON();

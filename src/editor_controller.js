@@ -46,20 +46,20 @@ EditorController.Prototype = function() {
     if (selection.isNull()) {
       throw new EditingError("Can not write, the current position is not valid.");
     }
-    var timer = util.startTimer();
+    // var timer = util.startTimer();
 
     var session = this.startTransaction();
-    console.log("EditorController.write(): Time for creating transaction", timer.stop());
+    // console.log("EditorController.write(): Time for creating transaction", timer.stop());
 
     if (this._write(session, text)) {
       session.save();
-      console.log("EditorController.write(): Time applying change", timer.stop());
+      // console.log("EditorController.write(): Time applying change", timer.stop());
       selection.set(session.selection);
       this._afterEdit();
-      console.log("EditorController.write(): Time for aftermath", timer.stop());
+      // console.log("EditorController.write(): Time for aftermath", timer.stop());
     }
 
-    console.log("EditorController.write(): total time", timer.total());
+    // console.log("EditorController.write(): total time", timer.total());
   };
 
   // Delete current selection

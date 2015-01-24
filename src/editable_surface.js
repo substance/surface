@@ -229,12 +229,12 @@ EditableSurface.Prototype = function() {
 
     // enables selection handling
     this.editorCtrl.session.selection.on("selection:changed", this._onModelSelectionChanged);
-    el.addEventListener("mousedown", this._onMousedown, true);
-    window.document.addEventListener("mouseup", this._onMouseup, true);
+    el.addEventListener("mousedown", this._onMousedown, false);
+    window.document.addEventListener("mouseup", this._onMouseup, false);
 
     // text input
-    el.addEventListener("textInput", this._onTextInput, true);
-    el.addEventListener("input", this._onTextInput, true);
+    el.addEventListener("textInput", this._onTextInput, false);
+    el.addEventListener("input", this._onTextInput, false);
 
     // activates MutationObserver to handle deadkeys
     var _mutationObserverConfig = { subtree: true, characterData: true, characterDataOldValue: true };
@@ -251,12 +251,12 @@ EditableSurface.Prototype = function() {
 
     // disables selection handling
     this.editorCtrl.session.selection.off("selection:changed", this._onModelSelectionChanged);
-    el.removeEventListener("mousedown", this._onMousedown, true);
-    window.document.removeEventListener("mouseup", this._onMouseup, true);
+    el.removeEventListener("mousedown", this._onMousedown, false);
+    window.document.removeEventListener("mouseup", this._onMouseup, false);
 
     // text input
-    el.removeEventListener("textInput", this._onTextInput, true);
-    el.removeEventListener("input", this._onTextInput, true);
+    el.removeEventListener("textInput", this._onTextInput, false);
+    el.removeEventListener("input", this._onTextInput, false);
 
     // disables MutationObserver to handle deadkeys
     this._mutationObserver.disconnect();

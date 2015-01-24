@@ -112,6 +112,10 @@ Surface.Prototype = function() {
     return [pos, charPos];
   };
 
+  this.getCoordinateForPosition = function(range) {
+    return _mapDOMCoordinates.call(this, range.startContainer, range.startOffset);
+  };
+
   // Read out current DOM selection and update selection in the model
   // ---------------
 
@@ -208,11 +212,21 @@ Surface.Prototype = function() {
   var _mapModelCoordinates = function(pos) {
     var container = this.docCtrl.container;
     var component = container.getComponent(pos[0]);
+    return this.getPositionFromComponent(component, offset);
+  };
+
+  this.getPositionFromCoordinate = function(path, offset) {
+    var container = this.docCtrl.container;
+    var component = container.lookup(path);
+    return this.getPositionFromComponent(component, offset);
+  };
+
+  this.getPositionFromComponent = function(component, offset) {
     // TODO rethink when it is a good time to attach the view to the node surface
     if (!component.surface.hasView()) {
       this._attachViewToNodeSurface(component);
     }
-    var wCoor = component.surface.getDOMPosition(pos[1]);
+    var wCoor = component.surface.getDOMPosition(offset);
     return wCoor;
   };
 

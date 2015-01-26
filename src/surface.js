@@ -212,7 +212,7 @@ Surface.Prototype = function() {
   var _mapModelCoordinates = function(pos) {
     var container = this.docCtrl.container;
     var component = container.getComponent(pos[0]);
-    return this.getPositionFromComponent(component, offset);
+    return this.getPositionFromComponent(component, pos[1]);
   };
 
   this.getPositionFromCoordinate = function(path, offset) {

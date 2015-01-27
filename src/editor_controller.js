@@ -276,35 +276,30 @@ EditorController.Prototype = function() {
       }
     }
 
-    var last;
+    var newCursor;
     if (insertedNodes.length > 0) {
       var first = insertedNodes[0];
-      last = _.last(insertedNodes);
+      var last = _.last(insertedNodes);
+      var insertedComponents = container.getNodeComponents(last.id);
+      var lastComponent = _.last(insertedComponents);
+      newCursor = [lastComponent.pos, lastComponent.length];
       if (after && last.type === after.root.type) {
         _join(this, session, doc.get(last.id), after.root);
       }
       if (before && first.type === before.root.type) {
-        _join(this, session, before.root, doc.get(first.id));
-        // hackidy hack: we want to set the cursor to the last inserted
-        // component later, but when everything is 'joined', then there
-        // is no new component
-        // TODO: try to handle 'trivial' pastes with a simpler implementation
-        if (insertedNodes.length === 1) {
-          last = before.root;
+        if (insertedNodes.length > 1 && before) {
+          newCursor[1] += before.getLength();
+        } else {
+          newCursor[1] = lastComponent.getLength();
         }
+        newCursor[0]--;
+        _join(this, session, before.root, doc.get(first.id));
       }
     } else {
       // cancel everything if no content was inserted
       return;
     }
-
-    var insertedComponents = container.getNodeComponents(last.id);
-    var lastComponent = _.last(insertedComponents);
-    if (lastComponent) {
-      selection.set([lastComponent.pos, lastComponent.length]);
-    } else {
-      selection.clear();
-    }
+    selection.set(newCursor);
     session.save();
     this.session.selection.set(selection);
   };

@@ -234,11 +234,13 @@ EditorController.Prototype = function() {
     if (after.length === 0) {
       doc.hide(container.name, after.root.id);
       doc.delete(after.root.id);
+      after = null;
     }
     var before = container.getComponent(beforePos);
     if (before.length === 0) {
       doc.hide(container.name, before.root.id);
       doc.delete(before.root.id);
+      before = null;
       insertPos--;
     }
 
@@ -246,6 +248,7 @@ EditorController.Prototype = function() {
     // TODO: transfer annotations
     var nodeIds = content.get("content").nodes;
     var annoIndex = content.getIndex('annotations');
+    var insertedNodes = [];
     for (var i = 0; i < nodeIds.length; i++) {
       var nodeId = nodeIds[i];
       var node = content.get(nodeId).toJSON();
@@ -255,6 +258,7 @@ EditorController.Prototype = function() {
       }
       doc.create(node);
       doc.show(container.name, node.id, insertPos++);
+      insertedNodes.push(node);
 
       // EXPERIMENTAL also transfer annotations
       // what about nodes that are referenced by annotations?
@@ -271,9 +275,36 @@ EditorController.Prototype = function() {
         doc.create(anno.toJSON());
       }
     }
-    var last = container.getComponent(insertPos-1);
-    selection.set([last.pos, last.length]);
 
+    var last;
+    if (insertedNodes.length > 0) {
+      var first = insertedNodes[0];
+      last = _.last(insertedNodes);
+      if (after && last.type === after.root.type) {
+        _join(this, session, doc.get(last.id), after.root);
+      }
+      if (before && first.type === before.root.type) {
+        _join(this, session, before.root, doc.get(first.id));
+        // hackidy hack: we want to set the cursor to the last inserted
+        // component later, but when everything is 'joined', then there
+        // is no new component
+        // TODO: try to handle 'trivial' pastes with a simpler implementation
+        if (insertedNodes.length === 1) {
+          last = before.root;
+        }
+      }
+    } else {
+      // cancel everything if no content was inserted
+      return;
+    }
+
+    var insertedComponents = container.getNodeComponents(last.id);
+    var lastComponent = _.last(insertedComponents);
+    if (lastComponent) {
+      selection.set([lastComponent.pos, lastComponent.length]);
+    } else {
+      selection.clear();
+    }
     session.save();
     this.session.selection.set(selection);
   };

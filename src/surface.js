@@ -132,8 +132,7 @@ Surface.Prototype = function() {
   };
 
   this.handleUpOrDownArrowKey = function ( /*e*/ ) {
-    // TODO: let contenteditable to the move
-    // and then transfer the new window selection
+    // TODO: let contenteditable do the move and set the new selection afterwards
   };
 
   this.handleEnter = function( /*e*/ ) {
@@ -143,27 +142,11 @@ Surface.Prototype = function() {
   };
 
   this.handleInsertion = function() {
-    // TODO: what to do?
+    // TODO: let contenteditable insert something and then see what it was
   };
 
   this.handleDelete = function ( e ) {
-    var direction = e.keyCode === Surface.Keys.DELETE ? 1 : -1;
-    var unit = ( e.altKey === true || e.ctrlKey === true ) ? 'word' : 'character';
-    var tx = this.model.startTransaction();
-    var selection = tx.getSelection();
-    if ( selection.isCollapsed() ) {
-      // In case when the range is collapsed use the same logic that is used for cursor left and
-      // right movement in order to figure out range to remove.
-      var newRange = tx.createRelativeRange(direction, unit, true);
-      selection.setRange(newRange);
-    }
-    // do nothing if it is still collapsed, i.e., can't delete e.g. because at the end of document.
-    if (selection.isCollapsed()) {
-      return;
-    }
-    tx.deleteRange(selection.straight());
-    selection.collapse(-1);
-    tx.save();
+    // TODO: let contenteditable delete and find out the diff afterwards
   };
 
   /* Event handlers */
@@ -270,7 +253,7 @@ Surface.Prototype = function() {
   };
 
   this.afterKeyPress = function () {
-    this.surfaceObserver.pollOnce();
+    // TODO: fetch the last change from surfaceObserver
   };
 
   /* Event handlers driven by dm.Document events */
@@ -290,13 +273,6 @@ Surface.Prototype = function() {
 
   this.onDocumentChange = function(changes) {
     if (!this.isRenderingLocked()) {
-      var nodeIds = changes.getNodes();
-      for (var i = 0; i < nodeIds.length; i++) {
-        var view = this.container.nodes[nodeIds[i]];
-        if (view) {
-          view.onModelUpdate();
-        }
-      }
     }
   };
 

@@ -6,8 +6,8 @@ var Document = require('substance-document');
 // SurfaceObserver watches the DOM for changes that could not be detected by this class
 // For instance, it is possible to use the native context menu to cut or paste
 // Thus, it serves as a last resort to get the model back in sync with the UI (or reset the UI)
-var DomObserver = require('./dom_observer');
-var DomSelection = require('./dom_selection');
+var DomObserver = require('./dom-observer');
+var DomSelection = require('./dom-selection');
 
 function Surface( element, model ) {
   Substance.EventEmitter.call(this);
@@ -32,16 +32,26 @@ function Surface( element, model ) {
   // It is used to test whether a reflected change event is emitted.
   this.hasSelectionChangeEvents = 'onselectionchange' in window.document;
 
+  var self = this;
   this._onMouseUp = Substance.bind( this.onMouseUp, this );
   this._onMouseDown = Substance.bind( this.onMouseDown, this );
   this._onMouseMove = Substance.bind( this.onMouseMove, this );
   this._onSelectionChange = Substance.bind( this.onSelectionChange, this );
+  this._delayedSelectionChange = function() {
+    window.setTimeout(function() {
+      self.onSelectionChange();
+    });
+  };
   this._onKeyDown = Substance.bind( this.onKeyDown, this );
   this._onKeyPress = Substance.bind( this.onKeyPress, this );
-  this._afterKeyPress = Substance.bind( Substance.delayed(this.afterKeyPress), this );
+  this._afterKeyPress = function() {
+    window.setTimeout(function() {
+      self.afterKeyPress();
+    });
+  };
   // this._onCut = Substance.bind( this.onCut, this );
   // this._onCopy = Substance.bind( this.onCopy, this );
-};
+}
 
 Surface.Prototype = function() {
 
@@ -104,13 +114,14 @@ Surface.Prototype = function() {
   };
 
   this.handleLeftOrRightArrowKey = function ( /*e*/ ) {
-    // TODO: let contenteditable move and then transfer the new window selection
-    console.log('TODO: handleLeftOrRightArrowKey');
+    // let contenteditable move and then transfer the new window selection
+    this._delayedSelectionChange();
   };
 
   this.handleUpOrDownArrowKey = function ( /*e*/ ) {
     // TODO: let contenteditable do the move and set the new selection afterwards
     console.log('TODO: handleUpOrDownArrowKey');
+    this._delayedSelectionChange();
   };
 
   this.handleEnter = function( e ) {
@@ -181,12 +192,6 @@ Surface.Prototype = function() {
 
   // triggered by DOM itself
   this.onSelectionChange = function () {
-    if ( !this.dragging ) {
-      // Note: during dragging we eagerly update the selection on mouse move
-      // so we do need to do anything here anymore
-      // Optimisation
-      return;
-    }
     this.setSelection(this.domSelection.get());
   };
 

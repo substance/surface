@@ -1,25 +1,29 @@
 'use strict';
 
 var Substance = require('substance');
+var Document = require('substance-document');
 
 // SurfaceObserver watches the DOM for changes that could not be detected by this class
 // For instance, it is possible to use the native context menu to cut or paste
 // Thus, it serves as a last resort to get the model back in sync with the UI (or reset the UI)
-var SurfaceObserver = require('./surface_observer');
-var SurfaceSelection = require('./surface_selection');
+var DomObserver = require('./dom_observer');
+var DomSelection = require('./dom_selection');
 
-var Surface = function uiSurface( container, model ) {
+function Surface( element, model ) {
+  Substance.EventEmitter.call(this);
 
-  this.container = container;
+  this.element = element;
   this.model = model;
+  this.selection = Document.NullSelection;
 
-  this.surfaceObserver = new SurfaceObserver(this);
-  this.surfaceSelection = new SurfaceSelection(container.element);
+  this.domObserver = new DomObserver(this);
+  this.domSelection = new DomSelection(element, this.model);
 
   // TODO: VE make jquery injectable
   this.$ = $;
   this.$window = this.$( window );
   this.$document = this.$( window.document );
+  this.$element = $(element);
 
   this.dragging = false;
   this.focused = false;
@@ -32,55 +36,27 @@ var Surface = function uiSurface( container, model ) {
   this._onMouseDown = Substance.bind( this.onMouseDown, this );
   this._onMouseMove = Substance.bind( this.onMouseMove, this );
   this._onSelectionChange = Substance.bind( this.onSelectionChange, this );
-  this._onWindowResize = Substance.bind( this.onWindowResize, this );
-  this._onFocusChange = Substance.bind( Substance.debounce( this.onFocusChange ), this );
   this._onKeyDown = Substance.bind( this.onKeyDown, this );
   this._onKeyPress = Substance.bind( this.onKeyPress, this );
-  this._afterKeyPress = Substance.bind( Substance.delay(this.afterKeyPress), this );
-  this._onCut = Substance.bind( this.onCut, this );
-  this._onCopy = Substance.bind( this.onCopy, this );
-
+  this._afterKeyPress = Substance.bind( Substance.delayed(this.afterKeyPress), this );
+  // this._onCut = Substance.bind( this.onCut, this );
+  // this._onCopy = Substance.bind( this.onCopy, this );
 };
 
 Surface.Prototype = function() {
 
-  this.atttach = function() {
-    this.$window.on( 'resize', this._onWindowResize );
-    // It is possible for a mousedown to clear the selection
-    // without triggering a focus change event (e.g. if the
-    // document has been programmatically blurred) so trigger
-    // a focus change to check if we still have a selection
-    this.$document.on( 'mousedown', this._onFocusChange );
-    this.$document.on( 'focusin', this._onFocusChange );
-    this.$document.on( 'focusout', this._onFocusChange );
+  this.attach = function() {
     this.attachKeyboardHandlers();
     this.attachMouseHandlers();
-
-    this.surfaceObserver.connect( this, {
-      contentChange: 'onObserverContentChange',
-      selectionChange: 'onObserverSelectionChange'
-    } );
-    this.model.connect( this, {
-      select: 'onModelSelect',
-      documentChange: "onDocumentChange"
-    } );
   };
 
   this.detach = function() {
-    this.$window.off( 'resize', this._onWindowResize );
-    // It is possible for a mousedown to clear the selection
-    // without triggering a focus change event (e.g. if the
-    // document has been programmatically blurred) so trigger
-    // a focus change to check if we still have a selection
-    this.$document.off( 'mousedown', this._onFocusChange );
-    this.$document.off( 'focusin', this._onFocusChange );
-    this.$document.off( 'focusout', this._onFocusChange );
-
     this.detachKeyboardHandlers();
     this.detachMouseHandlers();
+  };
 
-    this.surfaceObserver.disconnect(this);
-    this.model.disconnect(this);
+  this.dispose = function() {
+    this.detach();
   };
 
   this.attachKeyboardHandlers = function() {
@@ -129,30 +105,38 @@ Surface.Prototype = function() {
 
   this.handleLeftOrRightArrowKey = function ( /*e*/ ) {
     // TODO: let contenteditable move and then transfer the new window selection
+    console.log('TODO: handleLeftOrRightArrowKey');
   };
 
   this.handleUpOrDownArrowKey = function ( /*e*/ ) {
     // TODO: let contenteditable do the move and set the new selection afterwards
+    console.log('TODO: handleUpOrDownArrowKey');
   };
 
-  this.handleEnter = function( /*e*/ ) {
-    var tx = this.model.startTransaction();
-    tx.break();
-    tx.save();
+  this.handleEnter = function( e ) {
+    // var tx = this.model.startTransaction();
+    // tx.break();
+    // tx.save();
+    console.log('TODO: handleEnter');
+    e.preventDefault();
   };
 
-  this.handleInsertion = function() {
+  this.handleInsertion = function( e ) {
     // TODO: let contenteditable insert something and then see what it was
+    console.log('TODO: handleInsertion');
+    e.preventDefault();
   };
 
   this.handleDelete = function ( e ) {
     // TODO: let contenteditable delete and find out the diff afterwards
+    console.log('TODO: handleDelete');
+    e.preventDefault();
   };
 
   /* Event handlers */
 
   this.onFocus = function () {
-    this.surfaceObserver.start();
+    this.domObserver.start();
     this.focused = true;
     this.emit( 'focus' );
   };
@@ -174,31 +158,36 @@ Surface.Prototype = function() {
     this.$document.on( 'mouseup', this._onMouseUp );
 
     // TODO: update selection delayed
+    // Why should we need that?
+    // Substance.delay(this._onSelectionChange);
   };
 
   this.onMouseUp = function ( /*e*/ ) {
     this.$document.off( 'mouseup', this._onMouseUp );
-    this.surfaceObserver.start();
     // TODO: update selection
     this.dragging = false;
+    this.setSelection(this.domSelection.get());
   };
 
   this.onMouseMove = function () {
-    // TODO: update selection (i.e. during dragging?)
+    if (this.dragging) {
+      // update selection during dragging
+      this.selection = this.domSelection.get();
+      // TODO: maybe this is not really necessary, as the main things are not really useful (such as tools)
+      // while selection is dragged
+      // this.emit('selection');
+    }
   };
 
-  /**
-   * Handle document selection change events.
-   *
-   * @method
-   * @param {jQuery.Event} e Selection change event
-   */
+  // triggered by DOM itself
   this.onSelectionChange = function () {
     if ( !this.dragging ) {
+      // Note: during dragging we eagerly update the selection on mouse move
+      // so we do need to do anything here anymore
       // Optimisation
       return;
     }
-    // TODO: update selection
+    this.setSelection(this.domSelection.get());
   };
 
   /**
@@ -254,6 +243,7 @@ Surface.Prototype = function() {
 
   this.afterKeyPress = function () {
     // TODO: fetch the last change from surfaceObserver
+    console.log('TODO: afterKeyPress');
   };
 
   /* Event handlers driven by dm.Document events */
@@ -269,6 +259,7 @@ Surface.Prototype = function() {
       this.showSelection( this.model.getSelection() );
     }
     // TODO: update selection
+    console.log('TODO: onModelSelect');
   };
 
   this.onDocumentChange = function(changes) {
@@ -276,9 +267,17 @@ Surface.Prototype = function() {
     }
   };
 
+  this.setSelection = function(sel) {
+    if (!this.selection.equals(sel)) {
+      console.log('Surface.setSelection: %s', sel.toString());
+      this.selection = sel;
+      this.emit('selection');
+    }
+  };
+
 };
 
-Substance.inheritClass( Surface, Object );
+Substance.inherit( Surface,   Substance.EventEmitter );
 
 Surface.Keys =  {
   UNDEFINED: 0,

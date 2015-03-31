@@ -1,12 +1,17 @@
 
 var Substance = require('substance');
-var SubstanceDocument =  require('substance-document');
+var Document =  require('substance-document');
 
-function SurfaceSelection(rootElement) {
+//  Helper to map selection between model and DOM
+function DomSelection(rootElement, container) {
   this.rootElement = rootElement;
+  this.container = container;
+
+  this.nativeSelection = null;
+  this.modelSelection = null;
 }
 
-SurfaceSelection.Prototype = function() {
+DomSelection.Prototype = function() {
 
   // mode: "after" - if the found position is at the right boundary of an element
   //  then the adjacent position is returned instead
@@ -66,9 +71,13 @@ SurfaceSelection.Prototype = function() {
     while(current) {
       // if available extract a path fragment
       if (current.getAttribute) {
-        // Stop when we find an element which has been made read-only
-        if (current.getAttribute("contenteditable") === "false") {
-          return null;
+        var pathProperty = current.getAttribute("data-path");
+        if (pathProperty) {
+          path = pathProperty.split('.');
+          return {
+            path: path,
+            element: current
+          };
         }
         // if there is a path attibute we collect it
         var propName = current.getAttribute("data-property");
@@ -81,7 +90,7 @@ SurfaceSelection.Prototype = function() {
           path.unshift(nodeId);
           elements.unshift(current);
           // STOP here
-          return { path: path, elements: elements };
+          return { path: path, element: elements[elements.length-1] };
         }
       }
       current = current.parentElement;
@@ -92,15 +101,15 @@ SurfaceSelection.Prototype = function() {
   var modelCoordinateFromDomPosition = function(domNode, offset) {
     var found = getPathFromElement(domNode);
     if (!found) return null;
-    var last = found.elements[found.elements.length - 1];
     var path = found.path;
+    var element = found.element;
     var charPos = 0;
     // TODO: in future we might support other component types than string
     var range = window.document.createRange();
-    range.setStart(last, 0);
+    range.setStart(element, 0);
     range.setEnd(domNode, offset);
     charPos = range.toString().length;
-    return new SubstanceDocument.Coordinate(path, charPos);
+    return new Document.Coordinate(path, charPos);
   };
 
   var getElementForPath = function(rootElement, path) {
@@ -120,36 +129,65 @@ SurfaceSelection.Prototype = function() {
     return findPosition(el, coordinate.offset, coordinate.after?'after':'');
   };
 
+  var selection_equals = function(s1, s2) {
+    return (s1.anchorNode === s2.anchorNode && s1.anchorOffset === s2.anchorOffset &&
+        s1.focusNode === s2.focusNode && s1.focusOffset === s2.focusOffset);
+  };
+
+  var selection_clone = function(s) {
+    return {
+      anchorNode: s.anchorNode,
+      anchorOffset: s.anchorOffset,
+      focusNode: s.focusNode,
+      focusOffset: s.focusOffset
+    };
+  };
+
   this.get = function() {
     var sel = window.getSelection();
-    var isReverse = (!sel.isCollapsed &&
-      sel.focusNode.compareDocumentPosition(sel.anchorNode) === window.document.DOCUMENT_POSITION_PRECEDING);
+    if (this.nativeSelection && selection_equals(sel, this.nativeSelection)) {
+      return this.modelSelection;
+    }
+    this.nativeSelection = selection_clone(sel);
+
+    var isReverse;
+    var cmp = sel.focusNode.compareDocumentPosition(sel.anchorNode);
+    isReverse = (cmp === window.document.DOCUMENT_POSITION_PRECEDING || (cmp === 0 && sel.focusOffset < sel.anchorOffset) );
     var rangeCount = sel.rangeCount;
     var ranges = [];
+    var result, range;
     if (rangeCount === 0) {
-      return Document.NullSelection;
+      result = Document.NullSelection;
     } else {
       for (var i = 0; i < rangeCount; i++) {
-        var range = sel.getRangeAt(i);
-        var start = modelCoordinateFromDomPosition(range.startNode, range.startOffset);
+        range = sel.getRangeAt(i);
+        var start = modelCoordinateFromDomPosition(range.startContainer, range.startOffset);
         var end = start;
         if (range.collapsed) {
           end = start;
         } else {
-          end = modelCoordinateFromDomPosition(range.endNode, range.endOffset);
+          end = modelCoordinateFromDomPosition(range.endContainer, range.endOffset);
         }
         if (start && end) {
-          ranges.push(new SubstanceDocument.Range(start, end));
+          ranges.push(new Document.Range(start, end));
         }
       }
       if (ranges.length > 1) {
-        return new Document.MultiSelection(ranges, isReverse);
-      } else if (ranges.length > 0) {
-        return new Document.Selection(ranges[0], isReverse);
+        console.log("Multi-Selections are not supported yet");
+        result = Document.NullSelection;
+      } else if (ranges.length === 1) {
+        range = ranges[0];
+        if (Substance.isArrayEqual(range.start.path, range.end.path)) {
+          result = new Document.PropertySelection(range, isReverse);
+        } else {
+          result = new Document.ContainerSelection(this.container, range, isReverse);
+        }
       } else {
-        return Document.NullSelection;
+        result = Document.NullSelection;
       }
     }
+    this.modelSelection = result;
+    return result;
   };
 
   this.set = function(modelSelection) {
@@ -177,6 +215,6 @@ SurfaceSelection.Prototype = function() {
 
 };
 
-Substance.initClass(SurfaceSelection);
+Substance.initClass(DomSelection);
 
-module.exports = SurfaceSelection;
+module.exports = DomSelection;

@@ -153,7 +153,7 @@ DomSelection.Prototype = function() {
     var isReverse;
     var cmp = sel.focusNode.compareDocumentPosition(sel.anchorNode);
     isReverse = (
-      ( (cmp & (window.document.DOCUMENT_POSITION_PRECEDING|window.document.DOCUMENT_POSITION_FOLLOWING) ) > 0 ) ||
+      ( (cmp & (window.document.DOCUMENT_POSITION_FOLLOWING) ) > 0 ) ||
       (cmp === 0 && sel.focusOffset < sel.anchorOffset)
     );
     // console.log('####', isReverse, cmp);

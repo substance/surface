@@ -44,13 +44,16 @@ function Surface( element, model ) {
   };
   this._onKeyDown = Substance.bind( this.onKeyDown, this );
   this._onKeyPress = Substance.bind( this.onKeyPress, this );
-  this._afterKeyPress = function() {
+  this._afterKeyPress = function(e) {
     window.setTimeout(function() {
-      self.afterKeyPress();
+      self.afterKeyPress(e);
     });
   };
   // this._onCut = Substance.bind( this.onCut, this );
   // this._onCopy = Substance.bind( this.onCopy, this );
+
+  // state used by handleInsertion
+  this.insertState = null;
 }
 
 Surface.Prototype = function() {
@@ -135,7 +138,30 @@ Surface.Prototype = function() {
   this.handleInsertion = function( e ) {
     // TODO: let contenteditable insert something and then see what it was
     console.log('TODO: handleInsertion');
-    e.preventDefault();
+    this.insertState = {};
+    if (!this.selection.isCollapsed()) {
+      this.insertState.delete = this.selection;
+    }
+    this.insertState.range = window.getSelection().getRangeAt(0);
+  };
+
+  this.afterKeyPress = function (e) {
+    // TODO: fetch the last change from surfaceObserver
+    console.log('afterKeyPress');
+    if (this.insertState) {
+      // get the text between the before insert and after insert
+      var range = window.document.createRange();
+      var before = this.insertState.range;
+      var after = window.getSelection().getRangeAt(0);
+      range.setStart(before.startContainer, before.startOffset);
+      range.setEnd(after.startContainer, after.startOffset);
+      var textInput = range.toString();
+      if (this.insertState.delete) {
+        console.log("Delete:", this.insertState.delete);
+      }
+      console.log("Inserted text: '%s'", textInput);
+      this.insertState = null;
+    }
   };
 
   this.handleDelete = function ( e ) {
@@ -243,12 +269,7 @@ Surface.Prototype = function() {
     ) {
       return;
     }
-    this.handleInsertion();
-  };
-
-  this.afterKeyPress = function () {
-    // TODO: fetch the last change from surfaceObserver
-    console.log('TODO: afterKeyPress');
+    this.handleInsertion(e);
   };
 
   /* Event handlers driven by dm.Document events */
